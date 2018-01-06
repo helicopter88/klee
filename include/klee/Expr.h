@@ -12,6 +12,7 @@
 
 #include "klee/util/Bits.h"
 #include "klee/util/Ref.h"
+#include "klee/util/Cache.pb.h"
 
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APFloat.h"
@@ -241,7 +242,7 @@ public:
   // Given an array of new kids return a copy of the expression
   // but using those children. 
   virtual ref<Expr> rebuild(ref<Expr> kids[/* getNumKids() */]) const = 0;
-
+  virtual ProtoExpr* serialize() const;
   /// isZero - Is this a constant zero.
   bool isZero() const;
   
@@ -494,7 +495,9 @@ public:
   /// a symbolic array. If non-empty, this size of this array is equivalent to
   /// the array size.
   const std::vector<ref<ConstantExpr> > constantValues;
-
+    ProtoArray* serialize() const;
+    Array(const ProtoArray& protoArray) : name(protoArray.name()), size(protoArray.size()), domain(protoArray.domain()), range(protoArray.range()) {}
+    ~Array();
 private:
   unsigned hashValue;
 
@@ -504,7 +507,6 @@ private:
   // FIXME: Make =delete when we switch to C++11
   Array& operator =(const Array& array);
 
-  ~Array();
 
   /// Array - Construct a new array object.
   ///
@@ -531,6 +533,8 @@ public:
   unsigned computeHash();
   unsigned hash() const { return hashValue; }
   friend class ArrayCache;
+
+
 };
 
 /// Class representing a complete list of updates into an array.

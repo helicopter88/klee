@@ -13,6 +13,7 @@
 #include <map>
 
 #include "klee/util/ExprEvaluator.h"
+#include "klee/util/Cache.pb.h"
 
 // FIXME: Rename?
 
@@ -27,6 +28,17 @@ namespace klee {
     bindings_ty bindings;
     
   public:
+      Assignment(const ProtoAssignment& pa):allowFreeValues(pa.allowfreevalues()) {
+        for(const ProtoBinding& bin : pa.binding()) {
+          bin.key();
+            auto* a = new Array(bin.key());
+          std::vector<unsigned char> val;
+          for(const auto& b : bin.value().value()) {
+            val.push_back(b);
+          }
+            bindings.insert(std::make_pair(a, val));
+        }
+      }
     Assignment(bool _allowFreeValues=false) 
       : allowFreeValues(_allowFreeValues) {}
     Assignment(const std::vector<const Array*> &objects,
@@ -51,6 +63,8 @@ namespace klee {
     template<typename InputIterator>
     bool satisfies(InputIterator begin, InputIterator end);
     void dump();
+      ProtoAssignment* serialize() const;
+
   };
   
   class AssignmentEvaluator : public ExprEvaluator {

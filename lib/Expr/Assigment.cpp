@@ -7,7 +7,25 @@
 //
 //===----------------------------------------------------------------------===//
 #include "klee/util/Assignment.h"
+#include "klee/util/Cache.pb.h"
+
 namespace klee {
+    ProtoAssignment* Assignment::serialize() const {
+      auto* protoAssignment = new ProtoAssignment();
+      protoAssignment->set_allowfreevalues(allowFreeValues);
+      for(const auto& binding : bindings) {
+        auto* protoBinding = new ProtoBinding();
+        auto* protoArray = binding.first->serialize();
+        auto* protoBitVector = new ProtoBitVector();
+        std::for_each(binding.second.begin(), binding.second.end(), [&](const char value) {
+            protoBitVector->add_value((uint32_t)value);
+        });
+        protoBinding->set_allocated_key(protoArray);
+        protoBinding->set_allocated_value(protoBitVector);
+        protoAssignment->mutable_binding()->AddAllocated(protoBinding);
+      }
+      return protoAssignment;
+    }
 
 void Assignment::dump() {
   if (bindings.size() == 0) {

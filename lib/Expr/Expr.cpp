@@ -81,6 +81,20 @@ ref<Expr> Expr::createTempRead(const Array *array, Expr::Width w) {
   }
 }
 
+ProtoExpr* Expr::serialize() const {
+    auto* pe = new ProtoExpr();
+    pe->set_hash(this->hash());
+    pe->set_refcount(this->refCount);
+    pe->set_numkids(this->getNumKids());
+    pe->set_width(this->getWidth());
+    pe->set_kind(this->getKind());
+    for(unsigned k = 0; k < this->getNumKids(); k++) {
+        auto pKid = this->getKid(k);
+        pe->mutable_kids()->AddAllocated(pKid->serialize());
+    }
+    return pe;
+}
+
 int Expr::compare(const Expr &b) const {
   static ExprEquivSet equivs;
   int r = compare(b, equivs);
@@ -503,6 +517,15 @@ Array::Array(const std::string &_name, uint64_t _size,
 Array::~Array() {
 }
 
+ProtoArray* Array::serialize() const {
+        auto* protoArray = new ProtoArray();
+        protoArray->set_name(name);
+        protoArray->set_size(size);
+        protoArray->set_range(range);
+        protoArray->set_domain(domain);
+        protoArray->set_hash(hash());
+        return protoArray;
+}
 unsigned Array::computeHash() {
   unsigned res = 0;
   for (unsigned i = 0, e = name.size(); i != e; ++i)

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package klee;
+
+message ProtoArray {
+    string name = 1;
+    uint64 size = 2;
+    uint32 domain = 3;
+    uint32 range = 4;
+    uint32 hash = 5;
+}
+
+message ProtoBitVector {
+    repeated uint32 value = 1;
+}
+
+message ProtoBinding {
+    ProtoArray key = 1;
+    ProtoBitVector value = 2;
+}
+
+message ProtoAssignment {
+    bool allowFreeValues = 1;
+    repeated ProtoBinding binding = 2;
+}
+
+message ProtoExpr {
+    uint32 width = 1;
+    uint32 kind = 2;
+    uint32 refCount = 3;
+    uint32 hash = 4;
+    uint32 numKids = 5;
+    repeated ProtoExpr kids = 6;
+}
+
+message ProtoCacheElem {
+    repeated ProtoExpr key = 1;
+    ProtoAssignment assignment = 2;
+}
+
+message ProtoCache {
+    repeated ProtoCacheElem elem = 1;
+}

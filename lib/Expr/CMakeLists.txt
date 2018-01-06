@@ -7,6 +7,7 @@
 #
 #===------------------------------------------------------------------------===#
 klee_add_component(kleaverExpr
+        Cache.pb.cc
   ArrayCache.cpp
   Assigment.cpp
   Constraints.cpp
@@ -27,3 +28,4 @@ set(LLVM_COMPONENTS
 )
 klee_get_llvm_libs(LLVM_LIBS ${LLVM_COMPONENTS})
 target_link_libraries(kleaverExpr PUBLIC ${LLVM_LIBS})
+target_link_libraries(kleaverExpr PUBLIC protobuf)
