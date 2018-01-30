@@ -20,6 +20,7 @@
 #include "klee/util/ExprPPrinter.h"
 
 #include <sstream>
+#include <klee/util/Cache.pb.h>
 
 using namespace klee;
 using namespace llvm;
@@ -300,6 +301,54 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
   }
 }
 
+ref<Expr> Expr::deserialize(const ProtoExpr& pe) {
+    switch(pe.kind()) {
+
+        case Constant:
+            return ConstantExpr::create(pe.constexprval(), pe.constexprbwidth());
+#define PROTO_CAST_EXPR_CASE(T)                                    \
+      case T:                                                \
+      return T ## Expr::create(Expr::deserialize(pe.kids(0)), pe.width()); \
+
+#define PROTO_BINARY_EXPR_CASE(T)                                 \
+      case T:                                               \
+        assert(pe.kids_size() == 2);      \
+      return T ## Expr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1))); \
+
+        PROTO_CAST_EXPR_CASE(ZExt);
+        PROTO_CAST_EXPR_CASE(SExt);
+
+        PROTO_BINARY_EXPR_CASE(Add);
+        PROTO_BINARY_EXPR_CASE(Sub);
+        PROTO_BINARY_EXPR_CASE(Mul);
+        PROTO_BINARY_EXPR_CASE(UDiv);
+        PROTO_BINARY_EXPR_CASE(SDiv);
+        PROTO_BINARY_EXPR_CASE(URem);
+        PROTO_BINARY_EXPR_CASE(SRem);
+        PROTO_BINARY_EXPR_CASE(And);
+        PROTO_BINARY_EXPR_CASE(Or);
+        PROTO_BINARY_EXPR_CASE(Xor);
+        PROTO_BINARY_EXPR_CASE(Shl);
+        PROTO_BINARY_EXPR_CASE(LShr);
+        PROTO_BINARY_EXPR_CASE(AShr);
+
+        PROTO_BINARY_EXPR_CASE(Eq);
+        PROTO_BINARY_EXPR_CASE(Ne);
+        PROTO_BINARY_EXPR_CASE(Ult);
+        PROTO_BINARY_EXPR_CASE(Ule);
+        PROTO_BINARY_EXPR_CASE(Ugt);
+        PROTO_BINARY_EXPR_CASE(Uge);
+        PROTO_BINARY_EXPR_CASE(Slt);
+        PROTO_BINARY_EXPR_CASE(Sle);
+        PROTO_BINARY_EXPR_CASE(Sgt);
+        PROTO_BINARY_EXPR_CASE(Sge);
+        default:
+        std::cout<< "Kind: " << pe.kind() << std::endl;
+            return ref<Expr>();
+    }
+
+    return ref<Expr>();
+}
 
 void Expr::printWidth(llvm::raw_ostream &os, Width width) {
   switch(width) {
@@ -360,6 +409,13 @@ void ConstantExpr::toMemory(void *address) {
     *((long double*) address) = *(const long double*) value.getRawData();
     break;
   }
+}
+
+ProtoExpr * ConstantExpr::serialize() const {
+    ProtoExpr* pe = Expr::serialize();
+    pe->set_constexprbwidth(this->value.getBitWidth());
+    pe->set_constexprval(this->value.getZExtValue());
+    return pe;
 }
 
 void ConstantExpr::toString(std::string &Res, unsigned radix) const {
@@ -1145,7 +1201,10 @@ static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
 static ref<Expr> EqExpr_createPartial(Expr *l, const ref<ConstantExpr> &cr) {  
   return EqExpr_createPartialR(cr, l);
 }
-  
+
+
+
+
 ref<Expr> NeExpr::create(const ref<Expr> &l, const ref<Expr> &r) {
   return EqExpr::create(ConstantExpr::create(0, Expr::Bool),
                         EqExpr::create(l, r));

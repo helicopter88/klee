@@ -189,11 +189,11 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
 
-  // uint32 size = 2;
+  // uint64 size = 2;
   void clear_size();
   static const int kSizeFieldNumber = 2;
-  ::google::protobuf::uint32 size() const;
-  void set_size(::google::protobuf::uint32 value);
+  ::google::protobuf::uint64 size() const;
+  void set_size(::google::protobuf::uint64 value);
 
   // uint32 domain = 3;
   void clear_domain();
@@ -218,7 +218,7 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr name_;
-  ::google::protobuf::uint32 size_;
+  ::google::protobuf::uint64 size_;
   ::google::protobuf::uint32 domain_;
   ::google::protobuf::uint32 range_;
   ::google::protobuf::uint32 hash_;
@@ -682,6 +682,18 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::uint32 numkids() const;
   void set_numkids(::google::protobuf::uint32 value);
 
+  // uint32 constExprBWidth = 7;
+  void clear_constexprbwidth();
+  static const int kConstExprBWidthFieldNumber = 7;
+  ::google::protobuf::uint32 constexprbwidth() const;
+  void set_constexprbwidth(::google::protobuf::uint32 value);
+
+  // uint64 constExprVal = 8;
+  void clear_constexprval();
+  static const int kConstExprValFieldNumber = 8;
+  ::google::protobuf::uint64 constexprval() const;
+  void set_constexprval(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:klee.ProtoExpr)
  private:
 
@@ -692,6 +704,8 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::uint32 refcount_;
   ::google::protobuf::uint32 hash_;
   ::google::protobuf::uint32 numkids_;
+  ::google::protobuf::uint32 constexprbwidth_;
+  ::google::protobuf::uint64 constexprval_;
   mutable int _cached_size_;
   friend struct ::protobuf_Cache_2eproto::TableStruct;
   friend void ::protobuf_Cache_2eproto::InitDefaultsProtoExprImpl();
@@ -980,15 +994,15 @@ inline void ProtoArray::set_allocated_name(::std::string* name) {
   // @@protoc_insertion_point(field_set_allocated:klee.ProtoArray.name)
 }
 
-// uint32 size = 2;
+// uint64 size = 2;
 inline void ProtoArray::clear_size() {
-  size_ = 0u;
+  size_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint32 ProtoArray::size() const {
+inline ::google::protobuf::uint64 ProtoArray::size() const {
   // @@protoc_insertion_point(field_get:klee.ProtoArray.size)
   return size_;
 }
-inline void ProtoArray::set_size(::google::protobuf::uint32 value) {
+inline void ProtoArray::set_size(::google::protobuf::uint64 value) {
   
   size_ = value;
   // @@protoc_insertion_point(field_set:klee.ProtoArray.size)
@@ -1324,6 +1338,34 @@ inline const ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr >&
 ProtoExpr::kids() const {
   // @@protoc_insertion_point(field_list:klee.ProtoExpr.kids)
   return kids_;
+}
+
+// uint32 constExprBWidth = 7;
+inline void ProtoExpr::clear_constexprbwidth() {
+  constexprbwidth_ = 0u;
+}
+inline ::google::protobuf::uint32 ProtoExpr::constexprbwidth() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExpr.constExprBWidth)
+  return constexprbwidth_;
+}
+inline void ProtoExpr::set_constexprbwidth(::google::protobuf::uint32 value) {
+  
+  constexprbwidth_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoExpr.constExprBWidth)
+}
+
+// uint64 constExprVal = 8;
+inline void ProtoExpr::clear_constexprval() {
+  constexprval_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 ProtoExpr::constexprval() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExpr.constExprVal)
+  return constexprval_;
+}
+inline void ProtoExpr::set_constexprval(::google::protobuf::uint64 value) {
+  
+  constexprval_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoExpr.constExprVal)
 }
 
 // -------------------------------------------------------------------

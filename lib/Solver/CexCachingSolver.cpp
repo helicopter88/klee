@@ -88,15 +88,15 @@ public:
         auto* pc = new ProtoCache();
         pc->ParseFromIstream(&ifs);
         protoCache = pc;
-        std::cout << pc->DebugString() << std::endl;
         for(const ProtoCacheElem& e : pc->elem()) {
             e.key();
+            for(const ProtoExpr& expr : e.key()) {
+                Expr::deserialize(expr);
+            }
             e.assignment();
             auto* a = new Assignment(e.assignment());
         }
-        /*for(auto* pBegin = pc->elem().pointer_begin(); pBegin != pc->elem().pointer_end(); pBegin++) {
-            protoCacheElem;
-        }*/
+
     }
 
     ~CexCachingSolver();
@@ -282,14 +282,10 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
     auto* pc = new ProtoCacheElem();
     for (const auto &k : key) {
         auto* e = k->serialize();
-
-        //std::cout << "EXPR PROTOBUF: " << e->DebugString() << std::endl;
         pc->mutable_key()->AddAllocated(e);
-        k->dump();
     }
     ProtoAssignment* pa = binding->serialize();
 
-    //std::cout << pa->DebugString() << std::endl;
     pc->set_allocated_assignment(pa);
     protoCache->mutable_elem()->AddAllocated(pc);
 /*#ifdef ENABLE_KLEE_DEBUG

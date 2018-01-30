@@ -254,6 +254,8 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::klee::ProtoExpr, hash_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::klee::ProtoExpr, numkids_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::klee::ProtoExpr, kids_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::klee::ProtoExpr, constexprbwidth_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::klee::ProtoExpr, constexprval_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::klee::ProtoCacheElem, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -274,8 +276,8 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 16, -1, sizeof(::klee::ProtoBinding)},
   { 23, -1, sizeof(::klee::ProtoAssignment)},
   { 30, -1, sizeof(::klee::ProtoExpr)},
-  { 41, -1, sizeof(::klee::ProtoCacheElem)},
-  { 48, -1, sizeof(::klee::ProtoCache)},
+  { 43, -1, sizeof(::klee::ProtoCacheElem)},
+  { 50, -1, sizeof(::klee::ProtoCache)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -311,23 +313,24 @@ void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\013Cache.proto\022\004klee\"U\n\nProtoArray\022\014\n\004nam"
-      "e\030\001 \001(\t\022\014\n\004size\030\002 \001(\r\022\016\n\006domain\030\003 \001(\r\022\r\n"
+      "e\030\001 \001(\t\022\014\n\004size\030\002 \001(\004\022\016\n\006domain\030\003 \001(\r\022\r\n"
       "\005range\030\004 \001(\r\022\014\n\004hash\030\005 \001(\r\"\037\n\016ProtoBitVe"
       "ctor\022\r\n\005value\030\001 \003(\r\"R\n\014ProtoBinding\022\035\n\003k"
       "ey\030\001 \001(\0132\020.klee.ProtoArray\022#\n\005value\030\002 \001("
       "\0132\024.klee.ProtoBitVector\"O\n\017ProtoAssignme"
       "nt\022\027\n\017allowFreeValues\030\001 \001(\010\022#\n\007binding\030\002"
-      " \003(\0132\022.klee.ProtoBinding\"x\n\tProtoExpr\022\r\n"
-      "\005width\030\001 \001(\r\022\014\n\004kind\030\002 \001(\r\022\020\n\010refCount\030\003"
-      " \001(\r\022\014\n\004hash\030\004 \001(\r\022\017\n\007numKids\030\005 \001(\r\022\035\n\004k"
-      "ids\030\006 \003(\0132\017.klee.ProtoExpr\"Y\n\016ProtoCache"
-      "Elem\022\034\n\003key\030\001 \003(\0132\017.klee.ProtoExpr\022)\n\nas"
-      "signment\030\002 \001(\0132\025.klee.ProtoAssignment\"0\n"
-      "\nProtoCache\022\"\n\004elem\030\001 \003(\0132\024.klee.ProtoCa"
-      "cheElemb\006proto3"
+      " \003(\0132\022.klee.ProtoBinding\"\247\001\n\tProtoExpr\022\r"
+      "\n\005width\030\001 \001(\r\022\014\n\004kind\030\002 \001(\r\022\020\n\010refCount\030"
+      "\003 \001(\r\022\014\n\004hash\030\004 \001(\r\022\017\n\007numKids\030\005 \001(\r\022\035\n\004"
+      "kids\030\006 \003(\0132\017.klee.ProtoExpr\022\027\n\017constExpr"
+      "BWidth\030\007 \001(\r\022\024\n\014constExprVal\030\010 \001(\004\"Y\n\016Pr"
+      "otoCacheElem\022\034\n\003key\030\001 \003(\0132\017.klee.ProtoEx"
+      "pr\022)\n\nassignment\030\002 \001(\0132\025.klee.ProtoAssig"
+      "nment\"0\n\nProtoCache\022\"\n\004elem\030\001 \003(\0132\024.klee"
+      ".ProtoCacheElemb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 575);
+      descriptor, 623);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "Cache.proto", &protobuf_RegisterTypes);
 }
@@ -459,13 +462,13 @@ bool ProtoArray::MergePartialFromCodedStream(
         break;
       }
 
-      // uint32 size = 2;
+      // uint64 size = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &size_)));
         } else {
           goto handle_unusual;
@@ -551,9 +554,9 @@ void ProtoArray::SerializeWithCachedSizes(
       1, this->name(), output);
   }
 
-  // uint32 size = 2;
+  // uint64 size = 2;
   if (this->size() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->size(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->size(), output);
   }
 
   // uint32 domain = 3;
@@ -596,9 +599,9 @@ void ProtoArray::SerializeWithCachedSizes(
         1, this->name(), target);
   }
 
-  // uint32 size = 2;
+  // uint64 size = 2;
   if (this->size() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->size(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->size(), target);
   }
 
   // uint32 domain = 3;
@@ -640,10 +643,10 @@ size_t ProtoArray::ByteSizeLong() const {
         this->name());
   }
 
-  // uint32 size = 2;
+  // uint64 size = 2;
   if (this->size() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+      ::google::protobuf::internal::WireFormatLite::UInt64Size(
         this->size());
   }
 
@@ -1606,6 +1609,8 @@ const int ProtoExpr::kRefCountFieldNumber;
 const int ProtoExpr::kHashFieldNumber;
 const int ProtoExpr::kNumKidsFieldNumber;
 const int ProtoExpr::kKidsFieldNumber;
+const int ProtoExpr::kConstExprBWidthFieldNumber;
+const int ProtoExpr::kConstExprValFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ProtoExpr::ProtoExpr()
@@ -1623,15 +1628,15 @@ ProtoExpr::ProtoExpr(const ProtoExpr& from)
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&width_, &from.width_,
-    static_cast<size_t>(reinterpret_cast<char*>(&numkids_) -
-    reinterpret_cast<char*>(&width_)) + sizeof(numkids_));
+    static_cast<size_t>(reinterpret_cast<char*>(&constexprval_) -
+    reinterpret_cast<char*>(&width_)) + sizeof(constexprval_));
   // @@protoc_insertion_point(copy_constructor:klee.ProtoExpr)
 }
 
 void ProtoExpr::SharedCtor() {
   ::memset(&width_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&numkids_) -
-      reinterpret_cast<char*>(&width_)) + sizeof(numkids_));
+      reinterpret_cast<char*>(&constexprval_) -
+      reinterpret_cast<char*>(&width_)) + sizeof(constexprval_));
   _cached_size_ = 0;
 }
 
@@ -1674,8 +1679,8 @@ void ProtoExpr::Clear() {
 
   kids_.Clear();
   ::memset(&width_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&numkids_) -
-      reinterpret_cast<char*>(&width_)) + sizeof(numkids_));
+      reinterpret_cast<char*>(&constexprval_) -
+      reinterpret_cast<char*>(&width_)) + sizeof(constexprval_));
   _internal_metadata_.Clear();
 }
 
@@ -1770,6 +1775,34 @@ bool ProtoExpr::MergePartialFromCodedStream(
         break;
       }
 
+      // uint32 constExprBWidth = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &constexprbwidth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // uint64 constExprVal = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(64u /* 64 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &constexprval_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -1828,6 +1861,16 @@ void ProtoExpr::SerializeWithCachedSizes(
       6, this->kids(static_cast<int>(i)), output);
   }
 
+  // uint32 constExprBWidth = 7;
+  if (this->constexprbwidth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(7, this->constexprbwidth(), output);
+  }
+
+  // uint64 constExprVal = 8;
+  if (this->constexprval() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(8, this->constexprval(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -1873,6 +1916,16 @@ void ProtoExpr::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
         6, this->kids(static_cast<int>(i)), deterministic, target);
+  }
+
+  // uint32 constExprBWidth = 7;
+  if (this->constexprbwidth() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(7, this->constexprbwidth(), target);
+  }
+
+  // uint64 constExprVal = 8;
+  if (this->constexprval() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(8, this->constexprval(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -1938,6 +1991,20 @@ size_t ProtoExpr::ByteSizeLong() const {
         this->numkids());
   }
 
+  // uint32 constExprBWidth = 7;
+  if (this->constexprbwidth() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->constexprbwidth());
+  }
+
+  // uint64 constExprVal = 8;
+  if (this->constexprval() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt64Size(
+        this->constexprval());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -1983,6 +2050,12 @@ void ProtoExpr::MergeFrom(const ProtoExpr& from) {
   if (from.numkids() != 0) {
     set_numkids(from.numkids());
   }
+  if (from.constexprbwidth() != 0) {
+    set_constexprbwidth(from.constexprbwidth());
+  }
+  if (from.constexprval() != 0) {
+    set_constexprval(from.constexprval());
+  }
 }
 
 void ProtoExpr::CopyFrom(const ::google::protobuf::Message& from) {
@@ -2015,6 +2088,8 @@ void ProtoExpr::InternalSwap(ProtoExpr* other) {
   swap(refcount_, other->refcount_);
   swap(hash_, other->hash_);
   swap(numkids_, other->numkids_);
+  swap(constexprbwidth_, other->constexprbwidth_);
+  swap(constexprval_, other->constexprval_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }

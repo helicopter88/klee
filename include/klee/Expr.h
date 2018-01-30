@@ -256,6 +256,7 @@ public:
 
   static void printKind(llvm::raw_ostream &os, Kind k);
   static void printWidth(llvm::raw_ostream &os, Expr::Width w);
+    static ref<Expr> deserialize(const ProtoExpr& pe);
 
   /// returns the smallest number of bytes in which the given width fits
   static inline unsigned getMinBytesForWidth(Width w) {
@@ -292,10 +293,9 @@ private:
 struct Expr::CreateArg {
   ref<Expr> expr;
   Width width;
-  
-  CreateArg(Width w = Bool) : expr(0), width(w) {}
-  CreateArg(ref<Expr> e) : expr(e), width(Expr::InvalidWidth) {}
-  
+    CreateArg(ref<Expr> e) : expr(e), width(Expr::InvalidWidth) {}
+    CreateArg(Width w = Bool) : expr(0), width(w) {}
+
   bool isExpr() { return !isWidth(); }
   bool isWidth() { return width != Expr::InvalidWidth; }
 };
@@ -1147,6 +1147,8 @@ public:
 
   ref<ConstantExpr> Neg();
   ref<ConstantExpr> Not();
+
+    virtual ProtoExpr * serialize() const;
 };
 
 // Implementations
