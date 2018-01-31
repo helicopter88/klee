@@ -8,6 +8,7 @@ message ProtoArray {
     uint32 domain = 3;
     uint32 range = 4;
     uint32 hash = 5;
+    repeated ProtoExpr constantValues = 6;
 }
 
 message ProtoBitVector {
@@ -24,13 +25,38 @@ message ProtoAssignment {
     repeated ProtoBinding binding = 2;
 }
 
+message ProtoConstExpr {
+    uint32 constExprBWidth = 1;
+    uint64 constExprVal = 2;
+}
+
+message ProtoUpdateNode {
+    ProtoExpr updateIndex = 1;
+    ProtoExpr updateValue = 2;
+}
+
+message ProtoReadExpr {
+    repeated ProtoUpdateNode updateList = 1;
+    ProtoArray root = 2;
+}
+
+message ProtoExtractExpr {
+    uint32 extractBitOff = 1;
+    uint32 extractWidth = 2;
+}
+
 message ProtoExpr {
     uint32 width = 1;
     uint32 kind = 2;
-    uint32 refCount = 3;
-    uint32 hash = 4;
-    uint32 numKids = 5;
+    uint32 refCount = 3; // TODO: maybe not needed
+    uint32 hash = 4; // TODO: maybe not needed
+    uint32 numKids = 5; // TODO: maybe not needed
     repeated ProtoExpr kids = 6;
+    oneof specialData {
+        ProtoConstExpr constData = 7;
+        ProtoReadExpr readData = 8;
+        ProtoExtractExpr extractData = 9;
+    }
 }
 
 message ProtoCacheElem {

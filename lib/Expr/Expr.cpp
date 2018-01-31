@@ -301,11 +301,48 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
   }
 }
 
-ref<Expr> Expr::deserialize(const ProtoExpr& pe) {
-    switch(pe.kind()) {
+UpdateNode* recDeserializeUpdateNode(const ProtoReadExpr& data, int depth, int size) {
+    if(data.updatelist().empty())
+        return nullptr;
+    UpdateNode* next = depth >= size ? nullptr : recDeserializeUpdateNode(data, depth + 1, size);
+    return new UpdateNode(next, Expr::deserialize(data.updatelist(depth).updateindex()), Expr::deserialize(data.updatelist(depth).updatevalue()));
+}
+ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
+    switch (pe.kind()) {
+        case Constant: {
+            assert(pe.has_constdata() && "ConstExpr does not have constant data");
+            return ConstantExpr::create(pe.constdata().constexprval(), pe.constdata().constexprbwidth());
+        }
+        case Select: {
+            assert(pe.kids_size() == 3 && "Wrong number of children for SelectExpr");
+            return SelectExpr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)),
+                                      Expr::deserialize(pe.kids(2)));
+        }
+        case Extract: {
+            assert(pe.has_extractdata() && "ExtractExpr does not have extract data");
+            return ExtractExpr::create(Expr::deserialize(pe.kids(0)),
+                                       pe.extractdata().extractbitoff(),
+                                       pe.extractdata().extractwidth());
+        }
+        case Read: {
+            assert(pe.has_readdata() && "ReadExpr does not have read data");
+            const auto& readData = pe.readdata();
+            auto* head = recDeserializeUpdateNode(readData, 0, readData.updatelist().size() - 1);
 
-        case Constant:
-            return ConstantExpr::create(pe.constexprval(), pe.constexprbwidth());
+            return ReadExpr::create(UpdateList(new Array(readData.root()), head), deserialize(pe.kids(0)));
+        }
+
+        case Concat: {
+            assert(pe.kids().size() >= 2);
+            if(pe.kids().size() == 2) {
+                return ConcatExpr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)));
+            } else if(pe.kids().size() == 4) {
+                return ConcatExpr::create4(Expr::deserialize(pe.kids(0)),Expr::deserialize(pe.kids(1)),Expr::deserialize(pe.kids(2)),Expr::deserialize(pe.kids(3)));
+            } else if(pe.kids().size() == 8) {
+                return ConcatExpr::create8(Expr::deserialize(pe.kids(0)),Expr::deserialize(pe.kids(1)),Expr::deserialize(pe.kids(2)),Expr::deserialize(pe.kids(3)),Expr::deserialize(pe.kids(4)),Expr::deserialize(pe.kids(5)),Expr::deserialize(pe.kids(6)),Expr::deserialize(pe.kids(7)));
+            }
+            assert(false && "ConcatExpr Number of kids was not 2 or 4 or 8");
+        }
 #define PROTO_CAST_EXPR_CASE(T)                                    \
       case T:                                                \
       return T ## Expr::create(Expr::deserialize(pe.kids(0)), pe.width()); \
@@ -343,7 +380,8 @@ ref<Expr> Expr::deserialize(const ProtoExpr& pe) {
         PROTO_BINARY_EXPR_CASE(Sgt);
         PROTO_BINARY_EXPR_CASE(Sge);
         default:
-        std::cout<< "Kind: " << pe.kind() << std::endl;
+            std::cout << "Kind: " << (Kind) pe.kind() << std::endl;
+
             return ref<Expr>();
     }
 
@@ -411,10 +449,12 @@ void ConstantExpr::toMemory(void *address) {
   }
 }
 
-ProtoExpr * ConstantExpr::serialize() const {
+ProtoExpr* ConstantExpr::serialize() const {
     ProtoExpr* pe = Expr::serialize();
-    pe->set_constexprbwidth(this->value.getBitWidth());
-    pe->set_constexprval(this->value.getZExtValue());
+    auto * pc = new ProtoConstExpr();
+    pc->set_constexprbwidth(this->value.getBitWidth());
+    pc->set_constexprval(this->value.getZExtValue());
+    pe->set_allocated_constdata(pc);
     return pe;
 }
 
@@ -632,7 +672,22 @@ ref<Expr> ReadExpr::create(const UpdateList &ul, ref<Expr> index) {
 int ReadExpr::compareContents(const Expr &b) const { 
   return updates.compare(static_cast<const ReadExpr&>(b).updates);
 }
-
+ProtoExpr* ReadExpr::serialize() const {
+    ProtoExpr* base = Expr::serialize();
+    auto* readExpr = new ProtoReadExpr();
+    base->clear_kids();
+    base->mutable_kids()->AddAllocated(this->index->serialize());
+    readExpr->set_allocated_root(this->updates.root->serialize());
+    for(auto iter = this->updates.head; iter != nullptr; iter = this->updates.head->next) {
+        ProtoUpdateNode* protoUpdateNode = new ProtoUpdateNode();
+        protoUpdateNode->set_allocated_updateindex(iter->index->serialize());
+        protoUpdateNode->set_allocated_updatevalue(iter->value->serialize());
+        readExpr->mutable_updatelist()->AddAllocated(protoUpdateNode);
+    }
+    base->set_allocated_readdata(readExpr);
+    return base;
+}
+/***/
 ref<Expr> SelectExpr::create(ref<Expr> c, ref<Expr> t, ref<Expr> f) {
   Expr::Width kt = t->getWidth();
 
@@ -742,6 +797,17 @@ ref<Expr> ExtractExpr::create(ref<Expr> expr, unsigned off, Width w) {
   }
   
   return ExtractExpr::alloc(expr, off, w);
+}
+
+ProtoExpr* ExtractExpr::serialize() const {
+    ProtoExpr* base = Expr::serialize();
+    auto* extractExpr = new ProtoExtractExpr();
+    extractExpr->set_extractbitoff(this->offset);
+    extractExpr->set_extractwidth(this->width);
+    base->set_allocated_extractdata(extractExpr);
+    base->clear_kids();
+    base->mutable_kids()->AddAllocated(this->expr->serialize());
+    return base;
 }
 
 /***/

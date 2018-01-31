@@ -36,7 +36,7 @@ namespace protobuf_Cache_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[7];
+  static const ::google::protobuf::internal::ParseTable schema[11];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -50,8 +50,10 @@ void InitDefaultsProtoBindingImpl();
 void InitDefaultsProtoBinding();
 void InitDefaultsProtoAssignmentImpl();
 void InitDefaultsProtoAssignment();
-void InitDefaultsProtoExprImpl();
-void InitDefaultsProtoExpr();
+void InitDefaultsProtoConstExprImpl();
+void InitDefaultsProtoConstExpr();
+void InitDefaultsProtoExtractExprImpl();
+void InitDefaultsProtoExtractExpr();
 void InitDefaultsProtoCacheElemImpl();
 void InitDefaultsProtoCacheElem();
 void InitDefaultsProtoCacheImpl();
@@ -61,7 +63,8 @@ inline void InitDefaults() {
   InitDefaultsProtoBitVector();
   InitDefaultsProtoBinding();
   InitDefaultsProtoAssignment();
-  InitDefaultsProtoExpr();
+  InitDefaultsProtoConstExpr();
+  InitDefaultsProtoExtractExpr();
   InitDefaultsProtoCacheElem();
   InitDefaultsProtoCache();
 }
@@ -85,9 +88,21 @@ extern ProtoCacheDefaultTypeInternal _ProtoCache_default_instance_;
 class ProtoCacheElem;
 class ProtoCacheElemDefaultTypeInternal;
 extern ProtoCacheElemDefaultTypeInternal _ProtoCacheElem_default_instance_;
+class ProtoConstExpr;
+class ProtoConstExprDefaultTypeInternal;
+extern ProtoConstExprDefaultTypeInternal _ProtoConstExpr_default_instance_;
 class ProtoExpr;
 class ProtoExprDefaultTypeInternal;
 extern ProtoExprDefaultTypeInternal _ProtoExpr_default_instance_;
+class ProtoExtractExpr;
+class ProtoExtractExprDefaultTypeInternal;
+extern ProtoExtractExprDefaultTypeInternal _ProtoExtractExpr_default_instance_;
+class ProtoReadExpr;
+class ProtoReadExprDefaultTypeInternal;
+extern ProtoReadExprDefaultTypeInternal _ProtoReadExpr_default_instance_;
+class ProtoUpdateNode;
+class ProtoUpdateNodeDefaultTypeInternal;
+extern ProtoUpdateNodeDefaultTypeInternal _ProtoUpdateNode_default_instance_;
 }  // namespace klee
 namespace klee {
 
@@ -175,6 +190,18 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
 
   // accessors -------------------------------------------------------
 
+  // repeated .klee.ProtoExpr constantValues = 6;
+  int constantvalues_size() const;
+  void clear_constantvalues();
+  static const int kConstantValuesFieldNumber = 6;
+  const ::klee::ProtoExpr& constantvalues(int index) const;
+  ::klee::ProtoExpr* mutable_constantvalues(int index);
+  ::klee::ProtoExpr* add_constantvalues();
+  ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr >*
+      mutable_constantvalues();
+  const ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr >&
+      constantvalues() const;
+
   // string name = 1;
   void clear_name();
   static const int kNameFieldNumber = 1;
@@ -217,6 +244,7 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr > constantvalues_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::uint64 size_;
   ::google::protobuf::uint32 domain_;
@@ -558,6 +586,445 @@ class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion
 };
 // -------------------------------------------------------------------
 
+class ProtoConstExpr : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoConstExpr) */ {
+ public:
+  ProtoConstExpr();
+  virtual ~ProtoConstExpr();
+
+  ProtoConstExpr(const ProtoConstExpr& from);
+
+  inline ProtoConstExpr& operator=(const ProtoConstExpr& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ProtoConstExpr(ProtoConstExpr&& from) noexcept
+    : ProtoConstExpr() {
+    *this = ::std::move(from);
+  }
+
+  inline ProtoConstExpr& operator=(ProtoConstExpr&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ProtoConstExpr& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ProtoConstExpr* internal_default_instance() {
+    return reinterpret_cast<const ProtoConstExpr*>(
+               &_ProtoConstExpr_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    4;
+
+  void Swap(ProtoConstExpr* other);
+  friend void swap(ProtoConstExpr& a, ProtoConstExpr& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ProtoConstExpr* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ProtoConstExpr* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const ProtoConstExpr& from);
+  void MergeFrom(const ProtoConstExpr& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(ProtoConstExpr* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // uint64 constExprVal = 2;
+  void clear_constexprval();
+  static const int kConstExprValFieldNumber = 2;
+  ::google::protobuf::uint64 constexprval() const;
+  void set_constexprval(::google::protobuf::uint64 value);
+
+  // uint32 constExprBWidth = 1;
+  void clear_constexprbwidth();
+  static const int kConstExprBWidthFieldNumber = 1;
+  ::google::protobuf::uint32 constexprbwidth() const;
+  void set_constexprbwidth(::google::protobuf::uint32 value);
+
+  // @@protoc_insertion_point(class_scope:klee.ProtoConstExpr)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::uint64 constexprval_;
+  ::google::protobuf::uint32 constexprbwidth_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_Cache_2eproto::TableStruct;
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoConstExprImpl();
+};
+// -------------------------------------------------------------------
+
+class ProtoUpdateNode : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoUpdateNode) */ {
+ public:
+  ProtoUpdateNode();
+  virtual ~ProtoUpdateNode();
+
+  ProtoUpdateNode(const ProtoUpdateNode& from);
+
+  inline ProtoUpdateNode& operator=(const ProtoUpdateNode& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ProtoUpdateNode(ProtoUpdateNode&& from) noexcept
+    : ProtoUpdateNode() {
+    *this = ::std::move(from);
+  }
+
+  inline ProtoUpdateNode& operator=(ProtoUpdateNode&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ProtoUpdateNode& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ProtoUpdateNode* internal_default_instance() {
+    return reinterpret_cast<const ProtoUpdateNode*>(
+               &_ProtoUpdateNode_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    5;
+
+  void Swap(ProtoUpdateNode* other);
+  friend void swap(ProtoUpdateNode& a, ProtoUpdateNode& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ProtoUpdateNode* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ProtoUpdateNode* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const ProtoUpdateNode& from);
+  void MergeFrom(const ProtoUpdateNode& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(ProtoUpdateNode* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // .klee.ProtoExpr updateIndex = 1;
+  bool has_updateindex() const;
+  void clear_updateindex();
+  static const int kUpdateIndexFieldNumber = 1;
+  const ::klee::ProtoExpr& updateindex() const;
+  ::klee::ProtoExpr* release_updateindex();
+  ::klee::ProtoExpr* mutable_updateindex();
+  void set_allocated_updateindex(::klee::ProtoExpr* updateindex);
+
+  // .klee.ProtoExpr updateValue = 2;
+  bool has_updatevalue() const;
+  void clear_updatevalue();
+  static const int kUpdateValueFieldNumber = 2;
+  const ::klee::ProtoExpr& updatevalue() const;
+  ::klee::ProtoExpr* release_updatevalue();
+  ::klee::ProtoExpr* mutable_updatevalue();
+  void set_allocated_updatevalue(::klee::ProtoExpr* updatevalue);
+
+  // @@protoc_insertion_point(class_scope:klee.ProtoUpdateNode)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::klee::ProtoExpr* updateindex_;
+  ::klee::ProtoExpr* updatevalue_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_Cache_2eproto::TableStruct;
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
+};
+// -------------------------------------------------------------------
+
+class ProtoReadExpr : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoReadExpr) */ {
+ public:
+  ProtoReadExpr();
+  virtual ~ProtoReadExpr();
+
+  ProtoReadExpr(const ProtoReadExpr& from);
+
+  inline ProtoReadExpr& operator=(const ProtoReadExpr& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ProtoReadExpr(ProtoReadExpr&& from) noexcept
+    : ProtoReadExpr() {
+    *this = ::std::move(from);
+  }
+
+  inline ProtoReadExpr& operator=(ProtoReadExpr&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ProtoReadExpr& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ProtoReadExpr* internal_default_instance() {
+    return reinterpret_cast<const ProtoReadExpr*>(
+               &_ProtoReadExpr_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    6;
+
+  void Swap(ProtoReadExpr* other);
+  friend void swap(ProtoReadExpr& a, ProtoReadExpr& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ProtoReadExpr* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ProtoReadExpr* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const ProtoReadExpr& from);
+  void MergeFrom(const ProtoReadExpr& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(ProtoReadExpr* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .klee.ProtoUpdateNode updateList = 1;
+  int updatelist_size() const;
+  void clear_updatelist();
+  static const int kUpdateListFieldNumber = 1;
+  const ::klee::ProtoUpdateNode& updatelist(int index) const;
+  ::klee::ProtoUpdateNode* mutable_updatelist(int index);
+  ::klee::ProtoUpdateNode* add_updatelist();
+  ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >*
+      mutable_updatelist();
+  const ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >&
+      updatelist() const;
+
+  // .klee.ProtoArray root = 2;
+  bool has_root() const;
+  void clear_root();
+  static const int kRootFieldNumber = 2;
+  const ::klee::ProtoArray& root() const;
+  ::klee::ProtoArray* release_root();
+  ::klee::ProtoArray* mutable_root();
+  void set_allocated_root(::klee::ProtoArray* root);
+
+  // @@protoc_insertion_point(class_scope:klee.ProtoReadExpr)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode > updatelist_;
+  ::klee::ProtoArray* root_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_Cache_2eproto::TableStruct;
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
+};
+// -------------------------------------------------------------------
+
+class ProtoExtractExpr : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoExtractExpr) */ {
+ public:
+  ProtoExtractExpr();
+  virtual ~ProtoExtractExpr();
+
+  ProtoExtractExpr(const ProtoExtractExpr& from);
+
+  inline ProtoExtractExpr& operator=(const ProtoExtractExpr& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ProtoExtractExpr(ProtoExtractExpr&& from) noexcept
+    : ProtoExtractExpr() {
+    *this = ::std::move(from);
+  }
+
+  inline ProtoExtractExpr& operator=(ProtoExtractExpr&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ProtoExtractExpr& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ProtoExtractExpr* internal_default_instance() {
+    return reinterpret_cast<const ProtoExtractExpr*>(
+               &_ProtoExtractExpr_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    7;
+
+  void Swap(ProtoExtractExpr* other);
+  friend void swap(ProtoExtractExpr& a, ProtoExtractExpr& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ProtoExtractExpr* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ProtoExtractExpr* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const ProtoExtractExpr& from);
+  void MergeFrom(const ProtoExtractExpr& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(ProtoExtractExpr* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // uint32 extractBitOff = 1;
+  void clear_extractbitoff();
+  static const int kExtractBitOffFieldNumber = 1;
+  ::google::protobuf::uint32 extractbitoff() const;
+  void set_extractbitoff(::google::protobuf::uint32 value);
+
+  // uint32 extractWidth = 2;
+  void clear_extractwidth();
+  static const int kExtractWidthFieldNumber = 2;
+  ::google::protobuf::uint32 extractwidth() const;
+  void set_extractwidth(::google::protobuf::uint32 value);
+
+  // @@protoc_insertion_point(class_scope:klee.ProtoExtractExpr)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::uint32 extractbitoff_;
+  ::google::protobuf::uint32 extractwidth_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_Cache_2eproto::TableStruct;
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoExtractExprImpl();
+};
+// -------------------------------------------------------------------
+
 class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoExpr) */ {
  public:
   ProtoExpr();
@@ -587,13 +1054,20 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   static const ::google::protobuf::Descriptor* descriptor();
   static const ProtoExpr& default_instance();
 
+  enum SpecialDataCase {
+    kConstData = 7,
+    kReadData = 8,
+    kExtractData = 9,
+    SPECIALDATA_NOT_SET = 0,
+  };
+
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const ProtoExpr* internal_default_instance() {
     return reinterpret_cast<const ProtoExpr*>(
                &_ProtoExpr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    4;
+    8;
 
   void Swap(ProtoExpr* other);
   friend void swap(ProtoExpr& a, ProtoExpr& b) {
@@ -682,20 +1156,43 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::uint32 numkids() const;
   void set_numkids(::google::protobuf::uint32 value);
 
-  // uint32 constExprBWidth = 7;
-  void clear_constexprbwidth();
-  static const int kConstExprBWidthFieldNumber = 7;
-  ::google::protobuf::uint32 constexprbwidth() const;
-  void set_constexprbwidth(::google::protobuf::uint32 value);
+  // .klee.ProtoConstExpr constData = 7;
+  bool has_constdata() const;
+  void clear_constdata();
+  static const int kConstDataFieldNumber = 7;
+  const ::klee::ProtoConstExpr& constdata() const;
+  ::klee::ProtoConstExpr* release_constdata();
+  ::klee::ProtoConstExpr* mutable_constdata();
+  void set_allocated_constdata(::klee::ProtoConstExpr* constdata);
 
-  // uint64 constExprVal = 8;
-  void clear_constexprval();
-  static const int kConstExprValFieldNumber = 8;
-  ::google::protobuf::uint64 constexprval() const;
-  void set_constexprval(::google::protobuf::uint64 value);
+  // .klee.ProtoReadExpr readData = 8;
+  bool has_readdata() const;
+  void clear_readdata();
+  static const int kReadDataFieldNumber = 8;
+  const ::klee::ProtoReadExpr& readdata() const;
+  ::klee::ProtoReadExpr* release_readdata();
+  ::klee::ProtoReadExpr* mutable_readdata();
+  void set_allocated_readdata(::klee::ProtoReadExpr* readdata);
 
+  // .klee.ProtoExtractExpr extractData = 9;
+  bool has_extractdata() const;
+  void clear_extractdata();
+  static const int kExtractDataFieldNumber = 9;
+  const ::klee::ProtoExtractExpr& extractdata() const;
+  ::klee::ProtoExtractExpr* release_extractdata();
+  ::klee::ProtoExtractExpr* mutable_extractdata();
+  void set_allocated_extractdata(::klee::ProtoExtractExpr* extractdata);
+
+  SpecialDataCase specialData_case() const;
   // @@protoc_insertion_point(class_scope:klee.ProtoExpr)
  private:
+  void set_has_constdata();
+  void set_has_readdata();
+  void set_has_extractdata();
+
+  inline bool has_specialData() const;
+  void clear_specialData();
+  inline void clear_has_specialData();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr > kids_;
@@ -704,11 +1201,17 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::uint32 refcount_;
   ::google::protobuf::uint32 hash_;
   ::google::protobuf::uint32 numkids_;
-  ::google::protobuf::uint32 constexprbwidth_;
-  ::google::protobuf::uint64 constexprval_;
+  union SpecialDataUnion {
+    SpecialDataUnion() {}
+    ::klee::ProtoConstExpr* constdata_;
+    ::klee::ProtoReadExpr* readdata_;
+    ::klee::ProtoExtractExpr* extractdata_;
+  } specialData_;
   mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
   friend struct ::protobuf_Cache_2eproto::TableStruct;
-  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoExprImpl();
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
 };
 // -------------------------------------------------------------------
 
@@ -747,7 +1250,7 @@ class ProtoCacheElem : public ::google::protobuf::Message /* @@protoc_insertion_
                &_ProtoCacheElem_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    5;
+    9;
 
   void Swap(ProtoCacheElem* other);
   friend void swap(ProtoCacheElem& a, ProtoCacheElem& b) {
@@ -862,7 +1365,7 @@ class ProtoCache : public ::google::protobuf::Message /* @@protoc_insertion_poin
                &_ProtoCache_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    6;
+    10;
 
   void Swap(ProtoCache* other);
   friend void swap(ProtoCache& a, ProtoCache& b) {
@@ -1048,6 +1551,36 @@ inline void ProtoArray::set_hash(::google::protobuf::uint32 value) {
   
   hash_ = value;
   // @@protoc_insertion_point(field_set:klee.ProtoArray.hash)
+}
+
+// repeated .klee.ProtoExpr constantValues = 6;
+inline int ProtoArray::constantvalues_size() const {
+  return constantvalues_.size();
+}
+inline void ProtoArray::clear_constantvalues() {
+  constantvalues_.Clear();
+}
+inline const ::klee::ProtoExpr& ProtoArray::constantvalues(int index) const {
+  // @@protoc_insertion_point(field_get:klee.ProtoArray.constantValues)
+  return constantvalues_.Get(index);
+}
+inline ::klee::ProtoExpr* ProtoArray::mutable_constantvalues(int index) {
+  // @@protoc_insertion_point(field_mutable:klee.ProtoArray.constantValues)
+  return constantvalues_.Mutable(index);
+}
+inline ::klee::ProtoExpr* ProtoArray::add_constantvalues() {
+  // @@protoc_insertion_point(field_add:klee.ProtoArray.constantValues)
+  return constantvalues_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr >*
+ProtoArray::mutable_constantvalues() {
+  // @@protoc_insertion_point(field_mutable_list:klee.ProtoArray.constantValues)
+  return &constantvalues_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr >&
+ProtoArray::constantvalues() const {
+  // @@protoc_insertion_point(field_list:klee.ProtoArray.constantValues)
+  return constantvalues_;
 }
 
 // -------------------------------------------------------------------
@@ -1238,6 +1771,258 @@ ProtoAssignment::binding() const {
 
 // -------------------------------------------------------------------
 
+// ProtoConstExpr
+
+// uint32 constExprBWidth = 1;
+inline void ProtoConstExpr::clear_constexprbwidth() {
+  constexprbwidth_ = 0u;
+}
+inline ::google::protobuf::uint32 ProtoConstExpr::constexprbwidth() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoConstExpr.constExprBWidth)
+  return constexprbwidth_;
+}
+inline void ProtoConstExpr::set_constexprbwidth(::google::protobuf::uint32 value) {
+  
+  constexprbwidth_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoConstExpr.constExprBWidth)
+}
+
+// uint64 constExprVal = 2;
+inline void ProtoConstExpr::clear_constexprval() {
+  constexprval_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 ProtoConstExpr::constexprval() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoConstExpr.constExprVal)
+  return constexprval_;
+}
+inline void ProtoConstExpr::set_constexprval(::google::protobuf::uint64 value) {
+  
+  constexprval_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoConstExpr.constExprVal)
+}
+
+// -------------------------------------------------------------------
+
+// ProtoUpdateNode
+
+// .klee.ProtoExpr updateIndex = 1;
+inline bool ProtoUpdateNode::has_updateindex() const {
+  return this != internal_default_instance() && updateindex_ != NULL;
+}
+inline void ProtoUpdateNode::clear_updateindex() {
+  if (GetArenaNoVirtual() == NULL && updateindex_ != NULL) {
+    delete updateindex_;
+  }
+  updateindex_ = NULL;
+}
+inline const ::klee::ProtoExpr& ProtoUpdateNode::updateindex() const {
+  const ::klee::ProtoExpr* p = updateindex_;
+  // @@protoc_insertion_point(field_get:klee.ProtoUpdateNode.updateIndex)
+  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoExpr*>(
+      &::klee::_ProtoExpr_default_instance_);
+}
+inline ::klee::ProtoExpr* ProtoUpdateNode::release_updateindex() {
+  // @@protoc_insertion_point(field_release:klee.ProtoUpdateNode.updateIndex)
+  
+  ::klee::ProtoExpr* temp = updateindex_;
+  updateindex_ = NULL;
+  return temp;
+}
+inline ::klee::ProtoExpr* ProtoUpdateNode::mutable_updateindex() {
+  
+  if (updateindex_ == NULL) {
+    updateindex_ = new ::klee::ProtoExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoUpdateNode.updateIndex)
+  return updateindex_;
+}
+inline void ProtoUpdateNode::set_allocated_updateindex(::klee::ProtoExpr* updateindex) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete updateindex_;
+  }
+  if (updateindex) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      updateindex = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, updateindex, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  updateindex_ = updateindex;
+  // @@protoc_insertion_point(field_set_allocated:klee.ProtoUpdateNode.updateIndex)
+}
+
+// .klee.ProtoExpr updateValue = 2;
+inline bool ProtoUpdateNode::has_updatevalue() const {
+  return this != internal_default_instance() && updatevalue_ != NULL;
+}
+inline void ProtoUpdateNode::clear_updatevalue() {
+  if (GetArenaNoVirtual() == NULL && updatevalue_ != NULL) {
+    delete updatevalue_;
+  }
+  updatevalue_ = NULL;
+}
+inline const ::klee::ProtoExpr& ProtoUpdateNode::updatevalue() const {
+  const ::klee::ProtoExpr* p = updatevalue_;
+  // @@protoc_insertion_point(field_get:klee.ProtoUpdateNode.updateValue)
+  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoExpr*>(
+      &::klee::_ProtoExpr_default_instance_);
+}
+inline ::klee::ProtoExpr* ProtoUpdateNode::release_updatevalue() {
+  // @@protoc_insertion_point(field_release:klee.ProtoUpdateNode.updateValue)
+  
+  ::klee::ProtoExpr* temp = updatevalue_;
+  updatevalue_ = NULL;
+  return temp;
+}
+inline ::klee::ProtoExpr* ProtoUpdateNode::mutable_updatevalue() {
+  
+  if (updatevalue_ == NULL) {
+    updatevalue_ = new ::klee::ProtoExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoUpdateNode.updateValue)
+  return updatevalue_;
+}
+inline void ProtoUpdateNode::set_allocated_updatevalue(::klee::ProtoExpr* updatevalue) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete updatevalue_;
+  }
+  if (updatevalue) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      updatevalue = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, updatevalue, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  updatevalue_ = updatevalue;
+  // @@protoc_insertion_point(field_set_allocated:klee.ProtoUpdateNode.updateValue)
+}
+
+// -------------------------------------------------------------------
+
+// ProtoReadExpr
+
+// repeated .klee.ProtoUpdateNode updateList = 1;
+inline int ProtoReadExpr::updatelist_size() const {
+  return updatelist_.size();
+}
+inline void ProtoReadExpr::clear_updatelist() {
+  updatelist_.Clear();
+}
+inline const ::klee::ProtoUpdateNode& ProtoReadExpr::updatelist(int index) const {
+  // @@protoc_insertion_point(field_get:klee.ProtoReadExpr.updateList)
+  return updatelist_.Get(index);
+}
+inline ::klee::ProtoUpdateNode* ProtoReadExpr::mutable_updatelist(int index) {
+  // @@protoc_insertion_point(field_mutable:klee.ProtoReadExpr.updateList)
+  return updatelist_.Mutable(index);
+}
+inline ::klee::ProtoUpdateNode* ProtoReadExpr::add_updatelist() {
+  // @@protoc_insertion_point(field_add:klee.ProtoReadExpr.updateList)
+  return updatelist_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >*
+ProtoReadExpr::mutable_updatelist() {
+  // @@protoc_insertion_point(field_mutable_list:klee.ProtoReadExpr.updateList)
+  return &updatelist_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >&
+ProtoReadExpr::updatelist() const {
+  // @@protoc_insertion_point(field_list:klee.ProtoReadExpr.updateList)
+  return updatelist_;
+}
+
+// .klee.ProtoArray root = 2;
+inline bool ProtoReadExpr::has_root() const {
+  return this != internal_default_instance() && root_ != NULL;
+}
+inline void ProtoReadExpr::clear_root() {
+  if (GetArenaNoVirtual() == NULL && root_ != NULL) {
+    delete root_;
+  }
+  root_ = NULL;
+}
+inline const ::klee::ProtoArray& ProtoReadExpr::root() const {
+  const ::klee::ProtoArray* p = root_;
+  // @@protoc_insertion_point(field_get:klee.ProtoReadExpr.root)
+  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoArray*>(
+      &::klee::_ProtoArray_default_instance_);
+}
+inline ::klee::ProtoArray* ProtoReadExpr::release_root() {
+  // @@protoc_insertion_point(field_release:klee.ProtoReadExpr.root)
+  
+  ::klee::ProtoArray* temp = root_;
+  root_ = NULL;
+  return temp;
+}
+inline ::klee::ProtoArray* ProtoReadExpr::mutable_root() {
+  
+  if (root_ == NULL) {
+    root_ = new ::klee::ProtoArray;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoReadExpr.root)
+  return root_;
+}
+inline void ProtoReadExpr::set_allocated_root(::klee::ProtoArray* root) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete root_;
+  }
+  if (root) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      root = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, root, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  root_ = root;
+  // @@protoc_insertion_point(field_set_allocated:klee.ProtoReadExpr.root)
+}
+
+// -------------------------------------------------------------------
+
+// ProtoExtractExpr
+
+// uint32 extractBitOff = 1;
+inline void ProtoExtractExpr::clear_extractbitoff() {
+  extractbitoff_ = 0u;
+}
+inline ::google::protobuf::uint32 ProtoExtractExpr::extractbitoff() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExtractExpr.extractBitOff)
+  return extractbitoff_;
+}
+inline void ProtoExtractExpr::set_extractbitoff(::google::protobuf::uint32 value) {
+  
+  extractbitoff_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoExtractExpr.extractBitOff)
+}
+
+// uint32 extractWidth = 2;
+inline void ProtoExtractExpr::clear_extractwidth() {
+  extractwidth_ = 0u;
+}
+inline ::google::protobuf::uint32 ProtoExtractExpr::extractwidth() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExtractExpr.extractWidth)
+  return extractwidth_;
+}
+inline void ProtoExtractExpr::set_extractwidth(::google::protobuf::uint32 value) {
+  
+  extractwidth_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoExtractExpr.extractWidth)
+}
+
+// -------------------------------------------------------------------
+
 // ProtoExpr
 
 // uint32 width = 1;
@@ -1340,34 +2125,135 @@ ProtoExpr::kids() const {
   return kids_;
 }
 
-// uint32 constExprBWidth = 7;
-inline void ProtoExpr::clear_constexprbwidth() {
-  constexprbwidth_ = 0u;
+// .klee.ProtoConstExpr constData = 7;
+inline bool ProtoExpr::has_constdata() const {
+  return specialData_case() == kConstData;
 }
-inline ::google::protobuf::uint32 ProtoExpr::constexprbwidth() const {
-  // @@protoc_insertion_point(field_get:klee.ProtoExpr.constExprBWidth)
-  return constexprbwidth_;
+inline void ProtoExpr::set_has_constdata() {
+  _oneof_case_[0] = kConstData;
 }
-inline void ProtoExpr::set_constexprbwidth(::google::protobuf::uint32 value) {
-  
-  constexprbwidth_ = value;
-  // @@protoc_insertion_point(field_set:klee.ProtoExpr.constExprBWidth)
+inline void ProtoExpr::clear_constdata() {
+  if (has_constdata()) {
+    delete specialData_.constdata_;
+    clear_has_specialData();
+  }
+}
+inline ::klee::ProtoConstExpr* ProtoExpr::release_constdata() {
+  // @@protoc_insertion_point(field_release:klee.ProtoExpr.constData)
+  if (has_constdata()) {
+    clear_has_specialData();
+      ::klee::ProtoConstExpr* temp = specialData_.constdata_;
+    specialData_.constdata_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::klee::ProtoConstExpr& ProtoExpr::constdata() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExpr.constData)
+  return has_constdata()
+      ? *specialData_.constdata_
+      : *reinterpret_cast< ::klee::ProtoConstExpr*>(&::klee::_ProtoConstExpr_default_instance_);
+}
+inline ::klee::ProtoConstExpr* ProtoExpr::mutable_constdata() {
+  if (!has_constdata()) {
+    clear_specialData();
+    set_has_constdata();
+    specialData_.constdata_ = new ::klee::ProtoConstExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoExpr.constData)
+  return specialData_.constdata_;
 }
 
-// uint64 constExprVal = 8;
-inline void ProtoExpr::clear_constexprval() {
-  constexprval_ = GOOGLE_ULONGLONG(0);
+// .klee.ProtoReadExpr readData = 8;
+inline bool ProtoExpr::has_readdata() const {
+  return specialData_case() == kReadData;
 }
-inline ::google::protobuf::uint64 ProtoExpr::constexprval() const {
-  // @@protoc_insertion_point(field_get:klee.ProtoExpr.constExprVal)
-  return constexprval_;
+inline void ProtoExpr::set_has_readdata() {
+  _oneof_case_[0] = kReadData;
 }
-inline void ProtoExpr::set_constexprval(::google::protobuf::uint64 value) {
-  
-  constexprval_ = value;
-  // @@protoc_insertion_point(field_set:klee.ProtoExpr.constExprVal)
+inline void ProtoExpr::clear_readdata() {
+  if (has_readdata()) {
+    delete specialData_.readdata_;
+    clear_has_specialData();
+  }
+}
+inline ::klee::ProtoReadExpr* ProtoExpr::release_readdata() {
+  // @@protoc_insertion_point(field_release:klee.ProtoExpr.readData)
+  if (has_readdata()) {
+    clear_has_specialData();
+      ::klee::ProtoReadExpr* temp = specialData_.readdata_;
+    specialData_.readdata_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::klee::ProtoReadExpr& ProtoExpr::readdata() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExpr.readData)
+  return has_readdata()
+      ? *specialData_.readdata_
+      : *reinterpret_cast< ::klee::ProtoReadExpr*>(&::klee::_ProtoReadExpr_default_instance_);
+}
+inline ::klee::ProtoReadExpr* ProtoExpr::mutable_readdata() {
+  if (!has_readdata()) {
+    clear_specialData();
+    set_has_readdata();
+    specialData_.readdata_ = new ::klee::ProtoReadExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoExpr.readData)
+  return specialData_.readdata_;
 }
 
+// .klee.ProtoExtractExpr extractData = 9;
+inline bool ProtoExpr::has_extractdata() const {
+  return specialData_case() == kExtractData;
+}
+inline void ProtoExpr::set_has_extractdata() {
+  _oneof_case_[0] = kExtractData;
+}
+inline void ProtoExpr::clear_extractdata() {
+  if (has_extractdata()) {
+    delete specialData_.extractdata_;
+    clear_has_specialData();
+  }
+}
+inline ::klee::ProtoExtractExpr* ProtoExpr::release_extractdata() {
+  // @@protoc_insertion_point(field_release:klee.ProtoExpr.extractData)
+  if (has_extractdata()) {
+    clear_has_specialData();
+      ::klee::ProtoExtractExpr* temp = specialData_.extractdata_;
+    specialData_.extractdata_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::klee::ProtoExtractExpr& ProtoExpr::extractdata() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExpr.extractData)
+  return has_extractdata()
+      ? *specialData_.extractdata_
+      : *reinterpret_cast< ::klee::ProtoExtractExpr*>(&::klee::_ProtoExtractExpr_default_instance_);
+}
+inline ::klee::ProtoExtractExpr* ProtoExpr::mutable_extractdata() {
+  if (!has_extractdata()) {
+    clear_specialData();
+    set_has_extractdata();
+    specialData_.extractdata_ = new ::klee::ProtoExtractExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoExpr.extractData)
+  return specialData_.extractdata_;
+}
+
+inline bool ProtoExpr::has_specialData() const {
+  return specialData_case() != SPECIALDATA_NOT_SET;
+}
+inline void ProtoExpr::clear_has_specialData() {
+  _oneof_case_[0] = SPECIALDATA_NOT_SET;
+}
+inline ProtoExpr::SpecialDataCase ProtoExpr::specialData_case() const {
+  return ProtoExpr::SpecialDataCase(_oneof_case_[0]);
+}
 // -------------------------------------------------------------------
 
 // ProtoCacheElem
@@ -1489,6 +2375,14 @@ ProtoCache::elem() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

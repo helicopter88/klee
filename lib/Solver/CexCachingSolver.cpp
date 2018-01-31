@@ -89,12 +89,13 @@ public:
         pc->ParseFromIstream(&ifs);
         protoCache = pc;
         for(const ProtoCacheElem& e : pc->elem()) {
-            e.key();
+            KeyType exprs;
             for(const ProtoExpr& expr : e.key()) {
-                Expr::deserialize(expr);
+                exprs.insert(Expr::deserialize(expr));
             }
-            e.assignment();
             auto* a = new Assignment(e.assignment());
+            std::pair<assignmentsTable_ty::iterator, bool> res = assignmentsTable.insert(a);
+            cache.insert(exprs, a);
         }
 
     }
@@ -240,6 +241,7 @@ bool CexCachingSolver::lookupAssignment(const Query &query,
 
 bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
     KeyType key;
+
     if (lookupAssignment(query, key, result))
         return true;
 
@@ -283,9 +285,12 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
     for (const auto &k : key) {
         auto* e = k->serialize();
         pc->mutable_key()->AddAllocated(e);
+        std::cout << "Comparing expressions: " << Expr::deserialize(*e)->compare(*k.get()) << std::endl;
+
+        std::cout << Expr::deserialize(*e)->classof(k.get()) << std::endl;
+        std::cout << k->hash() << std::endl;
     }
     ProtoAssignment* pa = binding->serialize();
-
     pc->set_allocated_assignment(pa);
     protoCache->mutable_elem()->AddAllocated(pc);
 /*#ifdef ENABLE_KLEE_DEBUG

@@ -607,6 +607,7 @@ public:
     return E->getKind() == Expr::Read;
   }
   static bool classof(const ReadExpr *) { return true; }
+    virtual ProtoExpr* serialize() const;
 };
 
 
@@ -778,7 +779,7 @@ public:
   }
 
   virtual unsigned computeHash();
-
+  virtual ProtoExpr* serialize() const;
 private:
   ExtractExpr(const ref<Expr> &e, unsigned b, Width w) 
     : expr(e),offset(b),width(w) {}
