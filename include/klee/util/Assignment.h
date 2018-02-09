@@ -28,17 +28,7 @@ namespace klee {
     bindings_ty bindings;
     
   public:
-      Assignment(const ProtoAssignment& pa):allowFreeValues(pa.allowfreevalues()) {
-        for(const ProtoBinding& bin : pa.binding()) {
-          bin.key();
-            auto* a = new Array(bin.key());
-          std::vector<unsigned char> val;
-          for(const auto& b : bin.value().value()) {
-            val.push_back(b);
-          }
-            bindings.insert(std::make_pair(a, val));
-        }
-      }
+      static Assignment* deserialize(const ProtoAssignment& pa);
     Assignment(bool _allowFreeValues=false) 
       : allowFreeValues(_allowFreeValues) {}
     Assignment(const std::vector<const Array*> &objects,
@@ -110,6 +100,7 @@ namespace klee {
         return false;
     return true;
   }
+
 }
 
 #endif

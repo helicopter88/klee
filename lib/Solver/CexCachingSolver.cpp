@@ -66,6 +66,8 @@ class CexCachingSolver : public SolverImpl {
     Solver *solver;
 
     MapOfSets<ref<Expr>, Assignment *> cache;
+    MapOfSets<ref<Expr>, Assignment *> previousCache;
+
     ProtoCache* protoCache;
     // memo table
     assignmentsTable_ty assignmentsTable;
@@ -93,9 +95,8 @@ public:
             for(const ProtoExpr& expr : e.key()) {
                 exprs.insert(Expr::deserialize(expr));
             }
-            auto* a = new Assignment(e.assignment());
-            std::pair<assignmentsTable_ty::iterator, bool> res = assignmentsTable.insert(a);
-            cache.insert(exprs, a);
+            Assignment* a = Assignment::deserialize(e.assignment());
+            previousCache.insert(exprs, a);
         }
 
     }
@@ -148,39 +149,72 @@ struct NullOrSatisfyingAssignment {
 /// unsatisfiable query).
 /// \return - True if a cached result was found.
 bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
-    Assignment *const *lookup = cache.lookup(key);
+
+    Assignment** lookup = previousCache.lookup(key);
     if (lookup) {
+        std::cout << "Previous cache had a hit!" << std::endl;
         result = *lookup;
-        return true;
+
+        if (!result->satisfies(key.begin(), key.end())) {
+
+            for (auto &k : key) {
+                k->dump();
+            }
+            result->dump();
+            std::cout << ("Generated assignment doesn't match query") << std::endl;
+        } else {
+            return true;
+        }
     }
 
-    if (CexCacheTryAll) {
-        // Look for a satisfying assignment for a superset, which is trivially an
-        // assignment for any subset.
-        Assignment **lookup = 0;
-        if (CexCacheSuperSet)
-            lookup = cache.findSuperset(key, NonNullAssignment());
+        lookup = cache.lookup(key);
 
-        // Otherwise, look for a subset which is unsatisfiable, see below.
-        if (!lookup)
-            lookup = cache.findSubset(key, NullAssignment());
-
-        // If either lookup succeeded, then we have a cached solution.
         if (lookup) {
+            std::cout << "New cache had a hit!" << std::endl;
+            /*auto* pc = new ProtoCacheElem();
+            for(auto& k : key) {
+                pc->mutable_key()->AddAllocated(k->serialize());
+            }
+            pc->set_allocated_assignment((*lookup)->serialize());
+            protoCache->mutable_elem()->AddAllocated(pc);*/
             result = *lookup;
             return true;
         }
 
-        // Otherwise, iterate through the set of current assignments to see if one
-        // of them satisfies the query.
-        for (assignmentsTable_ty::iterator it = assignmentsTable.begin(),
-                     ie = assignmentsTable.end(); it != ie; ++it) {
-            Assignment *a = *it;
-            if (a->satisfies(key.begin(), key.end())) {
-                result = a;
+        if (CexCacheTryAll) {
+            // Look for a satisfying assignment for a superset, which is trivially an
+            // assignment for any subset.
+            Assignment **lookup = 0;
+            if (CexCacheSuperSet)
+                lookup = cache.findSuperset(key, NonNullAssignment());
+
+            // Otherwise, look for a subset which is unsatisfiable, see below.
+            if (!lookup)
+                lookup = cache.findSubset(key, NullAssignment());
+
+            // If either lookup succeeded, then we have a cached solution.
+            if (lookup) {
+                result = *lookup;
+                /*auto* pc = new ProtoCacheElem();
+                for(auto& k : key) {
+                    pc->mutable_key()->AddAllocated(k->serialize());
+                }
+                pc->set_allocated_assignment((*lookup)->serialize());
+                protoCache->mutable_elem()->AddAllocated(pc);*/
                 return true;
             }
-        }
+
+            // Otherwise, iterate through the set of current assignments to see if one
+            // of them satisfies the query.
+            for (assignmentsTable_ty::iterator it = assignmentsTable.begin(),
+                         ie = assignmentsTable.end(); it != ie; ++it) {
+                Assignment *a = *it;
+                if (a->satisfies(key.begin(), key.end())) {
+                    result = a;
+                    return true;
+                }
+            }
+
     } else {
         // FIXME: Which order? one is sure to be better.
 
@@ -201,6 +235,13 @@ bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
         // If either lookup succeeded, then we have a cached solution.
         if (lookup) {
             result = *lookup;
+            auto* pc = new ProtoCacheElem();
+            for(auto& k : key) {
+                k->dump();
+                pc->mutable_key()->AddAllocated(k->serialize());
+            }
+            pc->set_allocated_assignment((*lookup)->serialize());
+            protoCache->mutable_elem()->AddAllocated(pc);
             return true;
         }
     }
@@ -285,10 +326,28 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
     for (const auto &k : key) {
         auto* e = k->serialize();
         pc->mutable_key()->AddAllocated(e);
-        std::cout << "Comparing expressions: " << Expr::deserialize(*e)->compare(*k.get()) << std::endl;
+        auto newExpr = Expr::deserialize(*e);
+        if(!newExpr.compare(k.get())) {
+            std::cout << newExpr->hash() << " " << k->hash() << std::endl;
+            unsigned s = k->getNumKids();
+            k->dump();
+            newExpr->dump();
+            std::cout << "Kids:" << std::endl;
+            for(unsigned i = 0; i < s; i++) {
+                if(k->getKid(i) != newExpr->getKid(i)) {
+                    auto kid = k->getKid(i);
+                    kid->dump();
+                    std::cout << "--" << std::endl;
+                    newExpr->getKid(i)->dump();
+                    unsigned sKids = k->getNumKids();
+                    assert(sKids == newExpr->getNumKids());
 
-        std::cout << Expr::deserialize(*e)->classof(k.get()) << std::endl;
-        std::cout << k->hash() << std::endl;
+                }
+                std::cout << "End of kid " << i << std::endl;
+            }
+
+            std::cout << "======" << std::endl;
+        }
     }
     ProtoAssignment* pa = binding->serialize();
     pc->set_allocated_assignment(pa);

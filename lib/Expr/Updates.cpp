@@ -157,16 +157,17 @@ void UpdateList::extend(const ref<Expr> &index, const ref<Expr> &value) {
 }
 
 int UpdateList::compare(const UpdateList &b) const {
-  if (root->name != b.root->name)
-    return root->name < b.root->name ? -1 : 1;
-
+  if (root->name != b.root->name) {
+      return root->name < b.root->name ? -1 : 1;
+  }
   // Check the root itself in case we have separate objects with the
   // same name.
-  if (root != b.root)
-    return root < b.root ? -1 : 1;
+  if ((*root) != *(b.root)) {
+      return root < b.root ? -1 : 1;
+  }
 
   if (getSize() < b.getSize()) return -1;
-  else if (getSize() > b.getSize()) return 1;    
+  else if (getSize() > b.getSize()) return 1;
 
   // XXX build comparison into update, make fast
   const UpdateNode *an=head, *bn=b.head;
@@ -174,8 +175,9 @@ int UpdateList::compare(const UpdateList &b) const {
     if (an==bn) { // exploit shared list structure
       return 0;
     } else {
-      if (int res = an->compare(*bn))
-        return res;
+      if (int res = an->compare(*bn)) {
+         return res;
+      }
     }
   }
   assert(!an && !bn);  

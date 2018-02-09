@@ -496,8 +496,7 @@ public:
   /// the array size.
   const std::vector<ref<ConstantExpr> > constantValues;
     ProtoArray* serialize() const;
-    Array(const ProtoArray& protoArray) : name(protoArray.name()), size(protoArray.size()), domain(protoArray.domain()), range(protoArray.range()) {}
-    ~Array();
+    static const Array* deserialize(const ProtoArray& protoArray);
 private:
   unsigned hashValue;
 
@@ -520,6 +519,7 @@ private:
         const ref<ConstantExpr> *constantValuesEnd = 0,
         Expr::Width _domain = Expr::Int32, Expr::Width _range = Expr::Int8);
 
+    ~Array();
 public:
   bool isSymbolicArray() const { return constantValues.empty(); }
   bool isConstantArray() const { return !isSymbolicArray(); }
@@ -532,7 +532,9 @@ public:
   /// ComputeHash must take into account the name, the size, the domain, and the range
   unsigned computeHash();
   unsigned hash() const { return hashValue; }
-  friend class ArrayCache;
+    bool operator==(const Array& rhs) const;
+    bool operator!=(const Array& rhs) const;
+    friend class ArrayCache;
 
 
 };
@@ -591,7 +593,6 @@ public:
   ref<Expr> getKid(unsigned i) const { return !i ? index : 0; }
   
   int compareContents(const Expr &b) const;
-
   virtual ref<Expr> rebuild(ref<Expr> kids[]) const {
     return create(updates, kids[0]);
   }
@@ -779,7 +780,7 @@ public:
   }
 
   virtual unsigned computeHash();
-  virtual ProtoExpr* serialize() const;
+  virtual ProtoExpr * serialize() const;
 private:
   ExtractExpr(const ref<Expr> &e, unsigned b, Width w) 
     : expr(e),offset(b),width(w) {}

@@ -36,7 +36,7 @@ namespace protobuf_Cache_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[11];
+  static const ::google::protobuf::internal::ParseTable schema[9];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -44,27 +44,18 @@ struct TableStruct {
 void AddDescriptors();
 void InitDefaultsProtoArrayImpl();
 void InitDefaultsProtoArray();
-void InitDefaultsProtoBitVectorImpl();
-void InitDefaultsProtoBitVector();
-void InitDefaultsProtoBindingImpl();
-void InitDefaultsProtoBinding();
 void InitDefaultsProtoAssignmentImpl();
 void InitDefaultsProtoAssignment();
 void InitDefaultsProtoConstExprImpl();
 void InitDefaultsProtoConstExpr();
-void InitDefaultsProtoExtractExprImpl();
-void InitDefaultsProtoExtractExpr();
 void InitDefaultsProtoCacheElemImpl();
 void InitDefaultsProtoCacheElem();
 void InitDefaultsProtoCacheImpl();
 void InitDefaultsProtoCache();
 inline void InitDefaults() {
   InitDefaultsProtoArray();
-  InitDefaultsProtoBitVector();
-  InitDefaultsProtoBinding();
   InitDefaultsProtoAssignment();
   InitDefaultsProtoConstExpr();
-  InitDefaultsProtoExtractExpr();
   InitDefaultsProtoCacheElem();
   InitDefaultsProtoCache();
 }
@@ -76,12 +67,6 @@ extern ProtoArrayDefaultTypeInternal _ProtoArray_default_instance_;
 class ProtoAssignment;
 class ProtoAssignmentDefaultTypeInternal;
 extern ProtoAssignmentDefaultTypeInternal _ProtoAssignment_default_instance_;
-class ProtoBinding;
-class ProtoBindingDefaultTypeInternal;
-extern ProtoBindingDefaultTypeInternal _ProtoBinding_default_instance_;
-class ProtoBitVector;
-class ProtoBitVectorDefaultTypeInternal;
-extern ProtoBitVectorDefaultTypeInternal _ProtoBitVector_default_instance_;
 class ProtoCache;
 class ProtoCacheDefaultTypeInternal;
 extern ProtoCacheDefaultTypeInternal _ProtoCache_default_instance_;
@@ -256,224 +241,6 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
 };
 // -------------------------------------------------------------------
 
-class ProtoBitVector : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoBitVector) */ {
- public:
-  ProtoBitVector();
-  virtual ~ProtoBitVector();
-
-  ProtoBitVector(const ProtoBitVector& from);
-
-  inline ProtoBitVector& operator=(const ProtoBitVector& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  ProtoBitVector(ProtoBitVector&& from) noexcept
-    : ProtoBitVector() {
-    *this = ::std::move(from);
-  }
-
-  inline ProtoBitVector& operator=(ProtoBitVector&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const ProtoBitVector& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const ProtoBitVector* internal_default_instance() {
-    return reinterpret_cast<const ProtoBitVector*>(
-               &_ProtoBitVector_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    1;
-
-  void Swap(ProtoBitVector* other);
-  friend void swap(ProtoBitVector& a, ProtoBitVector& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline ProtoBitVector* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  ProtoBitVector* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
-  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
-  void CopyFrom(const ProtoBitVector& from);
-  void MergeFrom(const ProtoBitVector& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const PROTOBUF_FINAL;
-  void InternalSwap(ProtoBitVector* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // repeated uint32 value = 1;
-  int value_size() const;
-  void clear_value();
-  static const int kValueFieldNumber = 1;
-  ::google::protobuf::uint32 value(int index) const;
-  void set_value(int index, ::google::protobuf::uint32 value);
-  void add_value(::google::protobuf::uint32 value);
-  const ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >&
-      value() const;
-  ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >*
-      mutable_value();
-
-  // @@protoc_insertion_point(class_scope:klee.ProtoBitVector)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedField< ::google::protobuf::uint32 > value_;
-  mutable int _value_cached_byte_size_;
-  mutable int _cached_size_;
-  friend struct ::protobuf_Cache_2eproto::TableStruct;
-  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoBitVectorImpl();
-};
-// -------------------------------------------------------------------
-
-class ProtoBinding : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoBinding) */ {
- public:
-  ProtoBinding();
-  virtual ~ProtoBinding();
-
-  ProtoBinding(const ProtoBinding& from);
-
-  inline ProtoBinding& operator=(const ProtoBinding& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  ProtoBinding(ProtoBinding&& from) noexcept
-    : ProtoBinding() {
-    *this = ::std::move(from);
-  }
-
-  inline ProtoBinding& operator=(ProtoBinding&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const ProtoBinding& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const ProtoBinding* internal_default_instance() {
-    return reinterpret_cast<const ProtoBinding*>(
-               &_ProtoBinding_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    2;
-
-  void Swap(ProtoBinding* other);
-  friend void swap(ProtoBinding& a, ProtoBinding& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline ProtoBinding* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  ProtoBinding* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
-  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
-  void CopyFrom(const ProtoBinding& from);
-  void MergeFrom(const ProtoBinding& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const PROTOBUF_FINAL;
-  void InternalSwap(ProtoBinding* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // .klee.ProtoArray key = 1;
-  bool has_key() const;
-  void clear_key();
-  static const int kKeyFieldNumber = 1;
-  const ::klee::ProtoArray& key() const;
-  ::klee::ProtoArray* release_key();
-  ::klee::ProtoArray* mutable_key();
-  void set_allocated_key(::klee::ProtoArray* key);
-
-  // .klee.ProtoBitVector value = 2;
-  bool has_value() const;
-  void clear_value();
-  static const int kValueFieldNumber = 2;
-  const ::klee::ProtoBitVector& value() const;
-  ::klee::ProtoBitVector* release_value();
-  ::klee::ProtoBitVector* mutable_value();
-  void set_allocated_value(::klee::ProtoBitVector* value);
-
-  // @@protoc_insertion_point(class_scope:klee.ProtoBinding)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::klee::ProtoArray* key_;
-  ::klee::ProtoBitVector* value_;
-  mutable int _cached_size_;
-  friend struct ::protobuf_Cache_2eproto::TableStruct;
-  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoBindingImpl();
-};
-// -------------------------------------------------------------------
-
 class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoAssignment) */ {
  public:
   ProtoAssignment();
@@ -509,7 +276,7 @@ class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion
                &_ProtoAssignment_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    3;
+    1;
 
   void Swap(ProtoAssignment* other);
   friend void swap(ProtoAssignment& a, ProtoAssignment& b) {
@@ -556,17 +323,39 @@ class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion
 
   // accessors -------------------------------------------------------
 
-  // repeated .klee.ProtoBinding binding = 2;
-  int binding_size() const;
-  void clear_binding();
-  static const int kBindingFieldNumber = 2;
-  const ::klee::ProtoBinding& binding(int index) const;
-  ::klee::ProtoBinding* mutable_binding(int index);
-  ::klee::ProtoBinding* add_binding();
-  ::google::protobuf::RepeatedPtrField< ::klee::ProtoBinding >*
-      mutable_binding();
-  const ::google::protobuf::RepeatedPtrField< ::klee::ProtoBinding >&
-      binding() const;
+  // repeated .klee.ProtoArray objects = 2;
+  int objects_size() const;
+  void clear_objects();
+  static const int kObjectsFieldNumber = 2;
+  const ::klee::ProtoArray& objects(int index) const;
+  ::klee::ProtoArray* mutable_objects(int index);
+  ::klee::ProtoArray* add_objects();
+  ::google::protobuf::RepeatedPtrField< ::klee::ProtoArray >*
+      mutable_objects();
+  const ::google::protobuf::RepeatedPtrField< ::klee::ProtoArray >&
+      objects() const;
+
+  // repeated bytes values = 3;
+  int values_size() const;
+  void clear_values();
+  static const int kValuesFieldNumber = 3;
+  const ::std::string& values(int index) const;
+  ::std::string* mutable_values(int index);
+  void set_values(int index, const ::std::string& value);
+  #if LANG_CXX11
+  void set_values(int index, ::std::string&& value);
+  #endif
+  void set_values(int index, const char* value);
+  void set_values(int index, const void* value, size_t size);
+  ::std::string* add_values();
+  void add_values(const ::std::string& value);
+  #if LANG_CXX11
+  void add_values(::std::string&& value);
+  #endif
+  void add_values(const char* value);
+  void add_values(const void* value, size_t size);
+  const ::google::protobuf::RepeatedPtrField< ::std::string>& values() const;
+  ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_values();
 
   // bool allowFreeValues = 1;
   void clear_allowfreevalues();
@@ -578,7 +367,8 @@ class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedPtrField< ::klee::ProtoBinding > binding_;
+  ::google::protobuf::RepeatedPtrField< ::klee::ProtoArray > objects_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> values_;
   bool allowfreevalues_;
   mutable int _cached_size_;
   friend struct ::protobuf_Cache_2eproto::TableStruct;
@@ -621,7 +411,7 @@ class ProtoConstExpr : public ::google::protobuf::Message /* @@protoc_insertion_
                &_ProtoConstExpr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    4;
+    2;
 
   void Swap(ProtoConstExpr* other);
   friend void swap(ProtoConstExpr& a, ProtoConstExpr& b) {
@@ -727,7 +517,7 @@ class ProtoUpdateNode : public ::google::protobuf::Message /* @@protoc_insertion
                &_ProtoUpdateNode_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    5;
+    3;
 
   void Swap(ProtoUpdateNode* other);
   friend void swap(ProtoUpdateNode& a, ProtoUpdateNode& b) {
@@ -839,7 +629,7 @@ class ProtoReadExpr : public ::google::protobuf::Message /* @@protoc_insertion_p
                &_ProtoReadExpr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    6;
+    4;
 
   void Swap(ProtoReadExpr* other);
   friend void swap(ProtoReadExpr& a, ProtoReadExpr& b) {
@@ -907,12 +697,22 @@ class ProtoReadExpr : public ::google::protobuf::Message /* @@protoc_insertion_p
   ::klee::ProtoArray* mutable_root();
   void set_allocated_root(::klee::ProtoArray* root);
 
+  // .klee.ProtoExpr expr = 3;
+  bool has_expr() const;
+  void clear_expr();
+  static const int kExprFieldNumber = 3;
+  const ::klee::ProtoExpr& expr() const;
+  ::klee::ProtoExpr* release_expr();
+  ::klee::ProtoExpr* mutable_expr();
+  void set_allocated_expr(::klee::ProtoExpr* expr);
+
   // @@protoc_insertion_point(class_scope:klee.ProtoReadExpr)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode > updatelist_;
   ::klee::ProtoArray* root_;
+  ::klee::ProtoExpr* expr_;
   mutable int _cached_size_;
   friend struct ::protobuf_Cache_2eproto::TableStruct;
   friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
@@ -954,7 +754,7 @@ class ProtoExtractExpr : public ::google::protobuf::Message /* @@protoc_insertio
                &_ProtoExtractExpr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    5;
 
   void Swap(ProtoExtractExpr* other);
   friend void swap(ProtoExtractExpr& a, ProtoExtractExpr& b) {
@@ -1001,6 +801,15 @@ class ProtoExtractExpr : public ::google::protobuf::Message /* @@protoc_insertio
 
   // accessors -------------------------------------------------------
 
+  // .klee.ProtoExpr expr = 3;
+  bool has_expr() const;
+  void clear_expr();
+  static const int kExprFieldNumber = 3;
+  const ::klee::ProtoExpr& expr() const;
+  ::klee::ProtoExpr* release_expr();
+  ::klee::ProtoExpr* mutable_expr();
+  void set_allocated_expr(::klee::ProtoExpr* expr);
+
   // uint32 extractBitOff = 1;
   void clear_extractbitoff();
   static const int kExtractBitOffFieldNumber = 1;
@@ -1017,11 +826,12 @@ class ProtoExtractExpr : public ::google::protobuf::Message /* @@protoc_insertio
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::klee::ProtoExpr* expr_;
   ::google::protobuf::uint32 extractbitoff_;
   ::google::protobuf::uint32 extractwidth_;
   mutable int _cached_size_;
   friend struct ::protobuf_Cache_2eproto::TableStruct;
-  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoExtractExprImpl();
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
 };
 // -------------------------------------------------------------------
 
@@ -1067,7 +877,7 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
                &_ProtoExpr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    6;
 
   void Swap(ProtoExpr* other);
   friend void swap(ProtoExpr& a, ProtoExpr& b) {
@@ -1250,7 +1060,7 @@ class ProtoCacheElem : public ::google::protobuf::Message /* @@protoc_insertion_
                &_ProtoCacheElem_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    7;
 
   void Swap(ProtoCacheElem* other);
   friend void swap(ProtoCacheElem& a, ProtoCacheElem& b) {
@@ -1365,7 +1175,7 @@ class ProtoCache : public ::google::protobuf::Message /* @@protoc_insertion_poin
                &_ProtoCache_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    8;
 
   void Swap(ProtoCache* other);
   friend void swap(ProtoCache& a, ProtoCache& b) {
@@ -1585,144 +1395,6 @@ ProtoArray::constantvalues() const {
 
 // -------------------------------------------------------------------
 
-// ProtoBitVector
-
-// repeated uint32 value = 1;
-inline int ProtoBitVector::value_size() const {
-  return value_.size();
-}
-inline void ProtoBitVector::clear_value() {
-  value_.Clear();
-}
-inline ::google::protobuf::uint32 ProtoBitVector::value(int index) const {
-  // @@protoc_insertion_point(field_get:klee.ProtoBitVector.value)
-  return value_.Get(index);
-}
-inline void ProtoBitVector::set_value(int index, ::google::protobuf::uint32 value) {
-  value_.Set(index, value);
-  // @@protoc_insertion_point(field_set:klee.ProtoBitVector.value)
-}
-inline void ProtoBitVector::add_value(::google::protobuf::uint32 value) {
-  value_.Add(value);
-  // @@protoc_insertion_point(field_add:klee.ProtoBitVector.value)
-}
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >&
-ProtoBitVector::value() const {
-  // @@protoc_insertion_point(field_list:klee.ProtoBitVector.value)
-  return value_;
-}
-inline ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >*
-ProtoBitVector::mutable_value() {
-  // @@protoc_insertion_point(field_mutable_list:klee.ProtoBitVector.value)
-  return &value_;
-}
-
-// -------------------------------------------------------------------
-
-// ProtoBinding
-
-// .klee.ProtoArray key = 1;
-inline bool ProtoBinding::has_key() const {
-  return this != internal_default_instance() && key_ != NULL;
-}
-inline void ProtoBinding::clear_key() {
-  if (GetArenaNoVirtual() == NULL && key_ != NULL) {
-    delete key_;
-  }
-  key_ = NULL;
-}
-inline const ::klee::ProtoArray& ProtoBinding::key() const {
-  const ::klee::ProtoArray* p = key_;
-  // @@protoc_insertion_point(field_get:klee.ProtoBinding.key)
-  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoArray*>(
-      &::klee::_ProtoArray_default_instance_);
-}
-inline ::klee::ProtoArray* ProtoBinding::release_key() {
-  // @@protoc_insertion_point(field_release:klee.ProtoBinding.key)
-  
-  ::klee::ProtoArray* temp = key_;
-  key_ = NULL;
-  return temp;
-}
-inline ::klee::ProtoArray* ProtoBinding::mutable_key() {
-  
-  if (key_ == NULL) {
-    key_ = new ::klee::ProtoArray;
-  }
-  // @@protoc_insertion_point(field_mutable:klee.ProtoBinding.key)
-  return key_;
-}
-inline void ProtoBinding::set_allocated_key(::klee::ProtoArray* key) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  if (message_arena == NULL) {
-    delete key_;
-  }
-  if (key) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      key = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, key, submessage_arena);
-    }
-    
-  } else {
-    
-  }
-  key_ = key;
-  // @@protoc_insertion_point(field_set_allocated:klee.ProtoBinding.key)
-}
-
-// .klee.ProtoBitVector value = 2;
-inline bool ProtoBinding::has_value() const {
-  return this != internal_default_instance() && value_ != NULL;
-}
-inline void ProtoBinding::clear_value() {
-  if (GetArenaNoVirtual() == NULL && value_ != NULL) {
-    delete value_;
-  }
-  value_ = NULL;
-}
-inline const ::klee::ProtoBitVector& ProtoBinding::value() const {
-  const ::klee::ProtoBitVector* p = value_;
-  // @@protoc_insertion_point(field_get:klee.ProtoBinding.value)
-  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoBitVector*>(
-      &::klee::_ProtoBitVector_default_instance_);
-}
-inline ::klee::ProtoBitVector* ProtoBinding::release_value() {
-  // @@protoc_insertion_point(field_release:klee.ProtoBinding.value)
-  
-  ::klee::ProtoBitVector* temp = value_;
-  value_ = NULL;
-  return temp;
-}
-inline ::klee::ProtoBitVector* ProtoBinding::mutable_value() {
-  
-  if (value_ == NULL) {
-    value_ = new ::klee::ProtoBitVector;
-  }
-  // @@protoc_insertion_point(field_mutable:klee.ProtoBinding.value)
-  return value_;
-}
-inline void ProtoBinding::set_allocated_value(::klee::ProtoBitVector* value) {
-  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
-  if (message_arena == NULL) {
-    delete value_;
-  }
-  if (value) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
-    if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, value, submessage_arena);
-    }
-    
-  } else {
-    
-  }
-  value_ = value;
-  // @@protoc_insertion_point(field_set_allocated:klee.ProtoBinding.value)
-}
-
-// -------------------------------------------------------------------
-
 // ProtoAssignment
 
 // bool allowFreeValues = 1;
@@ -1739,34 +1411,103 @@ inline void ProtoAssignment::set_allowfreevalues(bool value) {
   // @@protoc_insertion_point(field_set:klee.ProtoAssignment.allowFreeValues)
 }
 
-// repeated .klee.ProtoBinding binding = 2;
-inline int ProtoAssignment::binding_size() const {
-  return binding_.size();
+// repeated .klee.ProtoArray objects = 2;
+inline int ProtoAssignment::objects_size() const {
+  return objects_.size();
 }
-inline void ProtoAssignment::clear_binding() {
-  binding_.Clear();
+inline void ProtoAssignment::clear_objects() {
+  objects_.Clear();
 }
-inline const ::klee::ProtoBinding& ProtoAssignment::binding(int index) const {
-  // @@protoc_insertion_point(field_get:klee.ProtoAssignment.binding)
-  return binding_.Get(index);
+inline const ::klee::ProtoArray& ProtoAssignment::objects(int index) const {
+  // @@protoc_insertion_point(field_get:klee.ProtoAssignment.objects)
+  return objects_.Get(index);
 }
-inline ::klee::ProtoBinding* ProtoAssignment::mutable_binding(int index) {
-  // @@protoc_insertion_point(field_mutable:klee.ProtoAssignment.binding)
-  return binding_.Mutable(index);
+inline ::klee::ProtoArray* ProtoAssignment::mutable_objects(int index) {
+  // @@protoc_insertion_point(field_mutable:klee.ProtoAssignment.objects)
+  return objects_.Mutable(index);
 }
-inline ::klee::ProtoBinding* ProtoAssignment::add_binding() {
-  // @@protoc_insertion_point(field_add:klee.ProtoAssignment.binding)
-  return binding_.Add();
+inline ::klee::ProtoArray* ProtoAssignment::add_objects() {
+  // @@protoc_insertion_point(field_add:klee.ProtoAssignment.objects)
+  return objects_.Add();
 }
-inline ::google::protobuf::RepeatedPtrField< ::klee::ProtoBinding >*
-ProtoAssignment::mutable_binding() {
-  // @@protoc_insertion_point(field_mutable_list:klee.ProtoAssignment.binding)
-  return &binding_;
+inline ::google::protobuf::RepeatedPtrField< ::klee::ProtoArray >*
+ProtoAssignment::mutable_objects() {
+  // @@protoc_insertion_point(field_mutable_list:klee.ProtoAssignment.objects)
+  return &objects_;
 }
-inline const ::google::protobuf::RepeatedPtrField< ::klee::ProtoBinding >&
-ProtoAssignment::binding() const {
-  // @@protoc_insertion_point(field_list:klee.ProtoAssignment.binding)
-  return binding_;
+inline const ::google::protobuf::RepeatedPtrField< ::klee::ProtoArray >&
+ProtoAssignment::objects() const {
+  // @@protoc_insertion_point(field_list:klee.ProtoAssignment.objects)
+  return objects_;
+}
+
+// repeated bytes values = 3;
+inline int ProtoAssignment::values_size() const {
+  return values_.size();
+}
+inline void ProtoAssignment::clear_values() {
+  values_.Clear();
+}
+inline const ::std::string& ProtoAssignment::values(int index) const {
+  // @@protoc_insertion_point(field_get:klee.ProtoAssignment.values)
+  return values_.Get(index);
+}
+inline ::std::string* ProtoAssignment::mutable_values(int index) {
+  // @@protoc_insertion_point(field_mutable:klee.ProtoAssignment.values)
+  return values_.Mutable(index);
+}
+inline void ProtoAssignment::set_values(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:klee.ProtoAssignment.values)
+  values_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+inline void ProtoAssignment::set_values(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:klee.ProtoAssignment.values)
+  values_.Mutable(index)->assign(std::move(value));
+}
+#endif
+inline void ProtoAssignment::set_values(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  values_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:klee.ProtoAssignment.values)
+}
+inline void ProtoAssignment::set_values(int index, const void* value, size_t size) {
+  values_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:klee.ProtoAssignment.values)
+}
+inline ::std::string* ProtoAssignment::add_values() {
+  // @@protoc_insertion_point(field_add_mutable:klee.ProtoAssignment.values)
+  return values_.Add();
+}
+inline void ProtoAssignment::add_values(const ::std::string& value) {
+  values_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:klee.ProtoAssignment.values)
+}
+#if LANG_CXX11
+inline void ProtoAssignment::add_values(::std::string&& value) {
+  values_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:klee.ProtoAssignment.values)
+}
+#endif
+inline void ProtoAssignment::add_values(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  values_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:klee.ProtoAssignment.values)
+}
+inline void ProtoAssignment::add_values(const void* value, size_t size) {
+  values_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:klee.ProtoAssignment.values)
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+ProtoAssignment::values() const {
+  // @@protoc_insertion_point(field_list:klee.ProtoAssignment.values)
+  return values_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+ProtoAssignment::mutable_values() {
+  // @@protoc_insertion_point(field_mutable_list:klee.ProtoAssignment.values)
+  return &values_;
 }
 
 // -------------------------------------------------------------------
@@ -1989,6 +1730,56 @@ inline void ProtoReadExpr::set_allocated_root(::klee::ProtoArray* root) {
   // @@protoc_insertion_point(field_set_allocated:klee.ProtoReadExpr.root)
 }
 
+// .klee.ProtoExpr expr = 3;
+inline bool ProtoReadExpr::has_expr() const {
+  return this != internal_default_instance() && expr_ != NULL;
+}
+inline void ProtoReadExpr::clear_expr() {
+  if (GetArenaNoVirtual() == NULL && expr_ != NULL) {
+    delete expr_;
+  }
+  expr_ = NULL;
+}
+inline const ::klee::ProtoExpr& ProtoReadExpr::expr() const {
+  const ::klee::ProtoExpr* p = expr_;
+  // @@protoc_insertion_point(field_get:klee.ProtoReadExpr.expr)
+  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoExpr*>(
+      &::klee::_ProtoExpr_default_instance_);
+}
+inline ::klee::ProtoExpr* ProtoReadExpr::release_expr() {
+  // @@protoc_insertion_point(field_release:klee.ProtoReadExpr.expr)
+  
+  ::klee::ProtoExpr* temp = expr_;
+  expr_ = NULL;
+  return temp;
+}
+inline ::klee::ProtoExpr* ProtoReadExpr::mutable_expr() {
+  
+  if (expr_ == NULL) {
+    expr_ = new ::klee::ProtoExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoReadExpr.expr)
+  return expr_;
+}
+inline void ProtoReadExpr::set_allocated_expr(::klee::ProtoExpr* expr) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete expr_;
+  }
+  if (expr) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      expr = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, expr, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  expr_ = expr;
+  // @@protoc_insertion_point(field_set_allocated:klee.ProtoReadExpr.expr)
+}
+
 // -------------------------------------------------------------------
 
 // ProtoExtractExpr
@@ -2019,6 +1810,56 @@ inline void ProtoExtractExpr::set_extractwidth(::google::protobuf::uint32 value)
   
   extractwidth_ = value;
   // @@protoc_insertion_point(field_set:klee.ProtoExtractExpr.extractWidth)
+}
+
+// .klee.ProtoExpr expr = 3;
+inline bool ProtoExtractExpr::has_expr() const {
+  return this != internal_default_instance() && expr_ != NULL;
+}
+inline void ProtoExtractExpr::clear_expr() {
+  if (GetArenaNoVirtual() == NULL && expr_ != NULL) {
+    delete expr_;
+  }
+  expr_ = NULL;
+}
+inline const ::klee::ProtoExpr& ProtoExtractExpr::expr() const {
+  const ::klee::ProtoExpr* p = expr_;
+  // @@protoc_insertion_point(field_get:klee.ProtoExtractExpr.expr)
+  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoExpr*>(
+      &::klee::_ProtoExpr_default_instance_);
+}
+inline ::klee::ProtoExpr* ProtoExtractExpr::release_expr() {
+  // @@protoc_insertion_point(field_release:klee.ProtoExtractExpr.expr)
+  
+  ::klee::ProtoExpr* temp = expr_;
+  expr_ = NULL;
+  return temp;
+}
+inline ::klee::ProtoExpr* ProtoExtractExpr::mutable_expr() {
+  
+  if (expr_ == NULL) {
+    expr_ = new ::klee::ProtoExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoExtractExpr.expr)
+  return expr_;
+}
+inline void ProtoExtractExpr::set_allocated_expr(::klee::ProtoExpr* expr) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete expr_;
+  }
+  if (expr) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      expr = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, expr, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  expr_ = expr;
+  // @@protoc_insertion_point(field_set_allocated:klee.ProtoExtractExpr.expr)
 }
 
 // -------------------------------------------------------------------
@@ -2375,10 +2216,6 @@ ProtoCache::elem() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
