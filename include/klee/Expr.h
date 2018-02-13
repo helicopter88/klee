@@ -535,8 +535,6 @@ public:
     bool operator==(const Array& rhs) const;
     bool operator!=(const Array& rhs) const;
     friend class ArrayCache;
-
-
 };
 
 /// Class representing a complete list of updates into an array.

@@ -542,7 +542,25 @@ bool IndependentSolver::computeInitialValues(const Query& query,
       values.push_back(retMap[arr]);
     }
   }
-  assert(assertCreatedPointEvaluatesToTrue(query, objects, values, retMap) && "should satisfy the equation");
+  if(!assertCreatedPointEvaluatesToTrue(query, objects, values, retMap)) {
+    query.dump();
+      for(const auto& r : retMap) {
+        std::cout << r.first->name << ":";
+        for (auto d: r.second) {
+          std::cout << (unsigned)d << ",";
+        }
+        std::cout << std::endl;
+      }
+    for(const auto& r : values) {
+
+      for (auto d: r) {
+        std::cout << (unsigned)d << ",";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "should satisfy the equation" << std::endl;
+    assert(false);
+  }
   delete factors;
   return true;
 }

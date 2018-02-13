@@ -11,10 +11,14 @@
 
 namespace klee {
     ProtoAssignment *Assignment::serialize() const {
-        ProtoAssignment *protoAssignment = new ProtoAssignment();
+        auto *protoAssignment = new ProtoAssignment();
         protoAssignment->set_allowfreevalues(this->allowFreeValues);
-        for (const auto b : bindings) {
-            protoAssignment->add_values((char *) b.second.data());
+        for (const auto &b : bindings) {
+            ProtoBitVector *pbv = new ProtoBitVector();
+            for (const unsigned char &v : b.second) {
+                pbv->mutable_values()->Add(v);
+            }
+            protoAssignment->mutable_bvs()->AddAllocated(pbv);
             protoAssignment->mutable_objects()->AddAllocated(b.first->serialize());
         }
         return protoAssignment;
@@ -51,12 +55,16 @@ namespace klee {
         }
     }
 
-    Assignment* Assignment::deserialize(const ProtoAssignment &pa) {
+    Assignment *Assignment::deserialize(const ProtoAssignment &pa) {
         std::vector<const Array *> objects;
         std::vector<std::vector<unsigned char>> values;
-        for (const std::string &value : pa.values()) {
-            std::vector<unsigned char> v(value.c_str(), value.c_str() + value.size());
-            values.emplace_back(v);
+        for (const auto& pbv : pa.bvs()) {
+            std::vector<unsigned char> tmp;
+            for (const uint32_t value : pbv.values()) {
+                tmp.push_back((unsigned char) value);
+            }
+            //std::reverse(tmp.begin(), tmp.end());
+            values.push_back(tmp);
         }
         for (const auto &obj : pa.objects()) {
             objects.emplace_back(Array::deserialize(obj));

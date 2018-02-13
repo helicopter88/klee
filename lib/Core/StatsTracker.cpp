@@ -448,6 +448,8 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::queryCexCacheMisses
              << "," << stats::queryCexCacheHits
              << "," << stats::queryCounterexamples
+             << "," << stats::previousCacheHits
+             << "," << stats::previousCacheMisses
 #ifdef DEBUG
              << "," << stats::arrayHashTime / 1000000.
 #endif

@@ -71,9 +71,7 @@ namespace {
 
     TEST(ExprTest, ConcatSerialization) {
         ArrayCache ac;
-        const Array *array = ac.CreateArray("arr0", 256);
         ref<Expr> c300 = getConstant(300, 32);
-        const Array *array2 = ac.CreateArray("arr1", 256);
         ref<Expr> c200 = getConstant(200, 8);
         ref<Expr> c100 = getConstant(100, 8);
 
@@ -85,6 +83,15 @@ namespace {
         EXPECT_EQ(concat2, Expr::deserialize(*protoConcat2));
     }
 
+    TEST(ExprTest, BinSerialization) {
+        ArrayCache ac;
+        ref<Expr> c100 = getConstant(100, 32);
+        const Array *array = ac.CreateArray("arr0", 4);
+        ref<Expr> readExpr = Expr::createTempRead(array, 32);
+        ref<Expr> expr = EqExpr::create(c100, readExpr);
+        ProtoExpr* protoExpr = expr->serialize();
+        EXPECT_EQ(expr, Expr::deserialize(*protoExpr));
+    }
     TEST(ExprTest, ConcatExtract) {
         ArrayCache ac;
         const Array *array = ac.CreateArray("arr0", 256);

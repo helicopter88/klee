@@ -23,6 +23,8 @@ Statistic stats::queryConstructTime("QueryConstructTime", "QBtime") ;
 Statistic stats::queryConstructs("QueriesConstructs", "QB");
 Statistic stats::queryCounterexamples("QueriesCEX", "Qcex");
 Statistic stats::queryTime("QueryTime", "Qtime");
+Statistic stats::previousCacheHits("PreviousCacheHits", "PCexHits");
+Statistic stats::previousCacheMisses("PreviousCacheHits", "PCexHits");
 
 #ifdef DEBUG
 Statistic stats::arrayHashTime("ArrayHashTime", "AHtime");

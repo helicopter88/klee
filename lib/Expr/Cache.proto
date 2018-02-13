@@ -11,10 +11,14 @@ message ProtoArray {
     repeated ProtoExpr constantValues = 6;
 }
 
+message ProtoBitVector {
+    repeated fixed32 values = 1;
+}
+
 message ProtoAssignment {
     bool allowFreeValues = 1;
     repeated ProtoArray objects = 2;
-    repeated bytes values = 3;
+    repeated ProtoBitVector bvs = 3;
 }
 
 message ProtoConstExpr {

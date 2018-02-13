@@ -306,9 +306,10 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
 UpdateNode* recDeserializeUpdateNode(const ProtoReadExpr& data, int depth, int size) {
     if(data.updatelist().empty())
         return nullptr;
-    UpdateNode* next = depth == size ? nullptr : recDeserializeUpdateNode(data, depth + 1, size);
+    UpdateNode* next = depth == (size - 1) ? nullptr : recDeserializeUpdateNode(data, depth + 1, size);
     return new UpdateNode(next, Expr::deserialize(data.updatelist(depth).updateindex()), Expr::deserialize(data.updatelist(depth).updatevalue()));
 }
+
 ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
     switch (pe.kind()) {
         case Constant: {
@@ -329,8 +330,8 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
         }
         case Read: {
             assert(pe.has_readdata() && "ReadExpr does not have read data");
-            const auto& readData = pe.readdata();
-            auto* head = recDeserializeUpdateNode(readData, 0, readData.updatelist().size());
+            const auto &readData = pe.readdata();
+            auto *head = recDeserializeUpdateNode(readData, 0, readData.updatelist().size());
 
             auto index = deserialize(readData.expr());
             return ReadExpr::create(UpdateList(Array::deserialize(readData.root()), head), index);
@@ -338,12 +339,16 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
 
         case Concat: {
             assert(pe.kids().size() >= 2);
-            if(pe.kids().size() == 2) {
+            if (pe.kids().size() == 2) {
                 return ConcatExpr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)));
-            } else if(pe.kids().size() == 4) {
-                return ConcatExpr::create4(Expr::deserialize(pe.kids(0)),Expr::deserialize(pe.kids(1)),Expr::deserialize(pe.kids(2)),Expr::deserialize(pe.kids(3)));
-            } else if(pe.kids().size() == 8) {
-                return ConcatExpr::create8(Expr::deserialize(pe.kids(0)),Expr::deserialize(pe.kids(1)),Expr::deserialize(pe.kids(2)),Expr::deserialize(pe.kids(3)),Expr::deserialize(pe.kids(4)),Expr::deserialize(pe.kids(5)),Expr::deserialize(pe.kids(6)),Expr::deserialize(pe.kids(7)));
+            } else if (pe.kids().size() == 4) {
+                return ConcatExpr::create4(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)),
+                                           Expr::deserialize(pe.kids(2)), Expr::deserialize(pe.kids(3)));
+            } else if (pe.kids().size() == 8) {
+                return ConcatExpr::create8(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)),
+                                           Expr::deserialize(pe.kids(2)), Expr::deserialize(pe.kids(3)),
+                                           Expr::deserialize(pe.kids(4)), Expr::deserialize(pe.kids(5)),
+                                           Expr::deserialize(pe.kids(6)), Expr::deserialize(pe.kids(7)));
             }
             assert(false && "ConcatExpr Number of kids was not 2 or 4 or 8");
         }
@@ -352,7 +357,11 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
         return T ## Expr::create(Expr::deserialize(pe.kids(0)), pe.width()); \
 
 #define PROTO_BINARY_EXPR_CASE(T)                                 \
-      case T:                                               \
+      case T:                       \
+        if(pe.kids_size() != 2)    { \
+            pe.PrintDebugString();  \
+            printKind(errs(), (Kind)pe.kind()); \
+        } \
         assert(pe.kids_size() == 2);      \
         return T ## Expr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1))); \
 
@@ -638,8 +647,14 @@ bool Array::operator==(const Array& rhs) const {
     if(rhs.domain != this->domain) {
         return false;
     }
-    if(rhs.constantValues != this->constantValues) {
+    if(rhs.name != this->name) {
         return false;
+    }
+
+    for(unsigned i = 0; i < constantValues.size(); i++) {
+        if(rhs.constantValues.at(i) != constantValues.at(i)) {
+            return false;
+        }
     }
     return true;
 }
@@ -852,7 +867,6 @@ ProtoExpr * ExtractExpr::serialize() const {
     extractExpr->set_extractwidth(this->width);
     extractExpr->set_allocated_expr(this->expr->serialize());
     base->set_allocated_extractdata(extractExpr);
-    assert(this->compareContents(*Expr::deserialize(*base)));
     return base;
 }
 
