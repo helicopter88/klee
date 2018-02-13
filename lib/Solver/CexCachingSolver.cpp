@@ -70,7 +70,6 @@ class CexCachingSolver : public SolverImpl {
 
     // memo table
     assignmentsTable_ty assignmentsTable;
-    assignmentsTable_ty previousAssignmentsTable;
 
     bool searchForAssignment(KeyType &key,
                              Assignment *&result);
@@ -84,8 +83,11 @@ class CexCachingSolver : public SolverImpl {
 
     bool getAssignment(const Query &query, Assignment *&result);
 
+    void serializeCache();
+
 public:
-    CexCachingSolver(Solver *_solver) : solver(_solver) {
+    explicit CexCachingSolver(Solver *_solver) : solver(_solver) {
+        TimerStatIncrementer t(stats::deserializationTime);
         std::ifstream ifs("cache.bin");
         auto *pc = new ProtoCache();
         pc->ParseFromIstream(&ifs);
@@ -118,6 +120,7 @@ public:
     char *getConstraintLog(const Query &query);
 
     void setCoreSolverTimeout(double timeout);
+
 };
 
 ///
@@ -151,13 +154,12 @@ bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
     Assignment **lookup = previousCache.lookup(key);
     if (lookup) {
         ++stats::previousCacheHits;
-        if ((*lookup)->bindings.empty())
-            lookup = nullptr;
+        result = *lookup;
+        return true;
     }
-    if (!lookup) {
-        ++stats::previousCacheMisses;
-        lookup = cache.lookup(key);
-    }
+
+    ++stats::previousCacheMisses;
+    lookup = cache.lookup(key);
 
     if (lookup) {
         result = *lookup;
@@ -289,24 +291,29 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
 }
 
 ///
-
-CexCachingSolver::~CexCachingSolver() {
+void CexCachingSolver::serializeCache() {
+    std::remove("cache.bin");
     std::ofstream ofs("cache.bin");
     ProtoCache protoCache;
     for (const auto &c : cache) {
-        ProtoCacheElem *pc = protoCache.add_elem();
-        if (c.second)
+        if (c.second) {
+            auto *pc = new ProtoCacheElem;
+            for (const auto &expr : c.first) {
+                pc->mutable_key()->AddAllocated(expr->serialize());
+            }
             pc->set_allocated_assignment(c.second->serialize());
-        for (const auto &expr : c.first) {
-            pc->mutable_key()->AddAllocated(expr->serialize());
+            protoCache.mutable_elem()->AddAllocated(pc);
         }
     }
-    ofs << protoCache.SerializeAsString();
+    protoCache.SerializeToOstream(&ofs);
+    ofs.flush();
     ofs.close();
+}
+
+CexCachingSolver::~CexCachingSolver() {
+    serializeCache();
     cache.clear();
     delete solver;
-    for (auto it : previousAssignmentsTable)
-        delete it;
     for (auto it : assignmentsTable)
         delete it;
 }

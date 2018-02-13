@@ -13,28 +13,30 @@
 #include "klee/Statistic.h"
 
 namespace klee {
-namespace stats {
+    namespace stats {
 
-  extern Statistic cexCacheTime;
-  extern Statistic queries;
-  extern Statistic queriesInvalid;
-  extern Statistic queriesValid;
-  extern Statistic queryCacheHits;
-  extern Statistic queryCacheMisses;
-  extern Statistic queryCexCacheHits;
-  extern Statistic queryCexCacheMisses;
-  extern Statistic queryConstructTime;
-  extern Statistic queryConstructs;
-  extern Statistic queryCounterexamples;
-  extern Statistic queryTime;
-    extern Statistic previousCacheHits;
-    extern Statistic previousCacheMisses;
+        extern Statistic cexCacheTime;
+        extern Statistic queries;
+        extern Statistic queriesInvalid;
+        extern Statistic queriesValid;
+        extern Statistic queryCacheHits;
+        extern Statistic queryCacheMisses;
+        extern Statistic queryCexCacheHits;
+        extern Statistic queryCexCacheMisses;
+        extern Statistic queryConstructTime;
+        extern Statistic queryConstructs;
+        extern Statistic queryCounterexamples;
+        extern Statistic queryTime;
+        extern Statistic previousCacheHits;
+        extern Statistic previousCacheMisses;
+        extern Statistic serializationTime;
+        extern Statistic deserializationTime;
 
 #ifdef DEBUG
-  extern Statistic arrayHashTime;
+        extern Statistic arrayHashTime;
 #endif
 
-}
+    }
 }
 
 #endif

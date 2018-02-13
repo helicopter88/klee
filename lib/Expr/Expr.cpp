@@ -84,9 +84,7 @@ ref<Expr> Expr::createTempRead(const Array *array, Expr::Width w) {
 }
 
 ProtoExpr* Expr::serialize() const {
-    auto* pe = new ProtoExpr();
-    pe->set_refcount(this->refCount);
-    pe->set_numkids(this->getNumKids());
+    auto* pe = new ProtoExpr;
     pe->set_width(this->getWidth());
     pe->set_kind(this->getKind());
     for(unsigned k = 0; k < this->getNumKids(); k++) {

@@ -25,7 +25,8 @@ Statistic stats::queryCounterexamples("QueriesCEX", "Qcex");
 Statistic stats::queryTime("QueryTime", "Qtime");
 Statistic stats::previousCacheHits("PreviousCacheHits", "PCexHits");
 Statistic stats::previousCacheMisses("PreviousCacheHits", "PCexHits");
-
+Statistic stats::serializationTime("PreviousCacheSerializationTime", "PCexSTime");
+Statistic stats::deserializationTime("PreviousCacheDeserializationTime", "PCexDTime");
 #ifdef DEBUG
 Statistic stats::arrayHashTime("ArrayHashTime", "AHtime");
 #endif
