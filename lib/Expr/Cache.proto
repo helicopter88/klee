@@ -7,7 +7,6 @@ message ProtoArray {
     uint64 size = 2;
     uint32 domain = 3;
     uint32 range = 4;
-    uint32 hash = 5;
     repeated ProtoExpr constantValues = 6;
 }
 
@@ -19,6 +18,7 @@ message ProtoAssignment {
     bool allowFreeValues = 1;
     repeated ProtoArray objects = 2;
     repeated ProtoBitVector bvs = 3;
+    bool noBinding = 4;
 }
 
 message ProtoConstExpr {
@@ -29,10 +29,15 @@ message ProtoConstExpr {
 message ProtoUpdateNode {
     ProtoExpr updateIndex = 1;
     ProtoExpr updateValue = 2;
+    oneof nextNode {
+        ProtoUpdateNode next = 3;
+    }
 }
 
 message ProtoReadExpr {
-    repeated ProtoUpdateNode updateList = 1;
+    oneof updateList {
+        ProtoUpdateNode head = 1;
+    }
     ProtoArray root = 2;
     ProtoExpr expr = 3;
 }
@@ -43,17 +48,19 @@ message ProtoExtractExpr {
     ProtoExpr expr = 3;
 }
 
+message ProtoNotOptimizedExpr {
+    ProtoExpr src = 1;
+}
+
 message ProtoExpr {
     uint32 width = 1;
     uint32 kind = 2;
-    uint32 refCount = 3; // TODO: maybe not needed
-    uint32 hash = 4; // TODO: maybe not needed
-    uint32 numKids = 5; // TODO: maybe not needed
     repeated ProtoExpr kids = 6;
     oneof specialData {
         ProtoConstExpr constData = 7;
         ProtoReadExpr readData = 8;
         ProtoExtractExpr extractData = 9;
+        ProtoNotOptimizedExpr NOData = 10;
     }
 }
 

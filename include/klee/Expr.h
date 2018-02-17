@@ -428,7 +428,7 @@ public:
   ref<Expr> getKid(unsigned i) const { return src; }
 
   virtual ref<Expr> rebuild(ref<Expr> kids[]) const { return create(kids[0]); }
-
+  virtual ProtoExpr* serialize() const;
 private:
   NotOptimizedExpr(const ref<Expr> &_src) : src(_src) {}
 

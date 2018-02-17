@@ -36,7 +36,7 @@ namespace protobuf_Cache_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[10];
+  static const ::google::protobuf::internal::ParseTable schema[11];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -88,6 +88,9 @@ extern ProtoExprDefaultTypeInternal _ProtoExpr_default_instance_;
 class ProtoExtractExpr;
 class ProtoExtractExprDefaultTypeInternal;
 extern ProtoExtractExprDefaultTypeInternal _ProtoExtractExpr_default_instance_;
+class ProtoNotOptimizedExpr;
+class ProtoNotOptimizedExprDefaultTypeInternal;
+extern ProtoNotOptimizedExprDefaultTypeInternal _ProtoNotOptimizedExpr_default_instance_;
 class ProtoReadExpr;
 class ProtoReadExprDefaultTypeInternal;
 extern ProtoReadExprDefaultTypeInternal _ProtoReadExpr_default_instance_;
@@ -225,12 +228,6 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::google::protobuf::uint32 range() const;
   void set_range(::google::protobuf::uint32 value);
 
-  // uint32 hash = 5;
-  void clear_hash();
-  static const int kHashFieldNumber = 5;
-  ::google::protobuf::uint32 hash() const;
-  void set_hash(::google::protobuf::uint32 value);
-
   // @@protoc_insertion_point(class_scope:klee.ProtoArray)
  private:
 
@@ -240,7 +237,6 @@ class ProtoArray : public ::google::protobuf::Message /* @@protoc_insertion_poin
   ::google::protobuf::uint64 size_;
   ::google::protobuf::uint32 domain_;
   ::google::protobuf::uint32 range_;
-  ::google::protobuf::uint32 hash_;
   mutable int _cached_size_;
   friend struct ::protobuf_Cache_2eproto::TableStruct;
   friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
@@ -465,6 +461,12 @@ class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion
   bool allowfreevalues() const;
   void set_allowfreevalues(bool value);
 
+  // bool noBinding = 4;
+  void clear_nobinding();
+  static const int kNoBindingFieldNumber = 4;
+  bool nobinding() const;
+  void set_nobinding(bool value);
+
   // @@protoc_insertion_point(class_scope:klee.ProtoAssignment)
  private:
 
@@ -472,6 +474,7 @@ class ProtoAssignment : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::RepeatedPtrField< ::klee::ProtoArray > objects_;
   ::google::protobuf::RepeatedPtrField< ::klee::ProtoBitVector > bvs_;
   bool allowfreevalues_;
+  bool nobinding_;
   mutable int _cached_size_;
   friend struct ::protobuf_Cache_2eproto::TableStruct;
   friend void ::protobuf_Cache_2eproto::InitDefaultsProtoAssignmentImpl();
@@ -613,6 +616,11 @@ class ProtoUpdateNode : public ::google::protobuf::Message /* @@protoc_insertion
   static const ::google::protobuf::Descriptor* descriptor();
   static const ProtoUpdateNode& default_instance();
 
+  enum NextNodeCase {
+    kNext = 3,
+    NEXTNODE_NOT_SET = 0,
+  };
+
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const ProtoUpdateNode* internal_default_instance() {
     return reinterpret_cast<const ProtoUpdateNode*>(
@@ -684,13 +692,34 @@ class ProtoUpdateNode : public ::google::protobuf::Message /* @@protoc_insertion
   ::klee::ProtoExpr* mutable_updatevalue();
   void set_allocated_updatevalue(::klee::ProtoExpr* updatevalue);
 
+  // .klee.ProtoUpdateNode next = 3;
+  bool has_next() const;
+  void clear_next();
+  static const int kNextFieldNumber = 3;
+  const ::klee::ProtoUpdateNode& next() const;
+  ::klee::ProtoUpdateNode* release_next();
+  ::klee::ProtoUpdateNode* mutable_next();
+  void set_allocated_next(::klee::ProtoUpdateNode* next);
+
+  NextNodeCase nextNode_case() const;
   // @@protoc_insertion_point(class_scope:klee.ProtoUpdateNode)
  private:
+  void set_has_next();
+
+  inline bool has_nextNode() const;
+  void clear_nextNode();
+  inline void clear_has_nextNode();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::klee::ProtoExpr* updateindex_;
   ::klee::ProtoExpr* updatevalue_;
+  union NextNodeUnion {
+    NextNodeUnion() {}
+    ::klee::ProtoUpdateNode* next_;
+  } nextNode_;
   mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
   friend struct ::protobuf_Cache_2eproto::TableStruct;
   friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
 };
@@ -724,6 +753,11 @@ class ProtoReadExpr : public ::google::protobuf::Message /* @@protoc_insertion_p
   #endif
   static const ::google::protobuf::Descriptor* descriptor();
   static const ProtoReadExpr& default_instance();
+
+  enum UpdateListCase {
+    kHead = 1,
+    UPDATELIST_NOT_SET = 0,
+  };
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
   static inline const ProtoReadExpr* internal_default_instance() {
@@ -778,18 +812,6 @@ class ProtoReadExpr : public ::google::protobuf::Message /* @@protoc_insertion_p
 
   // accessors -------------------------------------------------------
 
-  // repeated .klee.ProtoUpdateNode updateList = 1;
-  int updatelist_size() const;
-  void clear_updatelist();
-  static const int kUpdateListFieldNumber = 1;
-  const ::klee::ProtoUpdateNode& updatelist(int index) const;
-  ::klee::ProtoUpdateNode* mutable_updatelist(int index);
-  ::klee::ProtoUpdateNode* add_updatelist();
-  ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >*
-      mutable_updatelist();
-  const ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >&
-      updatelist() const;
-
   // .klee.ProtoArray root = 2;
   bool has_root() const;
   void clear_root();
@@ -808,14 +830,34 @@ class ProtoReadExpr : public ::google::protobuf::Message /* @@protoc_insertion_p
   ::klee::ProtoExpr* mutable_expr();
   void set_allocated_expr(::klee::ProtoExpr* expr);
 
+  // .klee.ProtoUpdateNode head = 1;
+  bool has_head() const;
+  void clear_head();
+  static const int kHeadFieldNumber = 1;
+  const ::klee::ProtoUpdateNode& head() const;
+  ::klee::ProtoUpdateNode* release_head();
+  ::klee::ProtoUpdateNode* mutable_head();
+  void set_allocated_head(::klee::ProtoUpdateNode* head);
+
+  UpdateListCase updateList_case() const;
   // @@protoc_insertion_point(class_scope:klee.ProtoReadExpr)
  private:
+  void set_has_head();
+
+  inline bool has_updateList() const;
+  void clear_updateList();
+  inline void clear_has_updateList();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode > updatelist_;
   ::klee::ProtoArray* root_;
   ::klee::ProtoExpr* expr_;
+  union UpdateListUnion {
+    UpdateListUnion() {}
+    ::klee::ProtoUpdateNode* head_;
+  } updateList_;
   mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
   friend struct ::protobuf_Cache_2eproto::TableStruct;
   friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
 };
@@ -937,6 +979,108 @@ class ProtoExtractExpr : public ::google::protobuf::Message /* @@protoc_insertio
 };
 // -------------------------------------------------------------------
 
+class ProtoNotOptimizedExpr : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoNotOptimizedExpr) */ {
+ public:
+  ProtoNotOptimizedExpr();
+  virtual ~ProtoNotOptimizedExpr();
+
+  ProtoNotOptimizedExpr(const ProtoNotOptimizedExpr& from);
+
+  inline ProtoNotOptimizedExpr& operator=(const ProtoNotOptimizedExpr& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  ProtoNotOptimizedExpr(ProtoNotOptimizedExpr&& from) noexcept
+    : ProtoNotOptimizedExpr() {
+    *this = ::std::move(from);
+  }
+
+  inline ProtoNotOptimizedExpr& operator=(ProtoNotOptimizedExpr&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ProtoNotOptimizedExpr& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const ProtoNotOptimizedExpr* internal_default_instance() {
+    return reinterpret_cast<const ProtoNotOptimizedExpr*>(
+               &_ProtoNotOptimizedExpr_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    7;
+
+  void Swap(ProtoNotOptimizedExpr* other);
+  friend void swap(ProtoNotOptimizedExpr& a, ProtoNotOptimizedExpr& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline ProtoNotOptimizedExpr* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ProtoNotOptimizedExpr* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const ProtoNotOptimizedExpr& from);
+  void MergeFrom(const ProtoNotOptimizedExpr& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(ProtoNotOptimizedExpr* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // .klee.ProtoExpr src = 1;
+  bool has_src() const;
+  void clear_src();
+  static const int kSrcFieldNumber = 1;
+  const ::klee::ProtoExpr& src() const;
+  ::klee::ProtoExpr* release_src();
+  ::klee::ProtoExpr* mutable_src();
+  void set_allocated_src(::klee::ProtoExpr* src);
+
+  // @@protoc_insertion_point(class_scope:klee.ProtoNotOptimizedExpr)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::klee::ProtoExpr* src_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_Cache_2eproto::TableStruct;
+  friend void ::protobuf_Cache_2eproto::InitDefaultsProtoArrayImpl();
+};
+// -------------------------------------------------------------------
+
 class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:klee.ProtoExpr) */ {
  public:
   ProtoExpr();
@@ -970,6 +1114,7 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
     kConstData = 7,
     kReadData = 8,
     kExtractData = 9,
+    kNOData = 10,
     SPECIALDATA_NOT_SET = 0,
   };
 
@@ -979,7 +1124,7 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
                &_ProtoExpr_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    8;
 
   void Swap(ProtoExpr* other);
   friend void swap(ProtoExpr& a, ProtoExpr& b) {
@@ -1050,24 +1195,6 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::uint32 kind() const;
   void set_kind(::google::protobuf::uint32 value);
 
-  // uint32 refCount = 3;
-  void clear_refcount();
-  static const int kRefCountFieldNumber = 3;
-  ::google::protobuf::uint32 refcount() const;
-  void set_refcount(::google::protobuf::uint32 value);
-
-  // uint32 hash = 4;
-  void clear_hash();
-  static const int kHashFieldNumber = 4;
-  ::google::protobuf::uint32 hash() const;
-  void set_hash(::google::protobuf::uint32 value);
-
-  // uint32 numKids = 5;
-  void clear_numkids();
-  static const int kNumKidsFieldNumber = 5;
-  ::google::protobuf::uint32 numkids() const;
-  void set_numkids(::google::protobuf::uint32 value);
-
   // .klee.ProtoConstExpr constData = 7;
   bool has_constdata() const;
   void clear_constdata();
@@ -1095,12 +1222,22 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::klee::ProtoExtractExpr* mutable_extractdata();
   void set_allocated_extractdata(::klee::ProtoExtractExpr* extractdata);
 
+  // .klee.ProtoNotOptimizedExpr NOData = 10;
+  bool has_nodata() const;
+  void clear_nodata();
+  static const int kNODataFieldNumber = 10;
+  const ::klee::ProtoNotOptimizedExpr& nodata() const;
+  ::klee::ProtoNotOptimizedExpr* release_nodata();
+  ::klee::ProtoNotOptimizedExpr* mutable_nodata();
+  void set_allocated_nodata(::klee::ProtoNotOptimizedExpr* nodata);
+
   SpecialDataCase specialData_case() const;
   // @@protoc_insertion_point(class_scope:klee.ProtoExpr)
  private:
   void set_has_constdata();
   void set_has_readdata();
   void set_has_extractdata();
+  void set_has_nodata();
 
   inline bool has_specialData() const;
   void clear_specialData();
@@ -1110,14 +1247,12 @@ class ProtoExpr : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::RepeatedPtrField< ::klee::ProtoExpr > kids_;
   ::google::protobuf::uint32 width_;
   ::google::protobuf::uint32 kind_;
-  ::google::protobuf::uint32 refcount_;
-  ::google::protobuf::uint32 hash_;
-  ::google::protobuf::uint32 numkids_;
   union SpecialDataUnion {
     SpecialDataUnion() {}
     ::klee::ProtoConstExpr* constdata_;
     ::klee::ProtoReadExpr* readdata_;
     ::klee::ProtoExtractExpr* extractdata_;
+    ::klee::ProtoNotOptimizedExpr* nodata_;
   } specialData_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -1162,7 +1297,7 @@ class ProtoCacheElem : public ::google::protobuf::Message /* @@protoc_insertion_
                &_ProtoCacheElem_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    9;
 
   void Swap(ProtoCacheElem* other);
   friend void swap(ProtoCacheElem& a, ProtoCacheElem& b) {
@@ -1277,7 +1412,7 @@ class ProtoCache : public ::google::protobuf::Message /* @@protoc_insertion_poin
                &_ProtoCache_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    10;
 
   void Swap(ProtoCache* other);
   friend void swap(ProtoCache& a, ProtoCache& b) {
@@ -1451,20 +1586,6 @@ inline void ProtoArray::set_range(::google::protobuf::uint32 value) {
   // @@protoc_insertion_point(field_set:klee.ProtoArray.range)
 }
 
-// uint32 hash = 5;
-inline void ProtoArray::clear_hash() {
-  hash_ = 0u;
-}
-inline ::google::protobuf::uint32 ProtoArray::hash() const {
-  // @@protoc_insertion_point(field_get:klee.ProtoArray.hash)
-  return hash_;
-}
-inline void ProtoArray::set_hash(::google::protobuf::uint32 value) {
-  
-  hash_ = value;
-  // @@protoc_insertion_point(field_set:klee.ProtoArray.hash)
-}
-
 // repeated .klee.ProtoExpr constantValues = 6;
 inline int ProtoArray::constantvalues_size() const {
   return constantvalues_.size();
@@ -1607,6 +1728,20 @@ ProtoAssignment::bvs() const {
   return bvs_;
 }
 
+// bool noBinding = 4;
+inline void ProtoAssignment::clear_nobinding() {
+  nobinding_ = false;
+}
+inline bool ProtoAssignment::nobinding() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoAssignment.noBinding)
+  return nobinding_;
+}
+inline void ProtoAssignment::set_nobinding(bool value) {
+  
+  nobinding_ = value;
+  // @@protoc_insertion_point(field_set:klee.ProtoAssignment.noBinding)
+}
+
 // -------------------------------------------------------------------
 
 // ProtoConstExpr
@@ -1743,38 +1878,97 @@ inline void ProtoUpdateNode::set_allocated_updatevalue(::klee::ProtoExpr* update
   // @@protoc_insertion_point(field_set_allocated:klee.ProtoUpdateNode.updateValue)
 }
 
+// .klee.ProtoUpdateNode next = 3;
+inline bool ProtoUpdateNode::has_next() const {
+  return nextNode_case() == kNext;
+}
+inline void ProtoUpdateNode::set_has_next() {
+  _oneof_case_[0] = kNext;
+}
+inline void ProtoUpdateNode::clear_next() {
+  if (has_next()) {
+    delete nextNode_.next_;
+    clear_has_nextNode();
+  }
+}
+inline ::klee::ProtoUpdateNode* ProtoUpdateNode::release_next() {
+  // @@protoc_insertion_point(field_release:klee.ProtoUpdateNode.next)
+  if (has_next()) {
+    clear_has_nextNode();
+      ::klee::ProtoUpdateNode* temp = nextNode_.next_;
+    nextNode_.next_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::klee::ProtoUpdateNode& ProtoUpdateNode::next() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoUpdateNode.next)
+  return has_next()
+      ? *nextNode_.next_
+      : *reinterpret_cast< ::klee::ProtoUpdateNode*>(&::klee::_ProtoUpdateNode_default_instance_);
+}
+inline ::klee::ProtoUpdateNode* ProtoUpdateNode::mutable_next() {
+  if (!has_next()) {
+    clear_nextNode();
+    set_has_next();
+    nextNode_.next_ = new ::klee::ProtoUpdateNode;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoUpdateNode.next)
+  return nextNode_.next_;
+}
+
+inline bool ProtoUpdateNode::has_nextNode() const {
+  return nextNode_case() != NEXTNODE_NOT_SET;
+}
+inline void ProtoUpdateNode::clear_has_nextNode() {
+  _oneof_case_[0] = NEXTNODE_NOT_SET;
+}
+inline ProtoUpdateNode::NextNodeCase ProtoUpdateNode::nextNode_case() const {
+  return ProtoUpdateNode::NextNodeCase(_oneof_case_[0]);
+}
 // -------------------------------------------------------------------
 
 // ProtoReadExpr
 
-// repeated .klee.ProtoUpdateNode updateList = 1;
-inline int ProtoReadExpr::updatelist_size() const {
-  return updatelist_.size();
+// .klee.ProtoUpdateNode head = 1;
+inline bool ProtoReadExpr::has_head() const {
+  return updateList_case() == kHead;
 }
-inline void ProtoReadExpr::clear_updatelist() {
-  updatelist_.Clear();
+inline void ProtoReadExpr::set_has_head() {
+  _oneof_case_[0] = kHead;
 }
-inline const ::klee::ProtoUpdateNode& ProtoReadExpr::updatelist(int index) const {
-  // @@protoc_insertion_point(field_get:klee.ProtoReadExpr.updateList)
-  return updatelist_.Get(index);
+inline void ProtoReadExpr::clear_head() {
+  if (has_head()) {
+    delete updateList_.head_;
+    clear_has_updateList();
+  }
 }
-inline ::klee::ProtoUpdateNode* ProtoReadExpr::mutable_updatelist(int index) {
-  // @@protoc_insertion_point(field_mutable:klee.ProtoReadExpr.updateList)
-  return updatelist_.Mutable(index);
+inline ::klee::ProtoUpdateNode* ProtoReadExpr::release_head() {
+  // @@protoc_insertion_point(field_release:klee.ProtoReadExpr.head)
+  if (has_head()) {
+    clear_has_updateList();
+      ::klee::ProtoUpdateNode* temp = updateList_.head_;
+    updateList_.head_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
 }
-inline ::klee::ProtoUpdateNode* ProtoReadExpr::add_updatelist() {
-  // @@protoc_insertion_point(field_add:klee.ProtoReadExpr.updateList)
-  return updatelist_.Add();
+inline const ::klee::ProtoUpdateNode& ProtoReadExpr::head() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoReadExpr.head)
+  return has_head()
+      ? *updateList_.head_
+      : *reinterpret_cast< ::klee::ProtoUpdateNode*>(&::klee::_ProtoUpdateNode_default_instance_);
 }
-inline ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >*
-ProtoReadExpr::mutable_updatelist() {
-  // @@protoc_insertion_point(field_mutable_list:klee.ProtoReadExpr.updateList)
-  return &updatelist_;
-}
-inline const ::google::protobuf::RepeatedPtrField< ::klee::ProtoUpdateNode >&
-ProtoReadExpr::updatelist() const {
-  // @@protoc_insertion_point(field_list:klee.ProtoReadExpr.updateList)
-  return updatelist_;
+inline ::klee::ProtoUpdateNode* ProtoReadExpr::mutable_head() {
+  if (!has_head()) {
+    clear_updateList();
+    set_has_head();
+    updateList_.head_ = new ::klee::ProtoUpdateNode;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoReadExpr.head)
+  return updateList_.head_;
 }
 
 // .klee.ProtoArray root = 2;
@@ -1877,6 +2071,15 @@ inline void ProtoReadExpr::set_allocated_expr(::klee::ProtoExpr* expr) {
   // @@protoc_insertion_point(field_set_allocated:klee.ProtoReadExpr.expr)
 }
 
+inline bool ProtoReadExpr::has_updateList() const {
+  return updateList_case() != UPDATELIST_NOT_SET;
+}
+inline void ProtoReadExpr::clear_has_updateList() {
+  _oneof_case_[0] = UPDATELIST_NOT_SET;
+}
+inline ProtoReadExpr::UpdateListCase ProtoReadExpr::updateList_case() const {
+  return ProtoReadExpr::UpdateListCase(_oneof_case_[0]);
+}
 // -------------------------------------------------------------------
 
 // ProtoExtractExpr
@@ -1961,6 +2164,60 @@ inline void ProtoExtractExpr::set_allocated_expr(::klee::ProtoExpr* expr) {
 
 // -------------------------------------------------------------------
 
+// ProtoNotOptimizedExpr
+
+// .klee.ProtoExpr src = 1;
+inline bool ProtoNotOptimizedExpr::has_src() const {
+  return this != internal_default_instance() && src_ != NULL;
+}
+inline void ProtoNotOptimizedExpr::clear_src() {
+  if (GetArenaNoVirtual() == NULL && src_ != NULL) {
+    delete src_;
+  }
+  src_ = NULL;
+}
+inline const ::klee::ProtoExpr& ProtoNotOptimizedExpr::src() const {
+  const ::klee::ProtoExpr* p = src_;
+  // @@protoc_insertion_point(field_get:klee.ProtoNotOptimizedExpr.src)
+  return p != NULL ? *p : *reinterpret_cast<const ::klee::ProtoExpr*>(
+      &::klee::_ProtoExpr_default_instance_);
+}
+inline ::klee::ProtoExpr* ProtoNotOptimizedExpr::release_src() {
+  // @@protoc_insertion_point(field_release:klee.ProtoNotOptimizedExpr.src)
+  
+  ::klee::ProtoExpr* temp = src_;
+  src_ = NULL;
+  return temp;
+}
+inline ::klee::ProtoExpr* ProtoNotOptimizedExpr::mutable_src() {
+  
+  if (src_ == NULL) {
+    src_ = new ::klee::ProtoExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoNotOptimizedExpr.src)
+  return src_;
+}
+inline void ProtoNotOptimizedExpr::set_allocated_src(::klee::ProtoExpr* src) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete src_;
+  }
+  if (src) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      src = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, src, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  src_ = src;
+  // @@protoc_insertion_point(field_set_allocated:klee.ProtoNotOptimizedExpr.src)
+}
+
+// -------------------------------------------------------------------
+
 // ProtoExpr
 
 // uint32 width = 1;
@@ -1989,48 +2246,6 @@ inline void ProtoExpr::set_kind(::google::protobuf::uint32 value) {
   
   kind_ = value;
   // @@protoc_insertion_point(field_set:klee.ProtoExpr.kind)
-}
-
-// uint32 refCount = 3;
-inline void ProtoExpr::clear_refcount() {
-  refcount_ = 0u;
-}
-inline ::google::protobuf::uint32 ProtoExpr::refcount() const {
-  // @@protoc_insertion_point(field_get:klee.ProtoExpr.refCount)
-  return refcount_;
-}
-inline void ProtoExpr::set_refcount(::google::protobuf::uint32 value) {
-  
-  refcount_ = value;
-  // @@protoc_insertion_point(field_set:klee.ProtoExpr.refCount)
-}
-
-// uint32 hash = 4;
-inline void ProtoExpr::clear_hash() {
-  hash_ = 0u;
-}
-inline ::google::protobuf::uint32 ProtoExpr::hash() const {
-  // @@protoc_insertion_point(field_get:klee.ProtoExpr.hash)
-  return hash_;
-}
-inline void ProtoExpr::set_hash(::google::protobuf::uint32 value) {
-  
-  hash_ = value;
-  // @@protoc_insertion_point(field_set:klee.ProtoExpr.hash)
-}
-
-// uint32 numKids = 5;
-inline void ProtoExpr::clear_numkids() {
-  numkids_ = 0u;
-}
-inline ::google::protobuf::uint32 ProtoExpr::numkids() const {
-  // @@protoc_insertion_point(field_get:klee.ProtoExpr.numKids)
-  return numkids_;
-}
-inline void ProtoExpr::set_numkids(::google::protobuf::uint32 value) {
-  
-  numkids_ = value;
-  // @@protoc_insertion_point(field_set:klee.ProtoExpr.numKids)
 }
 
 // repeated .klee.ProtoExpr kids = 6;
@@ -2183,6 +2398,46 @@ inline ::klee::ProtoExtractExpr* ProtoExpr::mutable_extractdata() {
   return specialData_.extractdata_;
 }
 
+// .klee.ProtoNotOptimizedExpr NOData = 10;
+inline bool ProtoExpr::has_nodata() const {
+  return specialData_case() == kNOData;
+}
+inline void ProtoExpr::set_has_nodata() {
+  _oneof_case_[0] = kNOData;
+}
+inline void ProtoExpr::clear_nodata() {
+  if (has_nodata()) {
+    delete specialData_.nodata_;
+    clear_has_specialData();
+  }
+}
+inline ::klee::ProtoNotOptimizedExpr* ProtoExpr::release_nodata() {
+  // @@protoc_insertion_point(field_release:klee.ProtoExpr.NOData)
+  if (has_nodata()) {
+    clear_has_specialData();
+      ::klee::ProtoNotOptimizedExpr* temp = specialData_.nodata_;
+    specialData_.nodata_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline const ::klee::ProtoNotOptimizedExpr& ProtoExpr::nodata() const {
+  // @@protoc_insertion_point(field_get:klee.ProtoExpr.NOData)
+  return has_nodata()
+      ? *specialData_.nodata_
+      : *reinterpret_cast< ::klee::ProtoNotOptimizedExpr*>(&::klee::_ProtoNotOptimizedExpr_default_instance_);
+}
+inline ::klee::ProtoNotOptimizedExpr* ProtoExpr::mutable_nodata() {
+  if (!has_nodata()) {
+    clear_specialData();
+    set_has_nodata();
+    specialData_.nodata_ = new ::klee::ProtoNotOptimizedExpr;
+  }
+  // @@protoc_insertion_point(field_mutable:klee.ProtoExpr.NOData)
+  return specialData_.nodata_;
+}
+
 inline bool ProtoExpr::has_specialData() const {
   return specialData_case() != SPECIALDATA_NOT_SET;
 }
@@ -2313,6 +2568,8 @@ ProtoCache::elem() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

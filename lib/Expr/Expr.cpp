@@ -301,11 +301,9 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
   }
 }
 
-UpdateNode* recDeserializeUpdateNode(const ProtoReadExpr& data, int depth, int size) {
-    if(data.updatelist().empty())
-        return nullptr;
-    UpdateNode* next = depth == (size - 1) ? nullptr : recDeserializeUpdateNode(data, depth + 1, size);
-    return new UpdateNode(next, Expr::deserialize(data.updatelist(depth).updateindex()), Expr::deserialize(data.updatelist(depth).updatevalue()));
+UpdateNode* recDeserializeUpdateNode(const ProtoUpdateNode& node) {
+    UpdateNode* next = node.has_next() ? recDeserializeUpdateNode(node.next()) : nullptr;
+    return new UpdateNode(next, Expr::deserialize(node.updateindex()), Expr::deserialize(node.updatevalue()));
 }
 
 ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
@@ -329,8 +327,10 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
         case Read: {
             assert(pe.has_readdata() && "ReadExpr does not have read data");
             const auto &readData = pe.readdata();
-            auto *head = recDeserializeUpdateNode(readData, 0, readData.updatelist().size());
-
+            UpdateNode* head = nullptr;
+            if(readData.has_head()) {
+                head = recDeserializeUpdateNode(readData.head());
+            }
             auto index = deserialize(readData.expr());
             return ReadExpr::create(UpdateList(Array::deserialize(readData.root()), head), index);
         }
@@ -350,6 +350,10 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
             }
             assert(false && "ConcatExpr Number of kids was not 2 or 4 or 8");
         }
+        case NotOptimized:
+            assert(pe.has_nodata() && "NotOptimizedExpr does not have NotOptimizedData");
+            return NotOptimizedExpr::create(deserialize(pe.nodata().src()));
+
 #define PROTO_CAST_EXPR_CASE(T)                                    \
       case T:                                                \
         return T ## Expr::create(Expr::deserialize(pe.kids(0)), pe.width()); \
@@ -359,6 +363,7 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
         if(pe.kids_size() != 2)    { \
             pe.PrintDebugString();  \
             printKind(errs(), (Kind)pe.kind()); \
+            return ref<Expr>(); \
         } \
         assert(pe.kids_size() == 2);      \
         return T ## Expr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1))); \
@@ -602,6 +607,13 @@ ref<Expr>  NotOptimizedExpr::create(ref<Expr> src) {
   return NotOptimizedExpr::alloc(src);
 }
 
+ProtoExpr* NotOptimizedExpr::serialize() const {
+    ProtoExpr* base = Expr::serialize();
+    ProtoNotOptimizedExpr* pne = new ProtoNotOptimizedExpr;
+    pne->set_allocated_src(src->serialize());
+    base->set_allocated_nodata(pne);
+    return base;
+}
 /***/
 
 Array::Array(const std::string &_name, uint64_t _size,
@@ -625,7 +637,7 @@ Array::Array(const std::string &_name, uint64_t _size,
 ArrayCache ac;
 const Array* Array::deserialize(const ProtoArray& protoArray) {
     if(protoArray.constantvalues().empty()) {
-        return ac.CreateArray(protoArray.name(), protoArray.size(), 0, 0, protoArray.domain(), protoArray.range());
+        return ac.CreateArray(protoArray.name(), protoArray.size(), nullptr, nullptr, protoArray.domain(), protoArray.range());
     }
     std::vector<ref<ConstantExpr>> cVals;
     for(const auto& cvalue : protoArray.constantvalues()) {
@@ -731,18 +743,23 @@ int ReadExpr::compareContents(const Expr &b) const {
   return updates.compare(static_cast<const ReadExpr&>(b).updates);
 }
 
+ProtoUpdateNode* serializeList(const UpdateNode* iter) {
+    auto* pn = new ProtoUpdateNode;
+    pn->set_allocated_updateindex(iter->index->serialize());
+    pn->set_allocated_updatevalue(iter->value->serialize());
+    if(iter->next)
+        pn->set_allocated_next(serializeList(iter->next));
+    return pn;
+}
+
 ProtoExpr* ReadExpr::serialize() const {
     ProtoExpr* base = Expr::serialize();
     auto* readExpr = new ProtoReadExpr();
     readExpr->set_allocated_expr(this->index->serialize());
     readExpr->set_allocated_root(this->updates.root->serialize());
     const UpdateNode* iter = this->updates.head;
-    for(; iter; iter = iter->next) {
-       auto* protoUpdateNode = new ProtoUpdateNode();
-       protoUpdateNode->set_allocated_updateindex(iter->index->serialize());
-       protoUpdateNode->set_allocated_updatevalue(iter->value->serialize());
-       readExpr->mutable_updatelist()->AddAllocated(protoUpdateNode);
-    }
+    if(iter)
+        readExpr->set_allocated_head(serializeList(iter));
     base->set_allocated_readdata(readExpr);
     return base;
 }
