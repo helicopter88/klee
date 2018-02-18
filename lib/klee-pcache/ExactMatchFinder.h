@@ -12,13 +12,15 @@
 #include "Finder.h"
 
 namespace klee {
-    class ExactMatchFinder : Finder {
+    class ExactMatchFinder : Finder<Assignment*> {
     private:
         RedisInstance instance;
     public:
-        ProtoAssignment *find(const std::set<ref<Expr>>& expressions) final;
+        Assignment** find(std::set<ref<Expr>>& expressions) final;
 
-        void insert(const std::set<ref<Expr>>& expressions, const Assignment *value) final;
+        void insert(std::set<ref<Expr>>& expressions, Assignment *value) final;
+
+        void close() final;
     };
 }
 

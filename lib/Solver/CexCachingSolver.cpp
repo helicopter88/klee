@@ -27,6 +27,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "klee/util/Cache.pb.h"
 #include "../klee-pcache/ExactMatchFinder.h"
+#include "../klee-pcache/SubSupersetFinder.h"
 
 using namespace klee;
 using namespace llvm;
@@ -84,8 +85,6 @@ class CexCachingSolver : public SolverImpl {
 
     bool getAssignment(const Query &query, Assignment *&result);
 
-    void serializeCache();
-
 public:
     explicit CexCachingSolver(Solver *_solver) : solver(_solver) {
         TimerStatIncrementer t(stats::deserializationTime);
@@ -140,11 +139,10 @@ struct NullOrSatisfyingAssignment {
 /// unsatisfiable query).
 /// \return - True if a cached result was found.
 bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
-    ProtoAssignment *previousLookup = finder.find(key);
+    Assignment **previousLookup = finder.find(key);
     if (previousLookup) {
         ++stats::previousCacheHits;
-        result = Assignment::deserialize(*previousLookup);
-        delete previousLookup;
+        result = *previousLookup;
         return true;
     }
 
@@ -282,13 +280,9 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
 }
 
 ///
-/*
-void CexCachingSolver::serializeCache() {
-    std::cout << "HERE" << std::endl;
-}
-*/
+
 CexCachingSolver::~CexCachingSolver() {
-//    serializeCache();
+    finder.close();
     cache.clear();
     delete solver;
     for (auto it : assignmentsTable)

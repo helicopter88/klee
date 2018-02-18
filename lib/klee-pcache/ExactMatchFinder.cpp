@@ -9,7 +9,7 @@
 
 using namespace klee;
 
-ProtoAssignment *ExactMatchFinder::find(const std::set<ref<Expr>>& expressions) {
+Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
     TimerStatIncrementer t(stats::deserializationTime);
     ProtoCacheElem protoCacheElem;
     for (const ref<Expr> &r : expressions) {
@@ -19,12 +19,14 @@ ProtoAssignment *ExactMatchFinder::find(const std::set<ref<Expr>>& expressions) 
     if (res.empty()) {
         return nullptr;
     }
-    auto *pa = new ProtoAssignment();
-    pa->ParseFromString(res);
-    return pa;
+    ProtoAssignment pa;
+    pa.ParseFromString(res);
+    Assignment **ret = new Assignment *();
+    *ret = Assignment::deserialize(pa);
+    return ret;
 }
 
-void ExactMatchFinder::insert(const std::set<ref<Expr>>& expressions, const Assignment *value){
+void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *value) {
     TimerStatIncrementer t(stats::serializationTime);
     ProtoCacheElem protoCacheElem;
     for (const ref<Expr> &r : expressions) {
@@ -39,3 +41,5 @@ void ExactMatchFinder::insert(const std::set<ref<Expr>>& expressions, const Assi
     }
     instance.set(protoCacheElem.SerializeAsString(), assignment->SerializeAsString());
 }
+
+void ExactMatchFinder::close() {}

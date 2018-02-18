@@ -16,7 +16,7 @@ RedisInstance::RedisInstance(const std::string &url, size_t port) {
     client.config_set("maxmemory-policy", "allkeys-lfu");
 }
 
-const std::string RedisInstance::get(const std::string &&key) {
+const std::string RedisInstance::get(const std::string &key) {
     std::string ret;
     client.get(key, [&](const cpp_redis::reply &reply) {
         if (!reply.is_null() && reply.is_string()) {
@@ -27,7 +27,7 @@ const std::string RedisInstance::get(const std::string &&key) {
     return ret;
 }
 
-void RedisInstance::set(const std::string &&key, const std::string &&value) {
+void RedisInstance::set(const std::string &key, const std::string &value) {
     client.set(key, value, [](const cpp_redis::reply &reply) {
     });
     client.commit();

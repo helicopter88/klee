@@ -12,16 +12,16 @@
 #include <klee/Internal/ADT/MapOfSets.h>
 #include "klee/Expr.h"
 namespace klee {
-    class PersistentMapOfSets : public Storage<std::set<ref<Expr>>, Assignment *> {
+    class PersistentMapOfSets : public Storage<std::set<ref<Expr>>, Assignment **> {
     private:
         const std::string path;
         MapOfSets<ref<Expr>, Assignment *> cache;
     public:
         explicit PersistentMapOfSets(const std::string &_path = "cache.bin");
 
-        Assignment *const get(const std::set<ref<Expr>> &&key) final;
+        Assignment** get(std::set<ref<Expr>> &key) final;
 
-        void set(const std::set<ref<Expr>> &&key, Assignment *const&& value) final;
+        void set(std::set<ref<Expr>> &key, Assignment **const& value) final;
 
         void store() final;
 

@@ -8,6 +8,25 @@
 #include "klee/util/Cache.pb.h"
 
 namespace klee {
+
+    struct NullAssignment {
+        bool operator()(Assignment *a) const { return !a; }
+    };
+
+    struct NonNullAssignment {
+        bool operator()(Assignment *a) const { return a != 0; }
+    };
+
+    struct NullOrSatisfyingAssignment {
+        std::set<ref<Expr>> &key;
+
+        explicit NullOrSatisfyingAssignment(std::set<ref<Expr>> &_key) : key(_key) {}
+
+        bool operator()(Assignment *a) const {
+            return !a || a->satisfies(key.begin(), key.end());
+        }
+    };
+
     PersistentMapOfSets::PersistentMapOfSets(const std::string &_path) : path(_path) {
         std::ifstream ifs(path);
         auto *pc = new ProtoCache();
@@ -33,17 +52,26 @@ namespace klee {
         delete pc;
     }
 
-    Assignment *const PersistentMapOfSets::get(const std::set<ref<Expr>> &&key) {
-        Assignment **const value = cache.lookup(key);
+    Assignment **PersistentMapOfSets::get(std::set<ref<Expr>> &key) {
+        Assignment **value = cache.lookup(key);
         if (value) {
-            return *value;
+            return value;
         }
-        // TODO: perform subset/superset
-        return nullptr;
+        // Find a non satisfying subset, if it exists then this expression is unsatisfiable.
+        value = cache.findSubset(key, NullAssignment());
+        if (!value) {
+            // If a superset is satisfiable then this subset must be satisfiable.
+            value = cache.findSuperset(key, NonNullAssignment());
+        }
+        if (!value)
+            value = cache.findSubset(key, NullOrSatisfyingAssignment(key));
+
+
+        return value;
     }
 
-    void PersistentMapOfSets::set(const std::set<ref<Expr>> &&key, Assignment *const &&value) {
-        cache.insert(key, value);
+    void PersistentMapOfSets::set(std::set<ref<Expr>> &key, Assignment **const &value) {
+        cache.insert(key, *value);
     }
 
     void PersistentMapOfSets::store() {
@@ -52,13 +80,20 @@ namespace klee {
             std::cout << "File deleted!" << std::endl;
         std::ofstream ofs(path);
         auto *protoCache = new ProtoCache;
-        for (const auto &c : cache) {
-            if (c.second) {
+        for (auto c : cache) {
+            if (!c.second) {
                 auto *pc = new ProtoCacheElem;
                 for (const auto &expr : c.first) {
                     pc->mutable_key()->AddAllocated(expr->serialize());
                 }
-                pc->set_allocated_assignment(c.second->serialize());
+                ProtoAssignment *protoAssignment;
+                if(!c.second) {
+                    protoAssignment = new ProtoAssignment;
+                    protoAssignment->set_nobinding(true);
+                } else {
+                    protoAssignment = c.second->serialize();
+                }
+                pc->set_allocated_assignment(protoAssignment);
                 protoCache->mutable_elem()->AddAllocated(pc);
             }
         }
@@ -70,8 +105,6 @@ namespace klee {
 
     PersistentMapOfSets::~PersistentMapOfSets() {
         store();
-        for(auto binding : cache) {
-            delete binding.second;
-        }
+        cache.clear();
     }
 }

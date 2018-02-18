@@ -8,9 +8,12 @@
 
 #include <cpp_redis/core/client.hpp>
 
-template <typename K, typename V> class Storage {
-    virtual const V get(const K&& key) = 0;
-    virtual void set(const K&& key, const V&& value) = 0;
+template<typename K, typename V>
+class Storage {
+    virtual V get(K &key) = 0;
+
+    virtual void set(K &key, const V &value) = 0;
+
     virtual void store() =0;
 };
 

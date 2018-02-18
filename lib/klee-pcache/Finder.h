@@ -9,10 +9,11 @@
 #include <klee/util/Assignment.h>
 #include "klee/Expr.h"
 namespace klee {
-    class Finder {
+    template <typename Result> class Finder {
     public:
-        virtual ProtoAssignment* find(const std::set<ref<Expr>>& exprs) = 0;
-        virtual void insert(const std::set<ref<Expr>>& exprs, const Assignment* assignment) = 0;
+        virtual Result* find(std::set<ref<Expr>>& exprs) = 0;
+        virtual void insert(std::set<ref<Expr>>& exprs, Assignment* assignment) = 0;
+        virtual void close() = 0;
     };
 }
 
