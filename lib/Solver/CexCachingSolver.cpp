@@ -66,9 +66,8 @@ class CexCachingSolver : public SolverImpl {
     typedef std::set<Assignment *, AssignmentLessThan> assignmentsTable_ty;
 
     Solver *solver;
-    ExactMatchFinder emf;
+    ExactMatchFinder finder;
     MapOfSets<ref<Expr>, Assignment *> cache;
-    MapOfSets<ref<Expr>, Assignment *> previousCache;
 
     // memo table
     assignmentsTable_ty assignmentsTable;
@@ -90,28 +89,6 @@ class CexCachingSolver : public SolverImpl {
 public:
     explicit CexCachingSolver(Solver *_solver) : solver(_solver) {
         TimerStatIncrementer t(stats::deserializationTime);
-        /*std::ifstream ifs("cache.bin");
-        auto *pc = new ProtoCache();
-        pc->ParseFromIstream(&ifs);
-        for (const ProtoCacheElem &e : pc->elem()) {
-            KeyType exprs;
-            for (const ProtoExpr &expr : e.key()) {
-                ref<Expr> ex = Expr::deserialize(expr);
-                // We couldn't deserialize this expression, bail out from this assignment
-                if(!ex.get()) {
-                    std::cout << "Deserialization failed!" << std::endl;
-                    expr.PrintDebugString();
-                    exprs.clear();
-                    break;
-                }
-                exprs.insert(ex);
-            }
-            if (exprs.empty()) continue;
-            Assignment *a = Assignment::deserialize(e.assignment());
-            previousCache.insert(exprs, a);
-        }
-        ifs.close();
-        delete pc;*/
     }
 
     ~CexCachingSolver();
@@ -163,17 +140,16 @@ struct NullOrSatisfyingAssignment {
 /// unsatisfiable query).
 /// \return - True if a cached result was found.
 bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
-    Assignment* thing = emf.find(key);
-
-    /*Assignment **lookup = previousCache.lookup(key);
-    if (lookup) {
+    ProtoAssignment *previousLookup = finder.find(key);
+    if (previousLookup) {
         ++stats::previousCacheHits;
-        result = *lookup;
+        result = Assignment::deserialize(*previousLookup);
+        delete previousLookup;
         return true;
-    }*/
+    }
 
     ++stats::previousCacheMisses;
-    lookup = cache.lookup(key);
+    Assignment **lookup = cache.lookup(key);
 
     if (lookup) {
         result = *lookup;
@@ -300,36 +276,19 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
 
     result = binding;
     cache.insert(key, binding);
+    finder.insert(key, binding);
 
     return true;
 }
 
 ///
+/*
 void CexCachingSolver::serializeCache() {
     std::cout << "HERE" << std::endl;
-    int rem = std::remove("cache.bin");
-    if(rem)
-        std::cout << "File deleted!" << std::endl;
-    std::ofstream ofs("cache.bin");
-    auto* protoCache = new ProtoCache;
-    for (const auto &c : cache) {
-        if (c.second) {
-            auto *pc = new ProtoCacheElem;
-            for (const auto &expr : c.first) {
-                pc->mutable_key()->AddAllocated(expr->serialize());
-            }
-            pc->set_allocated_assignment(c.second->serialize());
-            protoCache->mutable_elem()->AddAllocated(pc);
-        }
-    }
-    protoCache->SerializeToOstream(&ofs);
-    ofs.flush();
-    ofs.close();
-    delete protoCache;
 }
-
+*/
 CexCachingSolver::~CexCachingSolver() {
-    serializeCache();
+//    serializeCache();
     cache.clear();
     delete solver;
     for (auto it : assignmentsTable)

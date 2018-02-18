@@ -28,6 +28,7 @@ klee_add_component(kleaverSolver
   ValidatingSolver.cpp
   Z3Builder.cpp
   Z3Solver.cpp
+        PersistentCachingSolver.cpp
 )
 
 set(LLVM_COMPONENTS
@@ -40,5 +41,6 @@ target_link_libraries(kleaverSolver PRIVATE
   kleeBasic
   kleaverExpr
   kleeSupport
+        klee_pcache
   ${KLEE_SOLVER_LIBRARIES})
 

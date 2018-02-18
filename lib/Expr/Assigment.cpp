@@ -56,6 +56,9 @@ namespace klee {
     }
 
     Assignment *Assignment::deserialize(const ProtoAssignment &pa) {
+        if(pa.nobinding()) {
+            return nullptr;
+        }
         std::vector<const Array *> objects;
         std::vector<std::vector<unsigned char>> values;
         for (const auto& pbv : pa.bvs()) {
