@@ -67,7 +67,7 @@ class CexCachingSolver : public SolverImpl {
     typedef std::set<Assignment *, AssignmentLessThan> assignmentsTable_ty;
 
     Solver *solver;
-    ExactMatchFinder finder;
+    SubSupersetFinder finder;
     MapOfSets<ref<Expr>, Assignment *> cache;
 
     // memo table

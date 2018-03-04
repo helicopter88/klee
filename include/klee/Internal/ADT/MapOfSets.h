@@ -84,7 +84,7 @@ namespace klee {
 
   /***/
 
-  template<class K, class V>
+  template<typename K, typename V>
   class MapOfSets<K,V>::Node {
     friend class MapOfSets<K,V>;
     friend class MapOfSets<K,V>::iterator;

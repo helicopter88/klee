@@ -20,8 +20,9 @@
 #include "klee/util/ExprPPrinter.h"
 
 #include <sstream>
-#include <klee/util/Cache.pb.h>
 #include <klee/util/ArrayCache.h>
+#include <klee/util/Cache_generated.h>
+#include <iostream>
 
 using namespace klee;
 using namespace llvm;
@@ -83,15 +84,15 @@ ref<Expr> Expr::createTempRead(const Array *array, Expr::Width w) {
   }
 }
 
-ProtoExpr* Expr::serialize() const {
-    auto* pe = new ProtoExpr;
-    pe->set_width(this->getWidth());
-    pe->set_kind(this->getKind());
+ProtoExprBuilder* Expr::serialize(flatbuffers::FlatBufferBuilder& builder) const {
+    ProtoExprBuilder* protoExprBuilder = new ProtoExprBuilder(builder);
+    protoExprBuilder->add_width(this->getWidth());
+    protoExprBuilder->add_kind(this->getKind());
     for(unsigned k = 0; k < this->getNumKids(); k++) {
         auto pKid = this->getKid(k);
-        pe->mutable_kids()->AddAllocated(pKid->serialize());
+        protoExprBuilder->add_kids(pKid->serialize(builder)->Finish()); //->AddAllocated(pKid->serialize(builder));
     }
-    return pe;
+    return protoExprBuilder;
 }
 
 int Expr::compare(const Expr &b) const {
@@ -307,66 +308,68 @@ UpdateNode* recDeserializeUpdateNode(const ProtoUpdateNode& node) {
 }
 
 ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
+    using namespace ProtoExpr_;
     switch (pe.kind()) {
         case Constant: {
-            assert(pe.has_constdata() && "ConstExpr does not have constant data");
-            return ConstantExpr::create(pe.constdata().constexprval(), pe.constdata().constexprbwidth());
+            const ProtoConstExpr *pExpr = pe.specialData()->constData();
+            assert(pExpr && "ConstExpr does not have constant data");
+            return ConstantExpr::create(pExpr->constExprVal(), pExpr->constExprBWidth());
         }
         case Select: {
-            assert(pe.kids_size() == 3 && "Wrong number of children for SelectExpr");
-            return SelectExpr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)),
-                                      Expr::deserialize(pe.kids(2)));
+            assert(pe.kids()->size() == 3 && "Wrong number of children for SelectExpr");
+            return SelectExpr::create(Expr::deserialize(*pe.kids()->Get(0)), Expr::deserialize(*pe.kids()->Get(1)),
+                                      Expr::deserialize(*pe.kids()->Get(1));
         }
         case Extract: {
-            assert(pe.has_extractdata() && "ExtractExpr does not have extract data");
-            auto thing = deserialize(pe.extractdata().expr());
+            const ProtoExtractExpr *protoExtractExpr = pe.specialData()->extractData();
+            assert(protoExtractExpr && "ExtractExpr does not have extract data");
+            auto thing = deserialize(pe);
             return ExtractExpr::create(thing,
-                                       pe.extractdata().extractbitoff(),
-                                       pe.extractdata().extractwidth());
+                                       protoExtractExpr->extractBitOff(),
+                                       protoExtractExpr->extractWidth());
         }
         case Read: {
-            assert(pe.has_readdata() && "ReadExpr does not have read data");
-            const auto &readData = pe.readdata();
+            const ProtoReadExpr *protoReadExpr = pe.specialData()->readData();
+            assert(protoReadExpr && "ReadExpr does not have read data");
             UpdateNode* head = nullptr;
-            if(readData.has_head()) {
-                head = recDeserializeUpdateNode(readData.head());
+            if(protoReadExpr->head()) {
+                head = recDeserializeUpdateNode(*protoReadExpr->head());
             }
-            auto index = deserialize(readData.expr());
-            return ReadExpr::create(UpdateList(Array::deserialize(readData.root()), head), index);
+            auto index = deserialize(*protoReadExpr->expr());
+            return ReadExpr::create(UpdateList(Array::deserialize(*protoReadExpr->root()), head), index);
         }
 
         case Concat: {
-            assert(pe.kids().size() >= 2);
-            if (pe.kids().size() == 2) {
-                return ConcatExpr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)));
-            } else if (pe.kids().size() == 4) {
-                return ConcatExpr::create4(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)),
-                                           Expr::deserialize(pe.kids(2)), Expr::deserialize(pe.kids(3)));
-            } else if (pe.kids().size() == 8) {
-                return ConcatExpr::create8(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1)),
-                                           Expr::deserialize(pe.kids(2)), Expr::deserialize(pe.kids(3)),
-                                           Expr::deserialize(pe.kids(4)), Expr::deserialize(pe.kids(5)),
-                                           Expr::deserialize(pe.kids(6)), Expr::deserialize(pe.kids(7)));
+            assert(pe.kids()->size() >= 2);
+            if (pe.kids()->size() == 2) {
+                return ConcatExpr::create(Expr::deserialize(*pe.kids()->Get(0)), Expr::deserialize(*pe.kids()->Get(1)));
+            } else if (pe.kids()->size() == 4) {
+                return ConcatExpr::create4(Expr::deserialize(*pe.kids()->Get(0)), Expr::deserialize(*pe.kids()->Get(1)),
+                                           Expr::deserialize(*pe.kids()->Get(2)), Expr::deserialize(*pe.kids()->Get(3)));
+            } else if (pe.kids()->size() == 8) {
+                return ConcatExpr::create8(Expr::deserialize(*pe.kids()->Get(0)), Expr::deserialize(*pe.kids()->Get(1)),
+                                           Expr::deserialize(*pe.kids()->Get(2)), Expr::deserialize(*pe.kids()->Get(3)),
+                                           Expr::deserialize(*pe.kids()->Get(4)), Expr::deserialize(*pe.kids()->Get(5)),
+                                           Expr::deserialize(*pe.kids()->Get(6)), Expr::deserialize(*pe.kids()->Get(7)));
             }
             assert(false && "ConcatExpr Number of kids was not 2 or 4 or 8");
         }
         case NotOptimized:
-            assert(pe.has_nodata() && "NotOptimizedExpr does not have NotOptimizedData");
-            return NotOptimizedExpr::create(deserialize(pe.nodata().src()));
+            const ProtoNotOptimizedExpr* protoNotOptimizedExpr = pe.specialData()->NOData();
+            assert(protoNotOptimizedExpr && "NotOptimizedExpr does not have NotOptimizedData");
+            return NotOptimizedExpr::create(deserialize(*protoNotOptimizedExpr->src()));
 
 #define PROTO_CAST_EXPR_CASE(T)                                    \
       case T:                                                \
-        return T ## Expr::create(Expr::deserialize(pe.kids(0)), pe.width()); \
+        return T ## Expr::create(Expr::deserialize(*pe.kids()->Get(0)), pe.width()); \
 
 #define PROTO_BINARY_EXPR_CASE(T)                                 \
       case T:                       \
-        if(pe.kids_size() != 2)    { \
-            pe.PrintDebugString();  \
+        if(pe.kids()->size() != 2)    { \
             printKind(errs(), (Kind)pe.kind()); \
             return ref<Expr>(); \
         } \
-        assert(pe.kids_size() == 2);      \
-        return T ## Expr::create(Expr::deserialize(pe.kids(0)), Expr::deserialize(pe.kids(1))); \
+        return T ## Expr::create(Expr::deserialize(*pe.kids()->Get(0)), Expr::deserialize(*pe.kids()->Get(1))); \
 
         PROTO_CAST_EXPR_CASE(ZExt);
         PROTO_CAST_EXPR_CASE(SExt);
@@ -465,13 +468,10 @@ void ConstantExpr::toMemory(void *address) {
   }
 }
 
-ProtoExpr* ConstantExpr::serialize() const {
-    ProtoExpr* pe = Expr::serialize();
-    auto * pc = new ProtoConstExpr();
-    pc->set_constexprbwidth(this->value.getBitWidth());
-    pc->set_constexprval(this->value.getZExtValue());
-    pe->set_width(getWidth());
-    pe->set_allocated_constdata(pc);
+ProtoExprBuilder * ConstantExpr::serialize(flatbuffers::FlatBufferBuilder& builder) const {
+    ProtoExprBuilder* pe = Expr::serialize(builder);
+    flatbuffers::Offset<ProtoConstExpr> pc = CreateProtoConstExpr(builder, this->value.getBitWidth(), this->value.getBitWidth());
+    pe->add_specialData(pc.o);
     return pe;
 }
 
@@ -607,11 +607,10 @@ ref<Expr>  NotOptimizedExpr::create(ref<Expr> src) {
   return NotOptimizedExpr::alloc(src);
 }
 
-ProtoExpr* NotOptimizedExpr::serialize() const {
-    ProtoExpr* base = Expr::serialize();
-    ProtoNotOptimizedExpr* pne = new ProtoNotOptimizedExpr;
-    pne->set_allocated_src(src->serialize());
-    base->set_allocated_nodata(pne);
+ProtoExprBuilder* NotOptimizedExpr::serialize(flatbuffers::FlatBufferBuilder& fbb) const {
+    ProtoExprBuilder* base = Expr::serialize(fbb);
+    auto thing = CreateProtoNotOptimizedExpr(fbb, src->serialize(fbb)->Finish());
+    base->add_specialData(thing.o);
     return base;
 }
 /***/
@@ -636,15 +635,18 @@ Array::Array(const std::string &_name, uint64_t _size,
 
 ArrayCache ac;
 const Array* Array::deserialize(const ProtoArray& protoArray) {
-    if(protoArray.constantvalues().empty()) {
-        return ac.CreateArray(protoArray.name(), protoArray.size(), nullptr, nullptr, protoArray.domain(), protoArray.range());
+    if(!protoArray.size()) {
+        return ac.CreateArray(protoArray.name()->c_str(), protoArray.size(), nullptr, nullptr, protoArray.domain(), protoArray.range());
     }
     std::vector<ref<ConstantExpr>> cVals;
-    for(const auto& cvalue : protoArray.constantvalues()) {
-        ref<ConstantExpr> cExpr =  ConstantExpr::create(cvalue.constdata().constexprval(), cvalue.constdata().constexprbwidth());
+    flatbuffers::FlatBufferBuilder flatBufferBuilder;
+
+    for(flatbuffers::Offset<ProtoExpr>* cvalue : protoArray.constantValues()) {
+        
+        ref<ConstantExpr> cExpr =  ConstantExpr::alloc(cvalue, cvalue->constdata().constexprbwidth());
         cVals.push_back(cExpr);
     }
-    return ac.CreateArray(protoArray.name(), protoArray.size(), &cVals[0], &cVals[0] + protoArray.size(), protoArray.domain(), protoArray.range());
+    return ac.CreateArray(protoArray.name()->c_str(), protoArray.size(), &cVals[0], &cVals[0] + protoArray.size(), protoArray.domain(), protoArray.range());
 }
 
 bool Array::operator==(const Array& rhs) const {
@@ -675,21 +677,18 @@ bool Array::operator!=(const Array &rhs) const {
 
 Array::~Array() = default;
 
-ProtoArray *Array::serialize() const {
-    auto *protoArray = new ProtoArray();
-    protoArray->set_name(getName());
-    protoArray->set_size(getSize());
-    protoArray->set_range(getRange());
-    protoArray->set_domain(getDomain());
+flatbuffers::Offset<ProtoArray> Array::serialize() const {
+    flatbuffers::FlatBufferBuilder fbb;
+    ProtoArrayBuilder pbb(fbb);
+    pbb.add_domain(getDomain());
+    pbb.add_range(getRange());
+    pbb.add_name(fbb.CreateString(getName()));
+    std::vector<flatbuffers::Offset<ProtoExpr>> exprs;
     for (const auto &constExpr : this->constantValues) {
-        protoArray->mutable_constantvalues()->AddAllocated(constExpr->serialize());
+        exprs.push_back(constExpr->serialize()->Finish());
     }
-    const Array *pArray = Array::deserialize(*protoArray);
-    assert(pArray->hash() == this->hash());
-    for(unsigned i = 0; i < this->constantValues.size(); i++) {
-        assert(pArray->constantValues[i].compare(this->constantValues[i]) == 0);
-    }
-    return protoArray;
+    pbb.add_constantValues(fbb.CreateVector(exprs));
+    return pbb.Finish();
 }
 
 unsigned Array::computeHash() {

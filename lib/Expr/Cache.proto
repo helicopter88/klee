@@ -1,60 +1,56 @@
-syntax = "proto3";
+syntax = "proto2";
 
 package klee;
 
 message ProtoArray {
-    string name = 1;
-    uint64 size = 2;
-    uint32 domain = 3;
-    uint32 range = 4;
-    repeated ProtoExpr constantValues = 6;
+    required string name = 5;
+    required uint64 size = 6;
+    required uint32 domain = 7;
+    required uint32 range = 8;
+    repeated ProtoExpr constantValues = 9;
 }
 
 message ProtoBitVector {
-    repeated fixed32 values = 1;
+    repeated fixed32 values = 10;
 }
 
 message ProtoAssignment {
-    bool allowFreeValues = 1;
+    optional bool allowFreeValues = 1;
     repeated ProtoArray objects = 2;
     repeated ProtoBitVector bvs = 3;
-    bool noBinding = 4;
+    required bool noBinding = 4;
 }
 
 message ProtoConstExpr {
-    uint32 constExprBWidth = 1;
-    uint64 constExprVal = 2;
+    optional uint32 constExprBWidth = 11[default=8];
+    optional uint64 constExprVal = 12[default=0];
 }
 
 message ProtoUpdateNode {
-    ProtoExpr updateIndex = 1;
-    ProtoExpr updateValue = 2;
-    oneof nextNode {
-        ProtoUpdateNode next = 3;
-    }
+    required ProtoExpr updateIndex = 13;
+    required ProtoExpr updateValue = 14;
+    optional ProtoUpdateNode next = 15;
 }
 
 message ProtoReadExpr {
-    oneof updateList {
-        ProtoUpdateNode head = 1;
-    }
-    ProtoArray root = 2;
-    ProtoExpr expr = 3;
+    optional ProtoUpdateNode head = 16;
+    required ProtoArray root = 17;
+    required ProtoExpr expr = 18;
 }
 
 message ProtoExtractExpr {
-    uint32 extractBitOff = 1;
-    uint32 extractWidth = 2;
-    ProtoExpr expr = 3;
+    required uint32 extractBitOff = 19;
+    required uint32 extractWidth = 20;
+    required ProtoExpr expr = 21;
 }
 
 message ProtoNotOptimizedExpr {
-    ProtoExpr src = 1;
+    required ProtoExpr src = 22;
 }
 
 message ProtoExpr {
-    uint32 width = 1;
-    uint32 kind = 2;
+    optional uint32 width = 1[default=8];
+    optional uint32 kind = 2[default=0];
     repeated ProtoExpr kids = 6;
     oneof specialData {
         ProtoConstExpr constData = 7;
@@ -66,7 +62,7 @@ message ProtoExpr {
 
 message ProtoCacheElem {
     repeated ProtoExpr key = 1;
-    ProtoAssignment assignment = 2;
+    optional ProtoAssignment assignment = 2;
 }
 
 message ProtoCache {

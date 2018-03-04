@@ -14,10 +14,11 @@
 namespace klee {
     class PersistentMapOfSets : public Storage<std::set<ref<Expr>>, Assignment **> {
     private:
+        unsigned size = 0;
         const std::string path;
         MapOfSets<ref<Expr>, Assignment *> cache;
     public:
-        explicit PersistentMapOfSets(const std::string &_path = "cache.bin");
+        explicit PersistentMapOfSets(const std::string &_path = "caches");
 
         Assignment** get(std::set<ref<Expr>> &key) final;
 
@@ -25,7 +26,6 @@ namespace klee {
 
         void store() final;
 
-        ~PersistentMapOfSets();
     };
 }
 

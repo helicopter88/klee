@@ -6,16 +6,20 @@
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
+#include <klee/util/Cache.pb.h>
 #include "klee/util/Assignment.h"
-#include "klee/util/Cache.pb.h"
 
 namespace klee {
     ProtoAssignment *Assignment::serialize() const {
         auto *protoAssignment = new ProtoAssignment();
         protoAssignment->set_allowfreevalues(this->allowFreeValues);
-        for (const auto &b : bindings) {
-            ProtoBitVector *pbv = new ProtoBitVector();
-            for (const unsigned char &v : b.second) {
+        if(bindings.empty()) {
+            return protoAssignment;
+        }
+        for (auto b : bindings) {
+            if(!b.first) continue;
+            auto *pbv = new ProtoBitVector();
+            for (unsigned char v : b.second) {
                 pbv->mutable_values()->Add(v);
             }
             protoAssignment->mutable_bvs()->AddAllocated(pbv);
@@ -24,12 +28,12 @@ namespace klee {
         return protoAssignment;
     }
 
-    void Assignment::dump() {
-        if (bindings.size() == 0) {
+    void Assignment::dump() const {
+        if (bindings.empty()) {
             llvm::errs() << "No bindings\n";
             return;
         }
-        for (bindings_ty::iterator i = bindings.begin(), e = bindings.end(); i != e;
+        for (bindings_ty::const_iterator i = bindings.cbegin(), e = bindings.cend(); i != e;
              ++i) {
             llvm::errs() << (*i).first->name << "\n[";
             for (int j = 0, k = (*i).second.size(); j < k; ++j)
