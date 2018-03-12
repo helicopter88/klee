@@ -63,6 +63,15 @@ KleeTable = TableFormat(lineabove=Line("-", "-", "-", "-"),
                         padding=0,
                         with_header_hide=None)
 
+BaseTable = TableFormat(lineabove=None,
+                        linebelowheader=None,
+                        linebetweenrows=None,
+                        linebelow=None,
+                        headerrow=DataRow(',',',',','),
+                        datarow=DataRow(',',',',','),
+                        padding=0,
+                        with_header_hide=True)
+
 def getLogFile(path):
     """Return the path to run.stats."""
     return os.path.join(path, 'run.stats')
@@ -167,6 +176,8 @@ def getLabels(pr):
     elif pr == 'more':
         labels = ('Path', 'Instrs', 'Time(s)', 'ICov(%)', 'BCov(%)', 'ICount',
                   'TSolver(%)', 'States', 'maxStates', 'Mem(MB)', 'maxMem(MB)')
+    elif pr == 'iTime':
+        labels = ('Path', 'Instrs', 'Time(s)')
     else:
         labels = ('Path', 'Instrs', 'Time(s)', 'ICov(%)',
                   'BCov(%)', 'ICount', 'TSolver(%)')
@@ -204,10 +215,13 @@ def getRow(record, stats, pr):
                100 * (2 * BFull + BPart) / (2 * BTot),
                SCov + SUnc, 100 * Ts / Treal,
                St, maxStates, Mem, maxMem)
+    elif pr == 'iTime':
+        row = (I, Treal)
     else:
         row = (I, Treal, 100 * SCov / (SCov + SUnc),
                100 * (2 * BFull + BPart) / (2 * BTot),
                SCov + SUnc, 100 * Ts / Treal)
+
     return row
 
 
@@ -287,7 +301,7 @@ def main():
                         help='Floating point numbers display precision '
                         '(default: 2).')
     parser.add_argument('--table-format',
-                        choices=['plain', 'simple', 'grid', 'pipe', 'orgtbl',
+                        choices=['verysimple','plain', 'simple', 'grid', 'pipe', 'orgtbl',
                                  'rst', 'mediawiki', 'latex', 'klee'],
                         dest='tableFormat', default='klee',
                         help='Table format for the summary.')
@@ -321,6 +335,7 @@ def main():
                           action='store_true', dest='pMore',
                           help='Print extra information (needed when '
                           'monitoring an ongoing run).')
+    parser.add_argument('--print-i-time', dest='printOnly')
 
     # arguments for sorting
     parser.add_argument('--sort-by', dest='sortBy', metavar='header',
@@ -359,6 +374,9 @@ def main():
         pr = 'abstime'
     elif args.pMore:
         pr = 'more'
+    elif args.printOnly:
+        pr = 'iTime'
+
 
     dirs = getKleeOutDirs(args.dir)
     if len(dirs) == 0:
@@ -421,8 +439,9 @@ def main():
     if len(data) > 1:
         table.append(totalRow)
     table.insert(0, labels)
-
-    if args.tableFormat != 'klee':
+    if args.tableFormat == 'verysimple':
+        print(tabulate(table, tablefmt=BaseTable))
+    elif args.tableFormat != 'klee':
         print(tabulate(
             table, headers='firstrow',
             tablefmt=args.tableFormat,

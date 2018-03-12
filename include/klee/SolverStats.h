@@ -29,7 +29,7 @@ namespace klee {
         extern Statistic queryTime;
         extern Statistic previousCacheHits;
         extern Statistic previousCacheMisses;
-        extern Statistic serializationTime;
+        extern Statistic pcacheLookupTime;
         extern Statistic deserializationTime;
 
 #ifdef DEBUG

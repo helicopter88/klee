@@ -450,7 +450,7 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::queryCounterexamples
              << "," << stats::previousCacheHits
              << "," << stats::previousCacheMisses
-             << "," << stats::serializationTime / 1000000.
+             << "," << stats::pcacheLookupTime / 1000000.
              << "," << stats::deserializationTime / 1000000.
 #ifdef DEBUG
              << "," << stats::arrayHashTime / 1000000.

@@ -4,6 +4,7 @@ MAINTAINER Dan Liew <daniel.liew@imperial.ac.uk>
 # FIXME: Docker doesn't currently offer a way to
 # squash the layers from within a Dockerfile so
 # the resulting image is unnecessarily large!
+RUN pwd
 
 ENV LLVM_VERSION=3.4 \
     SOLVERS=STP:Z3 \
@@ -42,8 +43,9 @@ RUN apt-get update && \
         patch \
         wget \
         unzip \
+        redis-server \
         binutils && \
-    pip3 install -U lit tabulate wllvm && \
+  pip3 install -U lit tabulate wllvm && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 50 && \
     ( wget -O - http://download.opensuse.org/repositories/home:delcypher:z3/xUbuntu_14.04/Release.key | apt-key add - ) && \
     echo 'deb http://download.opensuse.org/repositories/home:/delcypher:/z3/xUbuntu_14.04/ /' >> /etc/apt/sources.list.d/z3.list && \
@@ -70,6 +72,12 @@ RUN mkdir -p ${BUILD_DIR}
 
 # Build/Install SMT solvers (use TravisCI script)
 RUN cd ${BUILD_DIR} && ${KLEE_SRC}/.travis/solvers.sh
+
+# Build/Install Protobuf
+RUN cd ${BUILD_DIR} && ${KLEE_SRC}/.travis/protobuf.sh
+
+# Build/Install cpp_redis
+RUN cd ${BUILD_DIR} && ${KLEE_SRC}/.travis/redis.sh
 
 # Install testing utils (use TravisCI script)
 RUN cd ${BUILD_DIR} && mkdir test-utils && cd test-utils && \

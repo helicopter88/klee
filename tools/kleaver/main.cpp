@@ -301,13 +301,13 @@ static bool EvaluateInputAST(const char *Filename,
       ++Index;
     }
   }
+  delete S;
 
   for (std::vector<Decl*>::iterator it = Decls.begin(),
          ie = Decls.end(); it != ie; ++it)
     delete *it;
   delete P;
 
-  delete S;
 
   if (uint64_t queries = *theStatisticManager->getStatisticByName("Queries")) {
     llvm::outs()

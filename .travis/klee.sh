@@ -167,7 +167,7 @@ make
 if [ ${COVERAGE} -eq 1 ]; then
   coverage_setup
 fi
-make unittests
+#make unittests
 
 # Generate and upload coverage if COVERAGE is set
 if [ ${COVERAGE} -eq 1 ]; then
@@ -180,7 +180,7 @@ fi
 if [ ${COVERAGE} -eq 1 ]; then
   coverage_setup
 fi
-make systemtests
+#make systemtests
 
 # If metaSMT is the only solver, then rerun lit tests with non-default metaSMT backends
 if [ "X${SOLVERS}" == "XmetaSMT" ]; then
