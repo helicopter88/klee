@@ -10,12 +10,20 @@
 using namespace klee;
 
 Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
-    TimerStatIncrementer t(stats::deserializationTime);
-    ProtoCacheElem protoCacheElem;
-    for (const ref<Expr> &r : expressions) {
-        protoCacheElem.mutable_key()->AddAllocated(r->serialize());
+    TimerStatIncrementer t(stats::pcacheLookupTime);
+    std::string serialized;
+    const auto thing = nameCache.find(expressions);
+    if(thing != nameCache.cend()) {
+        serialized = thing->second;
+    } else {
+        ProtoCacheElem protoCacheElem;
+        for (const ref<Expr> &r : expressions) {
+            protoCacheElem.mutable_key()->AddAllocated(r->serialize());
+        }
+        serialized = protoCacheElem.SerializeAsString();
+        nameCache.insert(std::make_pair(expressions, serialized));
     }
-    std::string res = instance.get(protoCacheElem.SerializeAsString());
+    std::string res = instance.get(serialized);
     if (res.empty()) {
         return nullptr;
     }
@@ -27,7 +35,7 @@ Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
 }
 
 void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *value) {
-    TimerStatIncrementer t(stats::serializationTime);
+    TimerStatIncrementer t(stats::deserializationTime);
     ProtoCacheElem protoCacheElem;
     for (const ref<Expr> &r : expressions) {
         protoCacheElem.mutable_key()->AddAllocated(r->serialize());
@@ -39,7 +47,9 @@ void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *valu
         assignment = new ProtoAssignment();
         assignment->set_nobinding(true);
     }
-    instance.set(protoCacheElem.SerializeAsString(), assignment->SerializeAsString());
+    const std::string& serialized = protoCacheElem.SerializeAsString();
+    nameCache.insert(std::make_pair(expressions, serialized));
+    instance.set(serialized, assignment->SerializeAsString());
 }
 
 void ExactMatchFinder::close() {}

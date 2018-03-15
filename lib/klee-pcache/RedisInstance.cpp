@@ -17,14 +17,14 @@ RedisInstance::RedisInstance(const std::string &url, size_t port) {
 }
 
 const std::string RedisInstance::get(const std::string &key) {
-    std::string ret;
-    client.get(key, [&](const cpp_redis::reply &reply) {
-        if (!reply.is_null() && reply.is_string()) {
-            ret = reply.as_string();
+    std::string res;
+    client.get(key, [&](const cpp_redis::reply& reply) {
+        if(!reply.is_null()) {
+            res = reply.as_string();
         }
     });
     client.sync_commit();
-    return ret;
+    return res;
 }
 
 void RedisInstance::set(const std::string &key, const std::string &value) {
@@ -42,3 +42,5 @@ void RedisInstance::store() {
 RedisInstance::~RedisInstance() {
     store();
 }
+
+

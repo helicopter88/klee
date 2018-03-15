@@ -68,7 +68,9 @@ class CexCachingSolver : public SolverImpl {
 
     Solver *solver;
     SubSupersetFinder finder;
+    ExactMatchFinder emf;
     MapOfSets<ref<Expr>, Assignment *> cache;
+
 
     // memo table
     assignmentsTable_ty assignmentsTable;
@@ -139,14 +141,6 @@ struct NullOrSatisfyingAssignment {
 /// unsatisfiable query).
 /// \return - True if a cached result was found.
 bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
-    Assignment **previousLookup = finder.find(key);
-    if (previousLookup) {
-        ++stats::previousCacheHits;
-        result = *previousLookup;
-        return true;
-    }
-
-    ++stats::previousCacheMisses;
     Assignment **lookup = cache.lookup(key);
 
     if (lookup) {
@@ -200,7 +194,17 @@ bool CexCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
             return true;
         }
     }
+    lookup = finder.find(key);
+    if(!lookup) {
+        lookup = emf.find(key);
+    }
+    if (lookup) {
+        ++stats::previousCacheHits;
+        result = *lookup;
+        return true;
+    }
 
+    ++stats::previousCacheMisses;
     return false;
 }
 
@@ -275,7 +279,7 @@ bool CexCachingSolver::getAssignment(const Query &query, Assignment *&result) {
     result = binding;
     cache.insert(key, binding);
     finder.insert(key, binding);
-
+    emf.insert(key, binding);
     return true;
 }
 

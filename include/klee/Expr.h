@@ -12,7 +12,7 @@
 
 #include "klee/util/Bits.h"
 #include "klee/util/Ref.h"
-#include "klee/util/Cache_generated.h"
+#include "klee/util/Cache.pb.h"
 
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APFloat.h"
@@ -242,7 +242,7 @@ public:
   // Given an array of new kids return a copy of the expression
   // but using those children. 
   virtual ref<Expr> rebuild(ref<Expr> kids[/* getNumKids() */]) const = 0;
-  virtual ProtoExprBuilder* serialize(flatbuffers::FlatBufferBuilder& pbb) const;
+  virtual ProtoExpr* serialize() const;
   /// isZero - Is this a constant zero.
   bool isZero() const;
   
@@ -495,7 +495,7 @@ public:
   /// a symbolic array. If non-empty, this size of this array is equivalent to
   /// the array size.
   const std::vector<ref<ConstantExpr> > constantValues;
-    flatbuffers::Offset<ProtoArray> serialize() const;
+    ProtoArray* serialize() const;
     static const Array* deserialize(const ProtoArray& protoArray);
 private:
   unsigned hashValue;

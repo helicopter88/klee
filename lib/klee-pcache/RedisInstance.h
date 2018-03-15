@@ -9,17 +9,17 @@
 #include <cpp_redis/core/client.hpp>
 #include "Storage.h"
 
-class RedisInstance : public Storage<const std::string, const std::string> {
+class RedisInstance : Storage<const std::string, const std::string>{
 private:
     cpp_redis::client client;
 public:
     explicit RedisInstance(const std::string &url = "127.0.0.1", size_t port = 6379);
 
-    void set(const std::string& key, const std::string& value) override;
+    void set(const std::string& key, const std::string& value) final;
 
-    const std::string get(const std::string& key) override;
+    const std::string get(const std::string& key) final;
 
-    void store() override;
+    void store() final;
 
     ~RedisInstance();
 };
