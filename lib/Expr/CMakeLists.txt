@@ -21,6 +21,7 @@ klee_add_component(kleaverExpr
   Lexer.cpp
   Parser.cpp
   Updates.cpp
+        cache_cap.capnp.cpp
 )
 
 set(LLVM_COMPONENTS
@@ -29,3 +30,4 @@ set(LLVM_COMPONENTS
 klee_get_llvm_libs(LLVM_LIBS ${LLVM_COMPONENTS})
 target_link_libraries(kleaverExpr PUBLIC ${LLVM_LIBS})
 target_link_libraries(kleaverExpr PUBLIC protobuf)
+target_link_libraries(kleaverExpr PUBLIC capnp kj)

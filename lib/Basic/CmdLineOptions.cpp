@@ -33,6 +33,11 @@ UseCexCache("use-cex-cache",
             cl::init(true),
             cl::desc("Use counterexample caching (default=on)"));
 
+    cl::opt<bool>
+    UsePersistentCache("use-pcex-cache",
+    cl::init(true),
+    cl::desc("Use persistent counterexample caching (default=on)"));
+
 cl::opt<bool>
 UseCache("use-cache",
          cl::init(true),

@@ -17,6 +17,8 @@ extern llvm::cl::opt<bool> UseFastCexSolver;
 
 extern llvm::cl::opt<bool> UseCexCache;
 
+    extern llvm::cl::opt<bool> UsePersistentCache;
+
 extern llvm::cl::opt<bool> UseCache;
 
 extern llvm::cl::opt<bool> UseIndependentSolver; 
