@@ -15,6 +15,8 @@ namespace klee {
     public:
         Assignment** find(std::set<ref<Expr>>& exprs) override;
 
+        Assignment** findSubSuperSet(std::set<ref<Expr>>& expr);
+
         void insert(std::set<ref<Expr>>& exprs, Assignment* assignment) override;
 
         void close() override;

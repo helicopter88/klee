@@ -9,6 +9,9 @@ namespace klee {
         return persistentCache.get(exprs);
     }
 
+    Assignment **SubSupersetFinder::findSubSuperSet(std::set<ref<Expr>> &expr) {
+        return persistentCache.tryAll_get(expr);
+    }
     void SubSupersetFinder::insert(std::set<ref<klee::Expr>> &exprs, Assignment *assignment) {
         persistentCache.set(exprs, &assignment);
     }

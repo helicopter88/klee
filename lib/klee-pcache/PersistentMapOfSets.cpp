@@ -5,11 +5,15 @@
 #include <fstream>
 #include <klee/util/Cache.pb.h>
 #include <llvm/Support/Path.h>
+#include <capnp/message.h>
 #include "PersistentMapOfSets.h"
-#include "klee/Expr.h"
-#include "klee/util/Cache.pb.h"
+#include <capnp/serialize.h>
+#include <capnp/serialize-packed.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 using namespace llvm;
+
 namespace klee {
 
     struct NullAssignment {
@@ -34,50 +38,47 @@ namespace klee {
         for (int i = 0; i <= INT_MAX; i++) {
             SmallString<128> s(_path);
             llvm::sys::path::append(s, "cache" + std::to_string(i) + ".bin");
-            std::ifstream ifs(s.c_str());
-            if (ifs.fail()) {
+            int fd = open(s.c_str(), O_RDWR);
+            if (fd < 0) {
+                if (errno != ENOENT)
+                    errs() << "Unable to load: " << s.c_str() << " - reason: " << strerror(errno);
                 break;
             }
-            ProtoCache *pc = new ProtoCache;
-            if (!pc->ParseFromIstream(&ifs)) {
-                //llvm::errs() << pc->ShortDebugString();
-                llvm::errs() << pc->InitializationErrorString() << "\n";
-                llvm::errs() << s.c_str() << "\n";
-            }
-
-            for (const ProtoCacheElem &e : pc->elem()) {
-                std::set<ref<Expr>> exprs;
-                for (const ProtoExpr &expr : e.key()) {
-                    ref<Expr> ex = Expr::deserialize(expr);
-                    // We couldn't deserialize this expression, bail out from this assignment
-                    if (!ex.get()) {
-                        std::cout << "Deserialization failed!" << std::endl;
-                        expr.PrintDebugString();
-                        exprs.clear();
-                        break;
-                    }
-                    exprs.insert(ex);
+            ::capnp::ReaderOptions readerOptions;
+            readerOptions.nestingLimit = 256;
+            readerOptions.traversalLimitInWords = 16384 * 1024;
+            ::capnp::PackedFdMessageReader *pfd = new capnp::PackedFdMessageReader(fd, readerOptions);
+            CapCache::Reader cacheReader = pfd->getRoot<CapCache>();
+            for (const auto &elem : cacheReader.getElems()) {
+                const auto &exprs = elem.getKey().getKey();
+                std::set<ref<Expr>> expressions;
+                for (auto expr : exprs) {
+                    expressions.insert(
+                            Expr::deserialize(std::forward<CacheExpr::Reader>(expr))
+                    );
                 }
-                if (exprs.empty()) {
-                    continue;
-                };
-                Assignment *a = Assignment::deserialize(e.assignment());
-                set(exprs, &a);
+                Assignment *a = nullptr;
+                if (elem.hasAssignment()) {
+                    a = Assignment::deserialize(elem.getAssignment());
+                }
+                set(expressions, &a);
             }
-            delete pc;
+            close(fd);
         }
-        std::cout << "Cache size: " << size << std::endl;
+#ifdef ENABLE_KLEE_DEBUG
+        errs() << "Cache size: " << size;
+#endif
     }
 
     Assignment **PersistentMapOfSets::get(std::set<ref<Expr>> &key) {
         Assignment **value = cache.lookup(key);
-        if (value) {
-            return value;
-        }
-        // Find a non satisfying subset, if it exists then this expression is unsatisfiable.
-        value = cache.findSubset(key, NullAssignment());
+        return value;
+    }
+
+    Assignment **PersistentMapOfSets::tryAll_get(std::set<ref<Expr>> &key) {
+        Assignment **value = cache.findSubset(key, NullAssignment());
         if (!value) {
-            // If a superset is satisfiable then this subset must be satisfiable.
+            // If a superset is satisfiable then this subset must be satisfiable
             value = cache.findSuperset(key, NonNullAssignment());
         }
         if (!value)
@@ -100,27 +101,35 @@ namespace klee {
 
     void PersistentMapOfSets::store() {
         int i = -1;
+        unsigned iter = 0;
         SmallString<128> p(path);
         llvm::sys::fs::create_directory(p.c_str());
         p.append("/placeholder");
-        auto *pc = new ProtoCache;
-        for (auto c : cache) {
-            auto *protoCacheElem = pc->add_elem();
+        ::capnp::MallocMessageBuilder messageBuilder;
+        CapCache::Builder cacheBuilder = messageBuilder.initRoot<CapCache>();
+        auto capCache = cacheBuilder.initElems(size);
+        for (const auto &c : cache) {
+            auto keyList = capCache[iter].initKey().initKey(c.first.size());
+            unsigned j = 0;
             for (const auto &expr : c.first) {
-                protoCacheElem->mutable_key()->AddAllocated(expr->serialize());
+                expr->serialize(keyList[j++]);
             }
-            ProtoAssignment *protoAssignment;
+
+            auto ass = capCache[iter].initAssignment();
             if (!c.second) {
-                protoAssignment = new ProtoAssignment;
-                protoAssignment->set_nobinding(true);
+                ass.setNoBinding(true);
+
             } else {
-                protoAssignment = c.second->serialize();
-                protoAssignment->set_nobinding(false);
+                c.second->serialize(std::forward<CacheAssignment::Builder>(ass));
             }
-            protoCacheElem->set_allocated_assignment(protoAssignment);
+            iter++;
         }
-        std::ofstream keyO(nextFile(p, i, "cache"), std::ios::binary | std::ios::out);
-        pc->SerializeToOstream(&keyO);
-        std::cout << "Cache size: " << size << std::endl;
+        int fd = open(nextFile(p, i, "cache"), O_RDWR | O_CREAT,
+                      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        ::capnp::writePackedMessageToFd(fd, messageBuilder);
+        close(fd);
+#ifdef ENABLE_KLEE_DEBUG
+        errs() << "Cache size: " << size;
+#endif
     }
 }

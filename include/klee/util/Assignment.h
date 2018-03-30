@@ -35,7 +35,7 @@ namespace klee {
 
     public:
         static Assignment *deserialize(const ProtoAssignment &pa);
-
+        static Assignment *deserialize(const CacheAssignment::Reader&& reader);
         Assignment(bool _allowFreeValues = false)
                 : allowFreeValues(_allowFreeValues) {}
 
@@ -66,7 +66,7 @@ namespace klee {
         void dump() const;
 
         ProtoAssignment *serialize() const;
-
+        void serialize(CacheAssignment::Builder&& builder) const;
     };
 
     class AssignmentEvaluator : public ExprEvaluator {

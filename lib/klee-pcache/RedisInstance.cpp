@@ -7,13 +7,18 @@
 RedisInstance::RedisInstance(const std::string &url, size_t port) {
     client.connect(url, port,
                    [](const std::string &host, std::size_t port, cpp_redis::client::connect_state status) {
+#ifdef ENABLE_KLEE_DEBUG
                        if (status == cpp_redis::client::connect_state::dropped) {
                            std::cout << "Goodbye!" << std::endl;
                        }
+#endif
                    });
-    client.config_set("appendonly", "no");
-    client.config_set("maxmemory", "1gb");
-    client.config_set("maxmemory-policy", "allkeys-lfu");
+}
+
+std::future<cpp_redis::reply> RedisInstance::future_get(const std::string &key) {
+    std::future<cpp_redis::reply> fut = client.get(key);
+    client.commit();
+    return fut;
 }
 
 const std::string RedisInstance::get(const std::string &key) {

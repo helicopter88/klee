@@ -18,7 +18,7 @@ public:
     void set(const std::string& key, const std::string& value) final;
 
     const std::string get(const std::string& key) final;
-
+    std::future<cpp_redis::reply> future_get(const std::string& key);
     void store() final;
 
     ~RedisInstance();

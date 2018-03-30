@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 #include <klee/util/Cache.pb.h>
 #include "klee/util/Assignment.h"
+#include <klee/util/cache_cap.capnp.h>
 
 namespace klee {
     ProtoAssignment *Assignment::serialize() const {
@@ -28,6 +29,23 @@ namespace klee {
         return protoAssignment;
     }
 
+    void Assignment::serialize(CacheAssignment::Builder &&builder) const {
+        builder.setAllowFreeValues(this->allowFreeValues);
+        if(bindings.empty()) {
+            builder.setNoBinding(true);
+            return;
+        }
+        int i = 0;
+        auto bins = builder.initBindings(bindings.size());
+        for(auto b : bindings) {
+            b.first->serialize(bins[i].getObjects());
+            auto bvs = bins[i].initBvs(b.second.size());
+            for(int j = 0; j < b.second.size(); j++) {
+                bvs.set(j, b.second[j]);
+            }
+            i++;
+        }
+    }
     void Assignment::dump() const {
         if (bindings.empty()) {
             llvm::errs() << "No bindings\n";
@@ -77,5 +95,21 @@ namespace klee {
             objects.emplace_back(Array::deserialize(obj));
         }
         return new Assignment(objects, values, pa.allowfreevalues());
+    }
+    Assignment* Assignment::deserialize(const CacheAssignment::Reader &&reader) {
+        if(reader.getNoBinding())
+            return nullptr;
+
+        std::vector<const Array *> objects;
+        std::vector<std::vector<unsigned char>> values;
+        for(const auto& binding : reader.getBindings()) {
+            std::vector<unsigned char> tmp;
+            for(const uint8_t t : binding.getBvs()) {
+                tmp.push_back(t);
+            }
+            values.push_back(tmp);
+            objects.emplace_back(Array::deserialize(binding.getObjects()));
+        }
+        return new Assignment(objects, values, reader.getAllowFreeValues());
     }
 }

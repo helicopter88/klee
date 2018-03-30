@@ -22,6 +22,9 @@
 #include <sstream>
 #include <klee/util/Cache.pb.h>
 #include <klee/util/ArrayCache.h>
+#include <klee/util/cache_cap.capnp.h>
+#include <capnp/message.h>
+#include <capnp/serialize-packed.h>
 
 using namespace klee;
 using namespace llvm;
@@ -42,43 +45,43 @@ ref<Expr> Expr::createTempRead(const Array *array, Expr::Width w) {
 
   switch (w) {
   default: assert(0 && "invalid width");
-  case Expr::Bool: 
-    return ZExtExpr::create(ReadExpr::create(ul, 
+  case Expr::Bool:
+    return ZExtExpr::create(ReadExpr::create(ul,
                                              ConstantExpr::alloc(0, Expr::Int32)),
                             Expr::Bool);
-  case Expr::Int8: 
-    return ReadExpr::create(ul, 
+  case Expr::Int8:
+    return ReadExpr::create(ul,
                             ConstantExpr::alloc(0,Expr::Int32));
-  case Expr::Int16: 
-    return ConcatExpr::create(ReadExpr::create(ul, 
+  case Expr::Int16:
+    return ConcatExpr::create(ReadExpr::create(ul,
                                                ConstantExpr::alloc(1,Expr::Int32)),
-                              ReadExpr::create(ul, 
+                              ReadExpr::create(ul,
                                                ConstantExpr::alloc(0,Expr::Int32)));
-  case Expr::Int32: 
-    return ConcatExpr::create4(ReadExpr::create(ul, 
+  case Expr::Int32:
+    return ConcatExpr::create4(ReadExpr::create(ul,
                                                 ConstantExpr::alloc(3,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(2,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(1,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(0,Expr::Int32)));
-  case Expr::Int64: 
-    return ConcatExpr::create8(ReadExpr::create(ul, 
+  case Expr::Int64:
+    return ConcatExpr::create8(ReadExpr::create(ul,
                                                 ConstantExpr::alloc(7,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(6,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(5,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(4,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(3,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(2,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(1,Expr::Int32)),
-                               ReadExpr::create(ul, 
+                               ReadExpr::create(ul,
                                                 ConstantExpr::alloc(0,Expr::Int32)));
   }
 }
@@ -94,6 +97,16 @@ ProtoExpr* Expr::serialize() const {
     return pe;
 }
 
+void Expr::serialize(CacheExpr::Builder&& builder) const {
+    builder.setKind(this->getKind());
+    builder.setWidth(this->getWidth());
+    auto kids = builder.initKids(this->getNumKids());
+    unsigned i = 0;
+    for(; i < this->getNumKids(); i++) {
+        this->getKid(i)->serialize(kids[i]);
+    }
+
+}
 int Expr::compare(const Expr &b) const {
   static ExprEquivSet equivs;
   int r = compare(b, equivs);
@@ -191,7 +204,7 @@ unsigned Expr::computeHash() {
     res <<= 1;
     res ^= getKid(i)->hash() * Expr::MAGIC_HASH_CONSTANT;
   }
-  
+
   hashValue = res;
   return hashValue;
 }
@@ -241,7 +254,7 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
       assert(numArgs == 1 && args[0].isExpr() &&
              "invalid args array for given opcode");
       return NotOptimizedExpr::create(args[0].expr);
-      
+
     case Select:
       assert(numArgs == 3 && args[0].isExpr() &&
              args[1].isExpr() && args[2].isExpr() &&
@@ -251,19 +264,19 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
                                 args[2].expr);
 
     case Concat: {
-      assert(numArgs == 2 && args[0].isExpr() && args[1].isExpr() && 
+      assert(numArgs == 2 && args[0].isExpr() && args[1].isExpr() &&
              "invalid args array for Concat opcode");
-      
+
       return ConcatExpr::create(args[0].expr, args[1].expr);
     }
-      
+
 #define CAST_EXPR_CASE(T)                                    \
       case T:                                                \
         assert(numArgs == 2 &&				     \
                args[0].isExpr() && args[1].isWidth() &&      \
                "invalid args array for given opcode");       \
       return T ## Expr::create(args[0].expr, args[1].width); \
-      
+
 #define BINARY_EXPR_CASE(T)                                 \
       case T:                                               \
         assert(numArgs == 2 &&                              \
@@ -273,7 +286,7 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
 
       CAST_EXPR_CASE(ZExt);
       CAST_EXPR_CASE(SExt);
-      
+
       BINARY_EXPR_CASE(Add);
       BINARY_EXPR_CASE(Sub);
       BINARY_EXPR_CASE(Mul);
@@ -287,7 +300,7 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
       BINARY_EXPR_CASE(Shl);
       BINARY_EXPR_CASE(LShr);
       BINARY_EXPR_CASE(AShr);
-      
+
       BINARY_EXPR_CASE(Eq);
       BINARY_EXPR_CASE(Ne);
       BINARY_EXPR_CASE(Ult);
@@ -304,6 +317,116 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
 UpdateNode* recDeserializeUpdateNode(const ProtoUpdateNode& node) {
     UpdateNode* next = node.has_next() ? recDeserializeUpdateNode(node.next()) : nullptr;
     return new UpdateNode(next, Expr::deserialize(node.updateindex()), Expr::deserialize(node.updatevalue()));
+}
+
+UpdateNode* deserializeUpdateNode(CacheUpdateNode::Reader&& reader) {
+    UpdateNode* next = reader.hasNext() ? deserializeUpdateNode(reader.getNext()) : nullptr;
+    return new UpdateNode(next, Expr::deserialize(reader.getUpdateIndex()), Expr::deserialize(reader.getUpdateValue()));
+}
+
+ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
+#define KID(x) re.getKids()[x]
+
+    switch (re.getKind()) {
+        case Constant: {
+
+            assert(re.getSpecialData().hasConstData() && "ConstExpr does not have constant data");
+            auto constData = re.getSpecialData().getConstData();
+            if(constData.getConstExprWidth() > 64) {
+                APInt i(constData.getConstExprWidth(), constData.getConstExprOverSizeVal().cStr(), 16);
+                return new ConstantExpr(i);
+            }
+            return ConstantExpr::create(constData.getConstExprVal(), constData.getConstExprWidth());
+        }
+        case Select: {
+            assert(re.getKids().size() == 3 && "Wrong number of children for SelectExpr");
+            return SelectExpr::create(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)),
+                                      Expr::deserialize(KID(2)));
+        }
+        case Extract: {
+            assert(re.getSpecialData().hasExtractData() && "ExtractExpr does not have extract data");
+            auto extractData = re.getSpecialData().getExtractData();
+            auto thing = deserialize(extractData.getExpr());
+            return ExtractExpr::create(thing,
+                                       extractData.getExtractBitOff(),
+                                       extractData.getExtractWidth());
+        }
+        case Read: {
+            assert(re.getSpecialData().hasReadData() && "ReadExpr does not have read data");
+            const auto &readData = re.getSpecialData().getReadData();
+            UpdateNode* head = nullptr;
+            if(readData.hasHead()) {
+                head = deserializeUpdateNode(readData.getHead());
+            }
+            auto index = deserialize(readData.getExpr());
+            return ReadExpr::create(UpdateList(Array::deserialize(readData.getRoot()), head), index);
+            break;
+        }
+
+        case Concat: {
+            assert(re.getKids().size() >= 2);
+            if (re.getKids().size() == 2) {
+                return ConcatExpr::create(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)));
+            } else if (re.getKids().size() == 4) {
+                return ConcatExpr::create4(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)),
+                                           Expr::deserialize(KID(2)), Expr::deserialize(KID(3)));
+            } else if (re.getKids().size() == 8) {
+                return ConcatExpr::create8(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)),
+                                           Expr::deserialize(KID(2)), Expr::deserialize(KID(3)),
+                                           Expr::deserialize(KID(4)), Expr::deserialize(KID(5)),
+                                           Expr::deserialize(KID(6)), Expr::deserialize(KID(7)));
+            }
+            assert(false && "ConcatExpr Number of kids was not 2 or 4 or 8");
+        }
+        case NotOptimized:
+            assert(re.getSpecialData().hasNOData() && "NotOptimizedExpr does not have NotOptimizedData");
+            return NotOptimizedExpr::create(deserialize(re.getSpecialData().getNOData().getSrc()));
+
+#define CAP_CAST_EXPR_CASE(T)                                    \
+      case T:                                                \
+        return T ## Expr::create(Expr::deserialize(KID(0)), re.getWidth()); \
+
+#define CAP_BINARY_EXPR_CASE(T)                                 \
+      case T:                       \
+        if(re.getKids().size() != 2)    { \
+            printKind(errs(), (Kind)re.getKind()); \
+            return ref<Expr>(); \
+        } \
+        return T ## Expr::create(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)));
+
+        CAP_CAST_EXPR_CASE(ZExt);
+        CAP_CAST_EXPR_CASE(SExt);
+
+        CAP_BINARY_EXPR_CASE(Add);
+        CAP_BINARY_EXPR_CASE(Sub);
+        CAP_BINARY_EXPR_CASE(Mul);
+        CAP_BINARY_EXPR_CASE(UDiv);
+        CAP_BINARY_EXPR_CASE(SDiv);
+        CAP_BINARY_EXPR_CASE(URem);
+        CAP_BINARY_EXPR_CASE(SRem);
+        CAP_BINARY_EXPR_CASE(And);
+        CAP_BINARY_EXPR_CASE(Or);
+        CAP_BINARY_EXPR_CASE(Xor);
+        CAP_BINARY_EXPR_CASE(Shl);
+        CAP_BINARY_EXPR_CASE(LShr);
+        CAP_BINARY_EXPR_CASE(AShr);
+
+        CAP_BINARY_EXPR_CASE(Eq);
+        CAP_BINARY_EXPR_CASE(Ne);
+        CAP_BINARY_EXPR_CASE(Ult);
+        CAP_BINARY_EXPR_CASE(Ule);
+        CAP_BINARY_EXPR_CASE(Ugt);
+        CAP_BINARY_EXPR_CASE(Uge);
+        CAP_BINARY_EXPR_CASE(Slt);
+        CAP_BINARY_EXPR_CASE(Sle);
+        CAP_BINARY_EXPR_CASE(Sgt);
+        CAP_BINARY_EXPR_CASE(Sge);
+        default:
+            std::cout << "Kind: " << (Kind) re.getKind() << std::endl;
+
+            return ref<Expr>();
+
+    }
 }
 
 ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
@@ -475,6 +598,16 @@ ProtoExpr* ConstantExpr::serialize() const {
     return pe;
 }
 
+void ConstantExpr::serialize(CacheExpr::Builder&& builder) const {
+    Expr::serialize(std::forward<CacheExpr::Builder>(builder));
+    CacheConstExpr::Builder constB = builder.initSpecialData().initConstData();
+    constB.setConstExprWidth(this->value.getBitWidth());
+    if(this->value.getBitWidth() > 64L) {
+        constB.setConstExprOverSizeVal(this->value.toString(16, true));
+    } else {
+        constB.setConstExprVal(this->value.getZExtValue());
+    }
+}
 void ConstantExpr::toString(std::string &Res, unsigned radix) const {
   Res = value.toString(radix, false);
 }
@@ -614,8 +747,39 @@ ProtoExpr* NotOptimizedExpr::serialize() const {
     base->set_allocated_nodata(pne);
     return base;
 }
+void NotOptimizedExpr::serialize(CacheExpr::Builder &&builder) const {
+    Expr::serialize(std::forward<CacheExpr::Builder>(builder));
+    src->serialize(builder.initSpecialData().initNOData().initSrc());
+}
 /***/
 
+void Array::serialize(CacheArray::Builder&& builder) const {
+    builder.setDomain(this->domain);
+    builder.setRange(this->range);
+    builder.setName(this->name);
+    builder.setSize(this->size);
+    if(this->constantValues.empty())
+        return;
+    auto consts = builder.initConstantValues(this->constantValues.size());
+    int i = 0;
+    for(; i < this->constantValues.size(); i++) {
+        constantValues[i]->serialize(consts[i]);
+    }
+}
+ArrayCache ac;
+const Array* Array::deserialize(const CacheArray::Reader&& reader) {
+    if(!reader.getConstantValues().size()) {
+        return ac.CreateArray(reader.getName(), reader.getSize(), nullptr, nullptr, reader.getDomain(), reader.getRange());
+    }
+    std::vector<ref<ConstantExpr>> cVals;
+    for(const auto& cvalue : reader.getConstantValues()) {
+        auto constData = cvalue.getSpecialData().getConstData();
+        ref<ConstantExpr> cExpr =  ConstantExpr::create(constData.getConstExprVal(), constData.getConstExprWidth());
+        cVals.push_back(cExpr);
+    }
+    return ac.CreateArray(reader.getName(), reader.getSize(), &cVals[0], &cVals[0] + reader.getSize(), reader.getDomain(), reader.getRange());
+
+}
 Array::Array(const std::string &_name, uint64_t _size,
              const ref<ConstantExpr> *constantValuesBegin,
              const ref<ConstantExpr> *constantValuesEnd, Expr::Width _domain,
@@ -634,7 +798,6 @@ Array::Array(const std::string &_name, uint64_t _size,
 #endif // NDEBUG
 }
 
-ArrayCache ac;
 const Array* Array::deserialize(const ProtoArray& protoArray) {
     if(protoArray.constantvalues().empty()) {
         return ac.CreateArray(protoArray.name(), protoArray.size(), nullptr, nullptr, protoArray.domain(), protoArray.range());
@@ -684,11 +847,11 @@ ProtoArray *Array::serialize() const {
     for (const auto &constExpr : this->constantValues) {
         protoArray->mutable_constantvalues()->AddAllocated(constExpr->serialize());
     }
-    const Array *pArray = Array::deserialize(*protoArray);
-    assert(pArray->hash() == this->hash());
+    //const Array *pArray = Array::deserialize(*protoArray);
+    /*assert(pArray->hash() == this->hash());
     for(unsigned i = 0; i < this->constantValues.size(); i++) {
         assert(pArray->constantValues[i].compare(this->constantValues[i]) == 0);
-    }
+    }*/
     return protoArray;
 }
 
@@ -698,16 +861,16 @@ unsigned Array::computeHash() {
     res = (res * Expr::MAGIC_HASH_CONSTANT) + name[i];
   res = (res * Expr::MAGIC_HASH_CONSTANT) + size;
   hashValue = res;
-  return hashValue; 
+  return hashValue;
 }
 /***/
 
 ref<Expr> ReadExpr::create(const UpdateList &ul, ref<Expr> index) {
-  // rollback index when possible... 
+  // rollback index when possible...
 
   // XXX this doesn't really belong here... there are basically two
   // cases, one is rebuild, where we want to optimistically try various
-  // optimizations when the index has changed, and the other is 
+  // optimizations when the index has changed, and the other is
   // initial creation, where we expect the ObjectState to have constructed
   // a smart UpdateList so it is not worth rescanning.
 
@@ -715,7 +878,7 @@ ref<Expr> ReadExpr::create(const UpdateList &ul, ref<Expr> index) {
   bool updateListHasSymbolicWrites = false;
   for (; un; un=un->next) {
     ref<Expr> cond = EqExpr::create(index, un->index);
-    
+
     if (ConstantExpr *CE = dyn_cast<ConstantExpr>(cond)) {
       if (CE->isTrue())
         return un->value;
@@ -739,7 +902,7 @@ ref<Expr> ReadExpr::create(const UpdateList &ul, ref<Expr> index) {
   return ReadExpr::alloc(ul, index);
 }
 
-int ReadExpr::compareContents(const Expr &b) const { 
+int ReadExpr::compareContents(const Expr &b) const {
   return updates.compare(static_cast<const ReadExpr&>(b).updates);
 }
 
@@ -750,6 +913,13 @@ ProtoUpdateNode* serializeList(const UpdateNode* iter) {
     if(iter->next)
         pn->set_allocated_next(serializeList(iter->next));
     return pn;
+}
+
+void serializeList(CacheUpdateNode::Builder&& builder, const UpdateNode* iter) {
+    iter->value->serialize(builder.initUpdateValue());
+    iter->index->serialize(builder.initUpdateIndex());
+    if(iter->next)
+        serializeList(builder.initNext(), iter->next);
 }
 
 ProtoExpr* ReadExpr::serialize() const {
@@ -763,6 +933,16 @@ ProtoExpr* ReadExpr::serialize() const {
     base->set_allocated_readdata(readExpr);
     return base;
 }
+
+void ReadExpr::serialize(CacheExpr::Builder &&builder) const {
+    Expr::serialize(std::forward<CacheExpr::Builder>(builder));
+    auto readData = builder.initSpecialData().initReadData();
+    index->serialize(readData.initExpr());
+    updates.root->serialize(readData.initRoot());
+    const UpdateNode* iter = this->updates.head;
+    if(iter)
+        serializeList(readData.initHead(), iter);//->set_allocated_head(serializeList(iter));
+}
 /***/
 ref<Expr> SelectExpr::create(ref<Expr> c, ref<Expr> t, ref<Expr> f) {
   Expr::Width kt = t->getWidth();
@@ -775,7 +955,7 @@ ref<Expr> SelectExpr::create(ref<Expr> c, ref<Expr> t, ref<Expr> f) {
   } else if (t==f) {
     return t;
   } else if (kt==Expr::Bool) { // c ? t : f  <=> (c and t) or (not c and f)
-    if (ConstantExpr *CE = dyn_cast<ConstantExpr>(t)) {      
+    if (ConstantExpr *CE = dyn_cast<ConstantExpr>(t)) {
       if (CE->isTrue()) {
         return OrExpr::create(c, f);
       } else {
@@ -789,7 +969,7 @@ ref<Expr> SelectExpr::create(ref<Expr> c, ref<Expr> t, ref<Expr> f) {
       }
     }
   }
-  
+
   return SelectExpr::alloc(c, t, f);
 }
 
@@ -797,7 +977,7 @@ ref<Expr> SelectExpr::create(ref<Expr> c, ref<Expr> t, ref<Expr> f) {
 
 ref<Expr> ConcatExpr::create(const ref<Expr> &l, const ref<Expr> &r) {
   Expr::Width w = l->getWidth() + r->getWidth();
-  
+
   // Fold concatenation of constants.
   //
   // FIXME: concat 0 x -> zext x ?
@@ -823,7 +1003,7 @@ ref<Expr> ConcatExpr::createN(unsigned n_kids, const ref<Expr> kids[]) {
   assert(n_kids > 0);
   if (n_kids == 1)
     return kids[0];
-  
+
   ref<Expr> r = ConcatExpr::create(kids[n_kids-2], kids[n_kids-1]);
   for (int i=n_kids-3; i>=0; i--)
     r = ConcatExpr::create(kids[i], r);
@@ -841,7 +1021,7 @@ ref<Expr> ConcatExpr::create8(const ref<Expr> &kid1, const ref<Expr> &kid2,
 			      const ref<Expr> &kid3, const ref<Expr> &kid4,
 			      const ref<Expr> &kid5, const ref<Expr> &kid6,
 			      const ref<Expr> &kid7, const ref<Expr> &kid8) {
-  return ConcatExpr::create(kid1, ConcatExpr::create(kid2, ConcatExpr::create(kid3, 
+  return ConcatExpr::create(kid1, ConcatExpr::create(kid2, ConcatExpr::create(kid3,
 			      ConcatExpr::create(kid4, ConcatExpr::create4(kid5, kid6, kid7, kid8)))));
 }
 
@@ -850,7 +1030,7 @@ ref<Expr> ConcatExpr::create8(const ref<Expr> &kid1, const ref<Expr> &kid2,
 ref<Expr> ExtractExpr::create(ref<Expr> expr, unsigned off, Width w) {
   unsigned kw = expr->getWidth();
   assert(w > 0 && off + w <= kw && "invalid extract");
-  
+
   if (w == kw) {
     return expr;
   } else if (ConstantExpr *CE = dyn_cast<ConstantExpr>(expr)) {
@@ -861,7 +1041,7 @@ ref<Expr> ExtractExpr::create(ref<Expr> expr, unsigned off, Width w) {
       // if the extract skips the right side of the concat
       if (off >= ce->getRight()->getWidth())
 	return ExtractExpr::create(ce->getLeft(), off - ce->getRight()->getWidth(), w);
-      
+
       // if the extract skips the left side of the concat
       if (off + w <= ce->getRight()->getWidth())
 	return ExtractExpr::create(ce->getRight(), off, w);
@@ -871,7 +1051,7 @@ ref<Expr> ExtractExpr::create(ref<Expr> expr, unsigned off, Width w) {
 				ExtractExpr::create(ce->getKid(1), off, ce->getKid(1)->getWidth() - off));
     }
   }
-  
+
   return ExtractExpr::alloc(expr, off, w);
 }
 
@@ -885,12 +1065,20 @@ ProtoExpr * ExtractExpr::serialize() const {
     return base;
 }
 
+void ExtractExpr::serialize(CacheExpr::Builder &&builder) const {
+    Expr::serialize(std::forward<CacheExpr::Builder>(builder));
+    auto exprData = builder.initSpecialData().initExtractData();
+    exprData.setExtractBitOff(this->offset);
+    exprData.setExtractWidth(this->width);
+    this->expr->serialize(exprData.initExpr());
+}
+
 /***/
 
 ref<Expr> NotExpr::create(const ref<Expr> &e) {
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(e))
     return CE->Not();
-  
+
   return NotExpr::alloc(e);
 }
 
@@ -918,7 +1106,7 @@ ref<Expr> SExtExpr::create(const ref<Expr> &e, Width w) {
     return ExtractExpr::create(e, 0, w);
   } else if (ConstantExpr *CE = dyn_cast<ConstantExpr>(e)) {
     return CE->SExt(w);
-  } else {    
+  } else {
     return SExtExpr::alloc(e, w);
   }
 }
@@ -978,7 +1166,7 @@ static ref<Expr> AddExpr_create(Expr *l, Expr *r) {
     } else {
       return AddExpr::alloc(l, r);
     }
-  }  
+  }
 }
 
 static ref<Expr> SubExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
@@ -1001,7 +1189,7 @@ static ref<Expr> SubExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
 }
 static ref<Expr> SubExpr_createPartial(Expr *l, const ref<ConstantExpr> &cr) {
   // l - c => l + (-c)
-  return AddExpr_createPartial(l, 
+  return AddExpr_createPartial(l,
                                ConstantExpr::alloc(0, cr->getWidth())->Sub(cr));
 }
 static ref<Expr> SubExpr_create(Expr *l, Expr *r) {
@@ -1028,7 +1216,7 @@ static ref<Expr> SubExpr_create(Expr *l, Expr *r) {
     } else {
       return SubExpr::alloc(l, r);
     }
-  }  
+  }
 }
 
 static ref<Expr> MulExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
@@ -1049,7 +1237,7 @@ static ref<Expr> MulExpr_createPartial(Expr *l, const ref<ConstantExpr> &cr) {
 }
 static ref<Expr> MulExpr_create(Expr *l, Expr *r) {
   Expr::Width type = l->getWidth();
-  
+
   if (type == Expr::Bool) {
     return AndExpr::alloc(l, r);
   } else {
@@ -1220,7 +1408,7 @@ ref<Expr>  _e_op ::create(const ref<Expr> &l, const ref<Expr> &r) {    \
     return _e_op ## _create(l.get(), r.get());                         \
   }                                                                    \
 }
-  
+
 
 static ref<Expr> EqExpr_create(const ref<Expr> &l, const ref<Expr> &r) {
   if (l == r) {
@@ -1235,7 +1423,7 @@ static ref<Expr> EqExpr_create(const ref<Expr> &l, const ref<Expr> &r) {
 /// rd a ReadExpr.  If rd is a read into an all-constant array,
 /// returns a disjunction of equalities on the index.  Otherwise,
 /// returns the initial equality expression. 
-static ref<Expr> TryConstArrayOpt(const ref<ConstantExpr> &cl, 
+static ref<Expr> TryConstArrayOpt(const ref<ConstantExpr> &cl,
 				  ReadExpr *rd) {
   if (rd->updates.root->isSymbolicArray() || rd->updates.getSize())
     return EqExpr_create(cl, rd);
@@ -1251,9 +1439,9 @@ static ref<Expr> TryConstArrayOpt(const ref<ConstantExpr> &cl,
       // Arbitrary maximum on the size of disjunction.
       if (++numMatches > 100)
         return EqExpr_create(cl, rd);
-      
-      ref<Expr> mayBe = 
-        EqExpr::create(rd->index, ConstantExpr::alloc(i, 
+
+      ref<Expr> mayBe =
+        EqExpr::create(rd->index, ConstantExpr::alloc(i,
                                                       rd->index->getWidth()));
       res = OrExpr::create(res, mayBe);
     }
@@ -1262,7 +1450,7 @@ static ref<Expr> TryConstArrayOpt(const ref<ConstantExpr> &cl,
   return res;
 }
 
-static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {  
+static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
   Expr::Width width = cl->getWidth();
 
   Expr::Kind rk = r->getKind();
@@ -1271,7 +1459,7 @@ static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
       return r;
     } else {
       // 0 == ...
-      
+
       if (rk == Expr::Eq) {
         const EqExpr *ree = cast<EqExpr>(r);
 
@@ -1308,7 +1496,7 @@ static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
     const ZExtExpr *zee = cast<ZExtExpr>(r);
     Expr::Width fromBits = zee->src->getWidth();
     ref<ConstantExpr> trunc = cl->ZExt(fromBits);
-    
+
     // pathological check, make sure it is possible to
     // zext to this value *from any value*
     if (cl == trunc->ZExt(width)) {
@@ -1320,7 +1508,7 @@ static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
     const AddExpr *ae = cast<AddExpr>(r);
     if (isa<ConstantExpr>(ae->left)) {
       // c0 = c1 + b => c0 - c1 = b
-      return EqExpr_createPartialR(cast<ConstantExpr>(SubExpr::create(cl, 
+      return EqExpr_createPartialR(cast<ConstantExpr>(SubExpr::create(cl,
                                                                       ae->left)),
                                    ae->right.get());
     }
@@ -1328,18 +1516,18 @@ static ref<Expr> EqExpr_createPartialR(const ref<ConstantExpr> &cl, Expr *r) {
     const SubExpr *se = cast<SubExpr>(r);
     if (isa<ConstantExpr>(se->left)) {
       // c0 = c1 - b => c1 - c0 = b
-      return EqExpr_createPartialR(cast<ConstantExpr>(SubExpr::create(se->left, 
+      return EqExpr_createPartialR(cast<ConstantExpr>(SubExpr::create(se->left,
                                                                       cl)),
                                    se->right.get());
     }
   } else if (rk == Expr::Read && ConstArrayOpt) {
     return TryConstArrayOpt(cl, static_cast<ReadExpr*>(r));
   }
-    
+
   return EqExpr_create(cl, r);
 }
 
-static ref<Expr> EqExpr_createPartial(Expr *l, const ref<ConstantExpr> &cr) {  
+static ref<Expr> EqExpr_createPartial(Expr *l, const ref<ConstantExpr> &cr) {
   return EqExpr_createPartialR(cr, l);
 }
 

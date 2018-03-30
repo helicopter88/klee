@@ -21,6 +21,7 @@ namespace klee {
         explicit PersistentMapOfSets(const std::string &_path = "caches");
 
         Assignment** get(std::set<ref<Expr>> &key) final;
+        Assignment** tryAll_get(std::set<ref<Expr>>& key);
 
         void set(std::set<ref<Expr>> &key, Assignment **const& value) final;
 
