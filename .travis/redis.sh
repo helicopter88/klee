@@ -9,6 +9,8 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     cmake .. -DCMAKE_BUILD_TYPE=Release
     make -j8
     sudo make install
+    cd ../
+    rm -Rf cpp_redis
 else
   echo "Unhandled TRAVIS_OS_NAME \"${TRAVIS_OS_NAME}\""
   exit 1
