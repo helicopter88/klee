@@ -27,10 +27,13 @@ namespace klee {
         extern Statistic queryConstructs;
         extern Statistic queryCounterexamples;
         extern Statistic queryTime;
-        extern Statistic previousCacheHits;
-        extern Statistic previousCacheMisses;
+        // Persistent cache related statistics
+        extern Statistic pcacheHits;
+        extern Statistic pcacheMisses;
         extern Statistic pcacheLookupTime;
-        extern Statistic deserializationTime;
+        extern Statistic pcacheInsertionTime;
+        extern Statistic pcacheRedisSize;
+        extern Statistic pcachePMapSize;
 
 #ifdef DEBUG
         extern Statistic arrayHashTime;

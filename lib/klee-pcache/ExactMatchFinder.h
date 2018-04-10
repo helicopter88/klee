@@ -18,16 +18,16 @@ namespace klee {
 
         std::map<std::set<ref<Expr>>, std::string> nameCache;
         RedisInstance instance;
-        ::capnp::MallocMessageBuilder mmb;
-        std::string serializeToString(std::set<ref<Expr>>& expressions);
-
+        ::capnp::MallocMessageBuilder lookupMessageBuilder;
+        ::capnp::MallocMessageBuilder insertionMessageBuilder;
+        std::string serializeToString(const std::set<ref<Expr>>& expressions);
     public:
         ExactMatchFinder();
-        Assignment** find(std::set<ref<Expr>>& expressions);
+        Assignment** find(std::set<ref<Expr>>& expressions) final;
 
-        void insert(std::set<ref<Expr>>& expressions, Assignment *value);
+        void insert(std::set<ref<Expr>>& expressions, Assignment *value) final;
 
-        void close();
+        void close() final;
 
         std::future<cpp_redis::reply> future_find(std::set<ref<Expr>>& expressions);
 

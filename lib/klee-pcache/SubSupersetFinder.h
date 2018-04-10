@@ -20,6 +20,8 @@ namespace klee {
         void insert(std::set<ref<Expr>>& exprs, Assignment* assignment) override;
 
         void close() override;
+
+        explicit SubSupersetFinder(const std::string& opt);
     };
 }
 

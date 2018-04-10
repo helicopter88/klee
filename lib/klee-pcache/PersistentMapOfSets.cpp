@@ -11,6 +11,7 @@
 #include <capnp/serialize-packed.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <klee/SolverStats.h>
 
 using namespace llvm;
 
@@ -46,7 +47,7 @@ namespace klee {
             }
             ::capnp::ReaderOptions readerOptions;
             readerOptions.nestingLimit = 256;
-            readerOptions.traversalLimitInWords = 16384 * 1024;
+            readerOptions.traversalLimitInWords = INT_MAX >> 8;
             ::capnp::PackedFdMessageReader *pfd = new capnp::PackedFdMessageReader(fd, readerOptions);
             CapCache::Reader cacheReader = pfd->getRoot<CapCache>();
             for (const auto &elem : cacheReader.getElems()) {
@@ -65,9 +66,6 @@ namespace klee {
             }
             close(fd);
         }
-#ifdef ENABLE_KLEE_DEBUG
-        errs() << "Cache size: " << size;
-#endif
     }
 
     Assignment **PersistentMapOfSets::get(std::set<ref<Expr>> &key) {
@@ -88,7 +86,7 @@ namespace klee {
     }
 
     void PersistentMapOfSets::set(std::set<ref<Expr>> &key, Assignment **const &value) {
-        size++;
+        ++stats::pcachePMapSize;
         cache.insert(key, *value);
     }
 
@@ -107,7 +105,7 @@ namespace klee {
         p.append("/placeholder");
         ::capnp::MallocMessageBuilder messageBuilder;
         CapCache::Builder cacheBuilder = messageBuilder.initRoot<CapCache>();
-        auto capCache = cacheBuilder.initElems(size);
+        auto capCache = cacheBuilder.initElems(stats::pcachePMapSize);
         for (const auto &c : cache) {
             auto keyList = capCache[iter].initKey().initKey(c.first.size());
             unsigned j = 0;
@@ -126,10 +124,11 @@ namespace klee {
         }
         int fd = open(nextFile(p, i, "cache"), O_RDWR | O_CREAT,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        if(fd < 0) {
+            errs() << "Could not store to file: " << strerror(errno) << "\n";
+            return;
+        }
         ::capnp::writePackedMessageToFd(fd, messageBuilder);
         close(fd);
-#ifdef ENABLE_KLEE_DEBUG
-        errs() << "Cache size: " << size;
-#endif
     }
 }

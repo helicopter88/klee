@@ -448,10 +448,12 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::queryCexCacheMisses
              << "," << stats::queryCexCacheHits
              << "," << stats::queryCounterexamples
-             << "," << stats::previousCacheHits
-             << "," << stats::previousCacheMisses
+             << "," << stats::pcacheHits
+             << "," << stats::pcacheMisses
              << "," << stats::pcacheLookupTime / 1000000.
-             << "," << stats::deserializationTime / 1000000.
+             << "," << stats::pcacheInsertionTime / 1000000.
+             << "," << stats::pcacheRedisSize
+             << "," << stats::pcachePMapSize
 #ifdef DEBUG
              << "," << stats::arrayHashTime / 1000000.
 #endif

@@ -7,7 +7,7 @@
 RedisInstance::RedisInstance(const std::string &url, size_t port) {
     client.connect(url, port,
                    [](const std::string &host, std::size_t port, cpp_redis::client::connect_state status) {
-#ifdef ENABLE_KLEE_DEBUG
+#ifdef DEBUG
                        if (status == cpp_redis::client::connect_state::dropped) {
                            std::cout << "Goodbye!" << std::endl;
                        }
@@ -33,8 +33,7 @@ const std::string RedisInstance::get(const std::string &key) {
 }
 
 void RedisInstance::set(const std::string &key, const std::string &value) {
-    client.set(key, value, [](const cpp_redis::reply &reply) {
-    });
+    client.set(key, value, [](const cpp_redis::reply& r) {});
     client.commit();
 }
 

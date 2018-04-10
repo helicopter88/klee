@@ -332,7 +332,7 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
 
             assert(re.getSpecialData().hasConstData() && "ConstExpr does not have constant data");
             auto constData = re.getSpecialData().getConstData();
-            if(constData.getConstExprWidth() > 64) {
+            if(constData.hasConstExprOverSizeVal()) {
                 APInt i(constData.getConstExprWidth(), constData.getConstExprOverSizeVal().cStr(), 16);
                 return new ConstantExpr(i);
             }
@@ -360,7 +360,6 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
             }
             auto index = deserialize(readData.getExpr());
             return ReadExpr::create(UpdateList(Array::deserialize(readData.getRoot()), head), index);
-            break;
         }
 
         case Concat: {
@@ -381,6 +380,9 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
         case NotOptimized:
             assert(re.getSpecialData().hasNOData() && "NotOptimizedExpr does not have NotOptimizedData");
             return NotOptimizedExpr::create(deserialize(re.getSpecialData().getNOData().getSrc()));
+
+        case Not:
+            return NotExpr::create(deserialize(KID(0)));
 
 #define CAP_CAST_EXPR_CASE(T)                                    \
       case T:                                                \
@@ -602,7 +604,7 @@ void ConstantExpr::serialize(CacheExpr::Builder&& builder) const {
     Expr::serialize(std::forward<CacheExpr::Builder>(builder));
     CacheConstExpr::Builder constB = builder.initSpecialData().initConstData();
     constB.setConstExprWidth(this->value.getBitWidth());
-    if(this->value.getBitWidth() > 64L) {
+    if(this->value.getBitWidth() >= 64L) {
         constB.setConstExprOverSizeVal(this->value.toString(16, true));
     } else {
         constB.setConstExprVal(this->value.getZExtValue());
@@ -761,7 +763,7 @@ void Array::serialize(CacheArray::Builder&& builder) const {
     if(this->constantValues.empty())
         return;
     auto consts = builder.initConstantValues(this->constantValues.size());
-    int i = 0;
+    unsigned i = 0;
     for(; i < this->constantValues.size(); i++) {
         constantValues[i]->serialize(consts[i]);
     }

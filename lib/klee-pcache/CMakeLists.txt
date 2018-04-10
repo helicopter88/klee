@@ -1,6 +1,6 @@
 project(klee_pcache)
 
-klee_add_component(klee_pcache RedisInstance.cpp PersistentMapOfSets.cpp ExactMatchFinder.cpp SubSupersetFinder.cpp)
+klee_add_component(klee_pcache RedisInstance.cpp PersistentMapOfSets.cpp ExactMatchFinder.cpp SubSupersetFinder.cpp ../../include/klee/Internal/ADT/MapOfSets.h)
 set(LLVM_COMPONENTS
         support
         )

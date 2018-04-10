@@ -23,10 +23,12 @@ Statistic stats::queryConstructTime("QueryConstructTime", "QBtime") ;
 Statistic stats::queryConstructs("QueriesConstructs", "QB");
 Statistic stats::queryCounterexamples("QueriesCEX", "Qcex");
 Statistic stats::queryTime("QueryTime", "Qtime");
-Statistic stats::previousCacheHits("PreviousCacheHits", "PCexHits");
-Statistic stats::previousCacheMisses("PreviousCacheHits", "PCexHits");
-Statistic stats::pcacheLookupTime("PreviousCacheLookupTime", "PCexSTime");
-Statistic stats::deserializationTime("PreviousCacheDeserializationTime", "PCexDTime");
+Statistic stats::pcacheHits("PreviousCacheHits", "PCacheHits");
+Statistic stats::pcacheMisses("PreviousCacheHits", "PCacheHits");
+Statistic stats::pcacheLookupTime("PreviousCacheLookupTime", "PCacheSTime");
+Statistic stats::pcacheInsertionTime("PreviousCacheDeserializationTime", "PCacheDTime");
+Statistic stats::pcacheRedisSize("PreviousCacheRedisSize", "PCacheRSize");
+Statistic stats::pcachePMapSize("PreviousCachePersistentMapSize", "PCachePMSize");
 #ifdef DEBUG
 Statistic stats::arrayHashTime("ArrayHashTime", "AHtime");
 #endif

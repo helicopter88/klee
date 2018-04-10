@@ -35,12 +35,12 @@ namespace klee {
             builder.setNoBinding(true);
             return;
         }
-        int i = 0;
+        unsigned i = 0;
         auto bins = builder.initBindings(bindings.size());
         for(auto b : bindings) {
             b.first->serialize(bins[i].getObjects());
             auto bvs = bins[i].initBvs(b.second.size());
-            for(int j = 0; j < b.second.size(); j++) {
+            for(unsigned j = 0; j < b.second.size(); j++) {
                 bvs.set(j, b.second[j]);
             }
             i++;
@@ -51,11 +51,10 @@ namespace klee {
             llvm::errs() << "No bindings\n";
             return;
         }
-        for (bindings_ty::const_iterator i = bindings.cbegin(), e = bindings.cend(); i != e;
-             ++i) {
-            llvm::errs() << (*i).first->name << "\n[";
-            for (int j = 0, k = (*i).second.size(); j < k; ++j)
-                llvm::errs() << (int) (*i).second[j] << ",";
+        for (const auto &binding : bindings) {
+            llvm::errs() << binding.first->name << "\n[";
+            for (unsigned char j : binding.second)
+                llvm::errs() << (int) j << ",";
             llvm::errs() << "]\n";
         }
     }
@@ -63,10 +62,9 @@ namespace klee {
     void Assignment::createConstraintsFromAssignment(
             std::vector<ref<Expr> > &out) const {
         assert(out.size() == 0 && "out should be empty");
-        for (bindings_ty::const_iterator it = bindings.begin(), ie = bindings.end();
-             it != ie; ++it) {
-            const Array *array = it->first;
-            const std::vector<unsigned char> &values = it->second;
+        for (const auto &binding : bindings) {
+            const Array *array = binding.first;
+            const std::vector<unsigned char> &values = binding.second;
             for (unsigned arrayIndex = 0; arrayIndex < array->size; ++arrayIndex) {
                 unsigned char value = values[arrayIndex];
                 out.push_back(EqExpr::create(
@@ -88,7 +86,6 @@ namespace klee {
             for (const uint32_t value : pbv.values()) {
                 tmp.push_back((unsigned char) value);
             }
-            //std::reverse(tmp.begin(), tmp.end());
             values.push_back(tmp);
         }
         for (const auto &obj : pa.objects()) {

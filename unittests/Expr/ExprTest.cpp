@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include <iostream>
+#include <capnp/message.h>
 #include "gtest/gtest.h"
 
 #include "klee/Expr.h"
@@ -16,6 +17,8 @@
 using namespace klee;
 
 namespace {
+
+        capnp::MallocMessageBuilder mmb;
 
     ref<Expr> getConstant(int value, Expr::Width width) {
         int64_t ext = value;
@@ -34,6 +37,10 @@ namespace {
         const ProtoExpr *protoExpr = c_expr->serialize();
 
         EXPECT_EQ(c_expr, Expr::deserialize(*protoExpr));
+
+        CacheExpr::Builder root = mmb.initRoot<CacheExpr>();
+        c_expr->serialize(std::forward<CacheExpr::Builder>(root));
+        EXPECT_EQ(c_expr, Expr::deserialize(root));
     }
 
     TEST(ExprTest, ReadSerialization) {
@@ -51,14 +58,26 @@ namespace {
         ref<Expr> index = ConstantExpr::create(4, Expr::Int32);
         UpdateList ul(array, nullptr);
         ref<Expr> read = ReadExpr::create(ul, index);
+        // Protobuf serialization
         ProtoExpr *protoRead = read->serialize();
         EXPECT_EQ(read, Expr::deserialize(*protoRead));
+        // capnp serialization
+        CacheExpr::Builder root = mmb.initRoot<CacheExpr>();
+        read->serialize(std::forward<CacheExpr::Builder>(root));
+        EXPECT_EQ(read, Expr::deserialize(root.asReader()));
+
+        ////---------------------------------------------------
 
         const Array *array2 = ac.CreateArray("arr2", 12);
         ref<Expr> read8 = Expr::createTempRead(array2, Expr::Int8);
         ProtoExpr *protoRead2 = read8->serialize();
         ref<Expr> deserialized = Expr::deserialize(*protoRead2);
         EXPECT_EQ(read8, deserialized);
+        root = mmb.initRoot<CacheExpr>();
+        read8->serialize(std::forward<CacheExpr::Builder>(root));
+        EXPECT_EQ(read8, Expr::deserialize(root));
+
+        ////---------------------------------------------------
 
         ref<Expr> indexOob = ConstantExpr::create(4, Expr::Int8);
         UpdateList ul1(array2, nullptr);
@@ -66,7 +85,9 @@ namespace {
         ProtoExpr *protoReadOob = readOob->serialize();
         ref<Expr> desReadOob = Expr::deserialize(*protoReadOob);
         EXPECT_EQ(readOob, desReadOob);
-
+        root = mmb.initRoot<CacheExpr>();
+        readOob->serialize(std::forward<CacheExpr::Builder>(root));
+        EXPECT_EQ(readOob, Expr::deserialize(root));
     }
 
     TEST(ExprTest, ConcatSerialization) {

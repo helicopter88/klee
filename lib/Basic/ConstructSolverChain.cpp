@@ -40,11 +40,11 @@ Solver *constructSolverChain(Solver *coreSolver,
   if (UseAssignmentValidatingSolver)
     solver = createAssignmentValidatingSolver(solver);
 
-  //if (UseFastCexSolver)
-  //  solver = createFastCexSolver(solver);
+  if (UseFastCexSolver)
+    solver = createFastCexSolver(solver);
 
-  //if (UseCexCache)
-  //  solver = createCexCachingSolver(solver);
+  if (UseCexCache)
+    solver = createCexCachingSolver(solver);
 
   if (UseCache)
     solver = createCachingSolver(solver);
@@ -54,6 +54,7 @@ Solver *constructSolverChain(Solver *coreSolver,
 
   if (UseIndependentSolver)
     solver = createIndependentSolver(solver);
+
 
   if (DebugValidateSolver)
     solver = createValidatingSolver(solver, coreSolver);

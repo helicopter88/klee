@@ -3,7 +3,6 @@
 //
 
 #include <klee/util/Assignment.h>
-#include <klee/TimerStatIncrementer.h>
 #include <klee/SolverStats.h>
 #include <capnp/message.h>
 #include "ExactMatchFinder.h"
@@ -19,8 +18,7 @@ ExactMatchFinder::ExactMatchFinder() {
     pa = new ProtoAssignment;
 }
 Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
-    TimerStatIncrementer t(stats::pcacheLookupTime);
-    std::string serialized = serializeToString(expressions);
+    const std::string& serialized = serializeToString(expressions);
     std::string res = instance.get(serialized);
     if (res.empty()) {
         return nullptr;
@@ -31,27 +29,30 @@ Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
     return ret;
 }
 
-std::string ExactMatchFinder::serializeToString(std::set<ref<Expr>> &expressions) {
+std::string ExactMatchFinder::serializeToString(const std::set<ref<Expr>> &expressions) {
     std::string serialized;
     const auto thing = this->nameCache.find(expressions);
     if(thing != this->nameCache.cend()) {
         serialized = thing->second;
     } else {
-        CacheExprList::Builder builder = this->mmb.initRoot<CacheExprList>();
+        CacheExprList::Builder builder = lookupMessageBuilder.initRoot<CacheExprList>();
         auto list = builder.initKey(expressions.size());
-        int i = 0;
-        ProtoCacheElem protoCacheElem;
+        unsigned i = 0;
         for (const ref<Expr> &r : expressions) {
             r->serialize(list[i++]);
         }
-        serialized = builder.toString().flatten().cStr();//protoCacheElem.SerializeAsString();
+        assert(lookupMessageBuilder.getSegmentsForOutput().size());
+        const kj::ArrayPtr<const unsigned char> chrs = lookupMessageBuilder.getSegmentsForOutput().asBytes();
+        std::string str(chrs.begin(), chrs.end());
+        serialized = str;//builder.toString().flatten().cStr();//protoCacheElem.SerializeAsString();
         this->nameCache.insert(std::make_pair(expressions, serialized));
+        builder.disownKey();
     }
     return serialized;
 }
 
 std::future<cpp_redis::reply> ExactMatchFinder::future_find(std::set<ref<Expr>>& expressions) {
-    std::string serialized = serializeToString(expressions);
+    const std::string& serialized = serializeToString(expressions);
     return instance.future_get(serialized);
 }
 
@@ -63,7 +64,10 @@ Assignment** ExactMatchFinder::processResponse(std::future<cpp_redis::reply>&& r
     if(r.is_null() || !r.is_string()) {
         return nullptr;
     }
-    std::string result = r.as_string();
+    const std::string &result = r.as_string();
+    //kj::ArrayPtr<const char> chars(result.c_str(), result.size());
+    //::capnp::word(0);
+    //::capnp::FlatArrayMessageReader flatArrayMessageReader(chars.asBytes());
     pa->ParseFromString(result);
     Assignment **ret = new Assignment *();
     *ret = Assignment::deserialize(*pa);
@@ -71,14 +75,7 @@ Assignment** ExactMatchFinder::processResponse(std::future<cpp_redis::reply>&& r
 
 }
 void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *value) {
-    TimerStatIncrementer t(stats::deserializationTime);
-    CacheExprList::Builder builder = mmb.initRoot<CacheExprList>();
-    auto list = builder.initKey(expressions.size());
-    int i = 0;
-    for (const ref<Expr> &r : expressions) {
-        r->serialize(list[i++]);
-    }
-    const std::string& serialized = builder.toString().flatten().cStr();
+    const std::string& serialized = serializeToString(expressions);
 
     ProtoAssignment *assignment;
     if (value) {
@@ -88,6 +85,7 @@ void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *valu
     }
     nameCache.insert(std::make_pair(expressions, serialized));
     instance.set(serialized, assignment->SerializeAsString());
+    ++stats::pcacheRedisSize;
 }
 
 void ExactMatchFinder::close() {}
