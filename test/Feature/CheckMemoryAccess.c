@@ -1,6 +1,6 @@
 // RUN: %llvmgcc -emit-llvm -g -c %s -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out %t.bc > %t.log
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out %t.bc > %t.log
 // RUN: grep -q "good" %t.log
 // RUN: not grep -q "bad" %t.log
 

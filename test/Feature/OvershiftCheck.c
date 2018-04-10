@@ -1,6 +1,6 @@
 // RUN: %llvmgcc %s -emit-llvm -g -O0 -c -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out -check-overshift %t.bc 2> %t.log
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out -check-overshift %t.bc 2> %t.log
 // RUN: grep -c "overshift error" %t.log
 // RUN: grep -c "OvershiftCheck.c:20: overshift error" %t.log
 // RUN: grep -c "OvershiftCheck.c:24: overshift error" %t.log

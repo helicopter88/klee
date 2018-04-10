@@ -1,6 +1,6 @@
 // RUN: %llvmgcc %s -fsanitize=unsigned-integer-overflow -emit-llvm -g -O0 -c -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out %t.bc 2>&1 | FileCheck %s
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out %t.bc 2>&1 | FileCheck %s
 
 #include "klee/klee.h"
 

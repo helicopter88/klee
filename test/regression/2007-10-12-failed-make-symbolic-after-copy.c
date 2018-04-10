@@ -1,6 +1,6 @@
 // RUN: %llvmgcc %s -emit-llvm -O0 -c -o %t1.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out %t1.bc
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out %t1.bc
 // RUN: test -f %t.klee-out/test000001.ktest
 
 int main() {

@@ -1,10 +1,10 @@
 // RUN: %llvmgcc %s -emit-llvm -O0 -DCOND_EXIT -c -o %t1.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out --write-paths %t1.bc > %t3.good
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out --write-paths %t1.bc > %t3.good
 
 // RUN: %llvmgcc %s -emit-llvm -O0 -c -o %t2.bc
 // RUN: rm -rf %t.klee-out-2
-// RUN: %klee --output-dir=%t.klee-out-2 --replay-path %t.klee-out/test000001.path %t2.bc > %t3.log
+// RUN: %klee --pcache-path=%t.klee-out-2/cache --output-dir=%t.klee-out-2 --replay-path %t.klee-out/test000001.path %t2.bc > %t3.log
 // RUN: diff %t3.log %t3.good
 
 #include <unistd.h>

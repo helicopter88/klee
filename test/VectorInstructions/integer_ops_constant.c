@@ -3,7 +3,7 @@
 // RUN: rm -rf %t.klee-out
 // NOTE: Have to pass `--optimize=false` to avoid vector operations being
 // constant folded away.
-// RUN: %klee --output-dir=%t.klee-out --optimize=false --exit-on-error %t1.bc
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out --optimize=false --exit-on-error %t1.bc
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>

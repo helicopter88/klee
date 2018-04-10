@@ -1,3 +1,4 @@
+# RUN: rm -Rf /home/klee/cache
 # RUN: %kleaver %s > %t
 
 array a[64] : w32 -> w8 = symbolic

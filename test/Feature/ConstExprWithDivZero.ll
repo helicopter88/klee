@@ -1,7 +1,7 @@
 ; REQUIRES: llvm-3.4
 ; RUN: llvm-as %s -f -o %t.bc
 ; RUN: rm -rf %t.klee-out
-; RUN: not %klee --output-dir=%t.klee-out %t.bc 2> %t.log
+; RUN: not %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out %t.bc 2> %t.log
 ; RUN: FileCheck --input-file %t.log %s
 
 ; See https://github.com/klee/klee/issues/268

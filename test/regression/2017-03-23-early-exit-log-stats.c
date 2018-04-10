@@ -1,7 +1,7 @@
 // RUN: %llvmgcc %s -emit-llvm -g -O0 -c -o %t.bc
 // RUN: rm -rf %t.klee-out
 // Delay writing instructions so that we ensure on exit that flush happens
-// RUN: not %klee --output-dir=%t.klee-out -exit-on-error -stats-write-interval=0 -stats-write-after-instructions=999999 %t.bc 2> %t.log
+// RUN: not %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out -exit-on-error -stats-write-interval=0 -stats-write-after-instructions=999999 %t.bc 2> %t.log
 // RUN: FileCheck -check-prefix=CHECK-KLEE -input-file=%t.log %s
 // RUN: FileCheck -check-prefix=CHECK-STATS -input-file=%t.klee-out/run.stats %s
 #include "klee/klee.h"

@@ -1,6 +1,6 @@
 // RUN: %llvmgcc %s -emit-llvm -O0 -c -o %t2.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out --libc=klee %t2.bc > %t3.log
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out --libc=klee %t2.bc > %t3.log
 // RUN: echo "good" > %t3.good
 // RUN: diff %t3.log %t3.good
 

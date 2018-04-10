@@ -3,8 +3,8 @@
 // solvers, in particular when counting the number of queries in the last two
 // commands
 // RUN: rm -rf %t.klee-out %t.klee-out2
-// RUN: %klee --output-dir=%t.klee-out --use-cex-cache=false --use-query-log=all:kquery %t1.bc
-// RUN: %klee --output-dir=%t.klee-out2 --use-cex-cache=false --compress-query-log --use-query-log=all:kquery %t1.bc
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out --use-cex-cache=false --use-query-log=all:kquery %t1.bc
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out2 --use-cex-cache=false --compress-query-log --use-query-log=all:kquery %t1.bc
 // RUN: gunzip -d %t.klee-out2/all-queries.kquery.gz
 // RUN: diff %t.klee-out/all-queries.kquery %t.klee-out/all-queries.kquery
 

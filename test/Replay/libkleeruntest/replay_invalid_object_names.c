@@ -1,6 +1,6 @@
 // RUN: %llvmgcc -DOBJ_NAME=simple_name %s -emit-llvm -g -O0 -c -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out --search=dfs %t.bc
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out --search=dfs %t.bc
 // RUN: test -f %t.klee-out/test000001.ktest
 
 // Now try to replay with libkleeRuntest but build the binary to use a different

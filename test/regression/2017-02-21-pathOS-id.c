@@ -1,6 +1,6 @@
 // RUN: %llvmgcc %s -emit-llvm -g -O0 -c -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out -write-paths %t.bc 2> %t.log
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out -write-paths %t.bc 2> %t.log
 // RUN: cat %t.klee-out/test000001.path | wc -l | grep -q 1
 // RUN: cat %t.klee-out/test000002.path | wc -l | grep -q 1
 // RUN: cat %t.klee-out/test000003.path | wc -l | grep -q 1

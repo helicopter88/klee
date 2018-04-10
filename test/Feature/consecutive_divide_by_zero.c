@@ -1,6 +1,6 @@
 // RUN: %llvmgcc -emit-llvm -c -g -O0 %s -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --output-dir=%t.klee-out -check-div-zero -emit-all-errors=0 %t.bc 2> %t.log
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out -check-div-zero -emit-all-errors=0 %t.bc 2> %t.log
 // RUN: grep "completed paths = 3" %t.log
 // RUN: grep "generated tests = 3" %t.log
 // RUN: grep "consecutive_divide_by_zero.c:25: divide by zero" %t.log

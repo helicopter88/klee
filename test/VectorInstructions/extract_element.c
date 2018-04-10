@@ -3,7 +3,7 @@
 // RUN: rm -rf %t.klee-out
 // NOTE: Have to pass `--optimize=false` to avoid vector operations being
 // constant folded away.
-// RUN: %klee --output-dir=%t.klee-out --optimize=false %t1.bc > %t.stdout.log 2> %t.stderr.log
+// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out --optimize=false %t1.bc > %t.stdout.log 2> %t.stderr.log
 // RUN: FileCheck -check-prefix=CHECK-STDOUT -input-file=%t.stdout.log %s
 // RUN: FileCheck -check-prefix=CHECK-STDERR -input-file=%t.stderr.log %s
 #include <assert.h>
