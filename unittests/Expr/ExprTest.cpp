@@ -13,6 +13,7 @@
 
 #include "klee/Expr.h"
 #include "klee/util/ArrayCache.h"
+#include "../../lib/klee-pcache/Trie.h"
 
 using namespace klee;
 
@@ -347,5 +348,49 @@ namespace {
             // Check that constant folding was not applied
             EXPECT_EQ(Expr::Read, read.get()->getKind());
         }
+    }
+    TEST(ExprTest, TrieTest) {
+        Trie t;
+        auto * assignment = new Assignment();
+        std::set<ref<Expr>> set1, set2, set3;
+
+        ArrayCache ac;
+        const Array *array = ac.CreateArray("arr2", 256);
+        ref<Expr> read64 = Expr::createTempRead(array, 64);
+        set1.insert(read64);
+        const Array *array2 = ac.CreateArray("arr3", 256);
+        ref<Expr> read8_2 = Expr::createTempRead(array2, 8);
+        set1.insert(read8_2);
+
+        t.insert(set1, assignment);
+        EXPECT_TRUE(t.search(set1));
+        ref<Expr> extract1 = ExtractExpr::create(read64, 36, 4);
+        set2.insert(extract1);
+        ref<Expr> extract2 = ExtractExpr::create(read64, 32, 4);
+        set2.insert(extract2);
+        EXPECT_FALSE(t.search(set2));
+
+        ref<Expr> extract3 = ExtractExpr::create(read64, 12, 3);
+        set2.insert(extract3);
+        ref<Expr> extract4 = ExtractExpr::create(read64, 10, 2);
+        set2.insert(extract4);
+        ref<Expr> extract5 = ExtractExpr::create(read64, 2, 8);
+        set2.insert(extract5);
+        set3.insert(extract1);
+        set3.insert(extract4);
+        t.insert(set3, assignment);
+
+        EXPECT_TRUE(t.search(set1));
+        EXPECT_FALSE(t.search(set2));
+        EXPECT_TRUE(t.search(set3));
+        EXPECT_TRUE(t.existsSubset(set2));
+
+        Trie t2;
+        t2.insert(set2, assignment);
+        EXPECT_TRUE(t2.search(set2));
+        EXPECT_TRUE(t2.existsSuperset(set2));
+        EXPECT_TRUE(t2.existsSuperset(set3));
+        EXPECT_FALSE(t2.existsSuperset(set1));
+        delete assignment;
     }
 }
