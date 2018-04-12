@@ -15,14 +15,15 @@
 
 using namespace llvm;
 
+static const constexpr uint64_t MAX_SIZE = UINT64_MAX >> 10;
 namespace klee {
 
     struct NullAssignment {
-        bool operator()(Assignment *a) const { return !a; }
+        bool operator()(const Assignment *a) const { return !a; }
     };
 
     struct NonNullAssignment {
-        bool operator()(Assignment *a) const { return a != 0; }
+        bool operator()(const Assignment *a) const { return a != nullptr; }
     };
 
     struct NullOrSatisfyingAssignment {
@@ -47,7 +48,7 @@ namespace klee {
             }
             ::capnp::ReaderOptions readerOptions;
             readerOptions.nestingLimit = 256;
-            readerOptions.traversalLimitInWords = INT_MAX >> 8;
+            readerOptions.traversalLimitInWords = MAX_SIZE << 1;
             ::capnp::PackedFdMessageReader *pfd = new capnp::PackedFdMessageReader(fd, readerOptions);
             CapCache::Reader cacheReader = pfd->getRoot<CapCache>();
             for (const auto &elem : cacheReader.getElems()) {
@@ -65,6 +66,7 @@ namespace klee {
                 set(expressions, &a);
             }
             close(fd);
+            delete pfd;
         }
     }
 
@@ -109,7 +111,7 @@ namespace klee {
         for (const auto &c : cache) {
             auto keyList = capCache[iter].initKey().initKey(c.first.size());
             unsigned j = 0;
-            for (const auto &expr : c.first) {
+            for (const ref<Expr> &expr : c.first) {
                 expr->serialize(keyList[j++]);
             }
 
@@ -122,9 +124,9 @@ namespace klee {
             }
             iter++;
         }
-        int fd = open(nextFile(p, i, "cache"), O_RDWR | O_CREAT,
+        int fd = open(nextFile(p, i, "cache"), O_TRUNC | O_RDWR | O_CREAT,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        if(fd < 0) {
+        if (fd < 0) {
             errs() << "Could not store to file: " << strerror(errno) << "\n";
             return;
         }

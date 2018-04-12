@@ -1,6 +1,6 @@
 // RUN: %llvmgcc %s -emit-llvm -g -O0 -c -o %t.bc
 // RUN: rm -rf %t.klee-out
-// RUN: %klee --pcache-path=%t.klee-out/cache --output-dir=%t.klee-out -use-cex-cache=1 %t.bc
+// RUN: %klee --use-pcex-cache=0 --output-dir=%t.klee-out -use-cex-cache=1 %t.bc
 // RUN: grep "KLEE: done: explored paths = 5" %t.klee-out/info
 // RUN: grep "KLEE: done: generated tests = 4" %t.klee-out/info
 #include <stdio.h>

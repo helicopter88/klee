@@ -324,38 +324,40 @@ UpdateNode* deserializeUpdateNode(CacheUpdateNode::Reader&& reader) {
     return new UpdateNode(next, Expr::deserialize(reader.getUpdateIndex()), Expr::deserialize(reader.getUpdateValue()));
 }
 
-ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
-#define KID(x) re.getKids()[x]
+ref<Expr> Expr::deserialize(const CacheExpr::Reader &&re) {
+#define KID(x) kids[x]
 
+    const auto &kids = re.getKids();
+    const CacheExpr::SpecialData::Reader &reader = re.getSpecialData();
     switch (re.getKind()) {
         case Constant: {
 
-            assert(re.getSpecialData().hasConstData() && "ConstExpr does not have constant data");
-            auto constData = re.getSpecialData().getConstData();
-            if(constData.hasConstExprOverSizeVal()) {
+            assert(reader.hasConstData() && "ConstExpr does not have constant data");
+            auto constData = reader.getConstData();
+            if (constData.hasConstExprOverSizeVal()) {
                 APInt i(constData.getConstExprWidth(), constData.getConstExprOverSizeVal().cStr(), 16);
                 return new ConstantExpr(i);
             }
             return ConstantExpr::create(constData.getConstExprVal(), constData.getConstExprWidth());
         }
         case Select: {
-            assert(re.getKids().size() == 3 && "Wrong number of children for SelectExpr");
+            assert(kids.size() == 3 && "Wrong number of children for SelectExpr");
             return SelectExpr::create(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)),
                                       Expr::deserialize(KID(2)));
         }
         case Extract: {
-            assert(re.getSpecialData().hasExtractData() && "ExtractExpr does not have extract data");
-            auto extractData = re.getSpecialData().getExtractData();
+            assert(reader.hasExtractData() && "ExtractExpr does not have extract data");
+            auto extractData = reader.getExtractData();
             auto thing = deserialize(extractData.getExpr());
             return ExtractExpr::create(thing,
                                        extractData.getExtractBitOff(),
                                        extractData.getExtractWidth());
         }
         case Read: {
-            assert(re.getSpecialData().hasReadData() && "ReadExpr does not have read data");
-            const auto &readData = re.getSpecialData().getReadData();
-            UpdateNode* head = nullptr;
-            if(readData.hasHead()) {
+            assert(reader.hasReadData() && "ReadExpr does not have read data");
+            const auto &readData = reader.getReadData();
+            UpdateNode *head = nullptr;
+            if (readData.hasHead()) {
                 head = deserializeUpdateNode(readData.getHead());
             }
             auto index = deserialize(readData.getExpr());
@@ -363,13 +365,13 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
         }
 
         case Concat: {
-            assert(re.getKids().size() >= 2);
-            if (re.getKids().size() == 2) {
+            assert(kids.size() >= 2);
+            if (kids.size() == 2) {
                 return ConcatExpr::create(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)));
-            } else if (re.getKids().size() == 4) {
+            } else if (kids.size() == 4) {
                 return ConcatExpr::create4(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)),
                                            Expr::deserialize(KID(2)), Expr::deserialize(KID(3)));
-            } else if (re.getKids().size() == 8) {
+            } else if (kids.size() == 8) {
                 return ConcatExpr::create8(Expr::deserialize(KID(0)), Expr::deserialize(KID(1)),
                                            Expr::deserialize(KID(2)), Expr::deserialize(KID(3)),
                                            Expr::deserialize(KID(4)), Expr::deserialize(KID(5)),
@@ -378,8 +380,8 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
             assert(false && "ConcatExpr Number of kids was not 2 or 4 or 8");
         }
         case NotOptimized:
-            assert(re.getSpecialData().hasNOData() && "NotOptimizedExpr does not have NotOptimizedData");
-            return NotOptimizedExpr::create(deserialize(re.getSpecialData().getNOData().getSrc()));
+            assert(reader.hasNOData() && "NotOptimizedExpr does not have NotOptimizedData");
+            return NotOptimizedExpr::create(deserialize(reader.getNOData().getSrc()));
 
         case Not:
             return NotExpr::create(deserialize(KID(0)));
@@ -390,7 +392,7 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader&& re) {
 
 #define CAP_BINARY_EXPR_CASE(T)                                 \
       case T:                       \
-        if(re.getKids().size() != 2)    { \
+        if(kids.size() != 2)    { \
             printKind(errs(), (Kind)re.getKind()); \
             return ref<Expr>(); \
         } \

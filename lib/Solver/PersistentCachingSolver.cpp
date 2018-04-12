@@ -16,6 +16,9 @@
 
 #include "../klee-pcache/ExactMatchFinder.h"
 #include "../klee-pcache/SubSupersetFinder.h"
+#include "../klee-pcache/NameNormalizer.h"
+#include "../klee-pcache/Trie.h"
+#include "../klee-pcache/TrieFinder.h"
 
 using namespace llvm;
 namespace {
@@ -24,10 +27,11 @@ namespace {
                                           cl::desc("Path for the persistent cache"));
 }
 namespace klee {
-    typedef std::set<ref<Expr> > KeyType;
+    typedef std::set<ref<Expr>> KeyType;
 
     class PersistentCachingSolver : public SolverImpl {
     private:
+        TrieFinder trie;
         SubSupersetFinder finder;
 
         Solver *solver;
@@ -119,36 +123,24 @@ namespace klee {
     }
 
     bool PersistentCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
-        //std::future<cpp_redis::reply> redisFind = emf.future_find(key);
-        Assignment **r = finder.find(key);
+        Assignment **r = trie.find(key);//finder.find(key);
         if (r) {
             result = *r;
             return true;
         }
-        std::future<Assignment **> subsupersetFind = std::async(std::launch::deferred,
-                                                                [&]() { return finder.findSubSuperSet(key); });
         r = emf.find(key);
-        if(r) {
+        if (r) {
             result = *r;
+            finder.insert(key, *r);
             return true;
         }
 
-        /*redisFind.wait();//.wait_for(std::chrono::duration<double>(10.));
-        if (redisFind.valid()) {
-            Assignment **binding = emf.processResponse(std::forward<std::future<cpp_redis::reply>>(redisFind));
-            if (binding) {
-                result = *binding;
+        if (!UseCexCache) {
+            r = finder.findSubSuperSet(key);
+            if (r) {
+                result = *r;
                 return true;
             }
-        }*/
-
-        if (subsupersetFind.valid()) {
-            Assignment **binding = subsupersetFind.get();
-            if (!binding) {
-                return false;
-            }
-            result = *binding;
-            return true;
         }
         return false;
     }
@@ -177,30 +169,9 @@ namespace klee {
             key.insert(neg);
         }
 
-        /*std::future<Assignment **> solverLookup = std::async(std::launch::deferred, [=]() -> Assignment ** {
-            std::vector<const Array *> objects;
-            findSymbolicObjects(key.cbegin(), key.cend(), objects);
-
-            std::vector<std::vector<unsigned char> > values;
-
-            bool hasSolution;
-            if (!solver->impl->computeInitialValues(query, objects, values,
-                                                    hasSolution))
-                return nullptr;
-
-            auto **binding = new Assignment *;
-            if (hasSolution) {
-                *binding = new Assignment(objects, values);
-            } else {
-                *binding = nullptr;
-            }
-            return binding;
-        });*/
-
         if (lookupAssignment(query, key, result))
             return true;
 
-        //solverLookup.wait();
 #ifdef DEBUG
         errs() << "We did not find a match in the caches for: \n";
         for (const auto &e : key) e->dump();
@@ -216,12 +187,14 @@ namespace klee {
                                                 hasSolution))
             return false;
         if (hasSolution) {
-                result = new Assignment(objects, values);
-            } else {
-                result = nullptr;
-            }
+            result = new Assignment(objects, values);
+        } else {
+            result = nullptr;
+        }
+        TimerStatIncrementer statIncrementer(stats::pcacheInsertionTime);
         finder.insert(key, result);
         emf.insert(key, result);
+        trie.insert(key, result);
         return true;
     }
 
@@ -230,8 +203,9 @@ namespace klee {
         TimerStatIncrementer t(stats::cexCacheTime);
 
         Assignment *a;
-        if (!getAssignment(query.withFalse(), a))
+        if (!getAssignment(query.withFalse(), a)) {
             return false;
+        }
         assert(a && "computeValue() must have assignment");
         result = a->evaluate(query.expr);
         assert(isa<ConstantExpr>(result) &&
