@@ -116,7 +116,7 @@ namespace klee {
             if (iterator == reverseMappings.cend()) {
                 assert("Name was not in the mapping" && false);
             }
-            const std::string &newName = iterator->first;
+            const std::string &newName = iterator->second;
             const Array *arr = newArray(orig, newName);
             arrays.push_back(arr);
             bvs.push_back(bin.second);

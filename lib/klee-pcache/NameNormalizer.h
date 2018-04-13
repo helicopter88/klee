@@ -17,8 +17,14 @@ namespace klee {
         std::map<std::string, std::string> reverseMappings;
     public:
         std::set<ref<Expr>> normalizeExpressions(const std::set<ref<Expr>> &expressions);
-        Assignment* denormalizeAssignment(const Assignment* assignment) const;
+
+        Assignment *denormalizeAssignment(const Assignment *assignment) const;
+
         Assignment *normalizeAssignment(const Assignment *assignment) const;
+
+        const std::map<std::string, std::string> &getMappings() const {
+            return namesMappings;
+        };
 
     };
 }
