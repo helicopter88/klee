@@ -13,7 +13,7 @@ class RedisInstance : Storage<const std::string, const std::string>{
 private:
     cpp_redis::client client;
 public:
-    explicit RedisInstance(const std::string &url = "127.0.0.1", size_t port = 6379);
+    explicit RedisInstance(const std::string &url, size_t port, int dbNum);
 
     void set(const std::string& key, const std::string& value) final;
 
@@ -22,6 +22,8 @@ public:
     void store() final;
 
     ~RedisInstance();
+
+    int64_t getSize();
 };
 
 

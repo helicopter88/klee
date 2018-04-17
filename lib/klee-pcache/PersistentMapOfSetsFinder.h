@@ -9,19 +9,19 @@
 #include "PersistentMapOfSets.h"
 
 namespace klee {
-    class SubSupersetFinder : public Finder<Assignment*> {
+    class PersistentMapOfSetsFinder : public Finder<Assignment*> {
     private:
         PersistentMapOfSets persistentCache;
     public:
         Assignment** find(std::set<ref<Expr>>& exprs) override;
 
-        Assignment** findSubSuperSet(std::set<ref<Expr>>& expr);
+        Assignment** findSpecial(std::set<ref<Expr>>& expr) override;
 
         void insert(std::set<ref<Expr>>& exprs, Assignment* assignment) override;
 
-        void close() override;
+        void storeFinder() override;
 
-        explicit SubSupersetFinder(const std::string& opt);
+        explicit PersistentMapOfSetsFinder(const std::string& opt);
     };
 }
 

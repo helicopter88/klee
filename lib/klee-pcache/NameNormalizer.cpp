@@ -60,8 +60,7 @@ namespace klee {
     };
 
 
-    std::set<ref<Expr>>
-    NameNormalizer::normalizeExpressions(const std::set<ref<Expr>> &exprs) {
+    std::set<ref<Expr>> NameNormalizer::normalizeExpressions(const std::set<ref<Expr>> &exprs) {
         std::set<std::string> names;
         std::vector<ref<ReadExpr>> readExprs;
         std::set<ref<Expr>> result;
@@ -113,14 +112,22 @@ namespace klee {
         for (const auto &bin : assignment->bindings) {
             const Array *orig = bin.first;
             const auto &iterator = reverseMappings.find(orig->getName());
+            std::string newName;
             if (iterator == reverseMappings.cend()) {
-                assert("Name was not in the mapping" && false);
+#if DEBUG
+                llvm::errs() << "Could not find: " << orig->getName() << "\n";
+#endif
+                //assert("Name was not in the mapping" && false);
+                newName = orig->getName();
+            } else {
+                newName = iterator->second;
             }
-            const std::string &newName = iterator->second;
+            //const std::string &newName = iterator->second;
             const Array *arr = newArray(orig, newName);
             arrays.push_back(arr);
             bvs.push_back(bin.second);
         }
+        delete assignment;
         return new Assignment(arrays, bvs);
     }
 }

@@ -5,19 +5,20 @@
 #include <klee/util/Assignment.h>
 #include <klee/SolverStats.h>
 #include <capnp/message.h>
-#include "ExactMatchFinder.h"
+#include "RedisFinder.h"
 
 using namespace klee;
 
 ProtoAssignment* pa;
 ProtoAssignment * emptyAssignment;
 
-ExactMatchFinder::ExactMatchFinder() {
+RedisFinder::ExactMatchFinder(const std::string& url, size_t port, int dbNum) : instance(url, port, dbNum) {
     emptyAssignment = new ProtoAssignment;
     emptyAssignment->set_nobinding(true);
     pa = new ProtoAssignment;
+    stats::pcacheRedisSize += instance.getSize();
 }
-Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
+Assignment **RedisFinder::find(std::set<ref<Expr>> &expressions) {
     const std::string& serialized = serializeToString(expressions);
     std::string res = instance.get(serialized);
     if (res.empty()) {
@@ -29,9 +30,9 @@ Assignment **ExactMatchFinder::find(std::set<ref<Expr>> &expressions) {
     return ret;
 }
 
-std::string ExactMatchFinder::serializeToString(const std::set<ref<Expr>> &expressions) {
+std::string RedisFinder::serializeToString(const std::set<ref<Expr>> &expressions) {
     std::string serialized;
-    const auto thing = this->nameCache.find(expressions);
+    const auto& thing = this->nameCache.find(expressions);
     if(thing != this->nameCache.cend()) {
         serialized = thing->second;
     } else {
@@ -51,12 +52,12 @@ std::string ExactMatchFinder::serializeToString(const std::set<ref<Expr>> &expre
     return serialized;
 }
 
-std::future<cpp_redis::reply> ExactMatchFinder::future_find(std::set<ref<Expr>>& expressions) {
+std::future<cpp_redis::reply> RedisFinder::future_find(std::set<ref<Expr>>& expressions) {
     const std::string& serialized = serializeToString(expressions);
     return instance.future_get(serialized);
 }
 
-Assignment** ExactMatchFinder::processResponse(std::future<cpp_redis::reply>&& reply) const {
+Assignment** RedisFinder::processResponse(std::future<cpp_redis::reply>&& reply) const {
     if(!reply.valid()) {
         return nullptr;
     }
@@ -65,16 +66,13 @@ Assignment** ExactMatchFinder::processResponse(std::future<cpp_redis::reply>&& r
         return nullptr;
     }
     const std::string &result = r.as_string();
-    //kj::ArrayPtr<const char> chars(result.c_str(), result.size());
-    //::capnp::word(0);
-    //::capnp::FlatArrayMessageReader flatArrayMessageReader(chars.asBytes());
     pa->ParseFromString(result);
     Assignment **ret = new Assignment *();
     *ret = Assignment::deserialize(*pa);
     return ret;
 
 }
-void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *value) {
+void RedisFinder::insert(std::set<ref<Expr>> &expressions, Assignment *value) {
     const std::string& serialized = serializeToString(expressions);
 
     ProtoAssignment *assignment;
@@ -88,5 +86,5 @@ void ExactMatchFinder::insert(std::set<ref<Expr>> &expressions, Assignment *valu
     ++stats::pcacheRedisSize;
 }
 
-void ExactMatchFinder::close() {}
+void RedisFinder::storeFinder() {}
 

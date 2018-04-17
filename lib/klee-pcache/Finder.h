@@ -12,8 +12,11 @@ namespace klee {
     template <typename Result> class Finder {
     public:
         virtual Result* find(std::set<ref<Expr>>& exprs) = 0;
+        virtual Result* findSpecial(std::set<ref<Expr>>& exprs) {
+            return find(exprs);
+        }
         virtual void insert(std::set<ref<Expr>>& exprs, Assignment* assignment) = 0;
-        virtual void close() = 0;
+        virtual void storeFinder() = 0;
     };
 }
 

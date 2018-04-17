@@ -88,6 +88,9 @@ namespace klee {
     }
 
     void PersistentMapOfSets::set(std::set<ref<Expr>> &key, Assignment **const &value) {
+        if(key.empty()) {
+            return;
+        }
         ++stats::pcachePMapSize;
         cache.insert(key, *value);
     }
