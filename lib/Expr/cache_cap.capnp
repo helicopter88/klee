@@ -70,3 +70,17 @@ struct CapCache {
 	}
 	elems @0: List(Elem);
 }
+
+struct CacheTrieNode {
+    struct Child {
+        expr @0: CacheExpr;
+        node @1: CacheTrieNode;
+    }
+    value @0: CacheAssignment;
+    last @1: UInt8;
+    children @2: List(Child);
+}
+
+struct CacheTrie {
+    root @0: CacheTrieNode;
+}

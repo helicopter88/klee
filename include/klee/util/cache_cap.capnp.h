@@ -26,6 +26,9 @@ CAPNP_DECLARE_SCHEMA(c10955f42d02090c);
 CAPNP_DECLARE_SCHEMA(bea231dc3c8767bf);
 CAPNP_DECLARE_SCHEMA(dd31e84586c9a967);
 CAPNP_DECLARE_SCHEMA(9bf4190d43974873);
+CAPNP_DECLARE_SCHEMA(a8ad3354398596ea);
+CAPNP_DECLARE_SCHEMA(dd69239f4ac6e0fb);
+CAPNP_DECLARE_SCHEMA(9c5557266b9e5def);
 
 }  // namespace schemas
 }  // namespace capnp
@@ -230,6 +233,52 @@ struct CapCache::Elem {
 
   struct _capnpPrivate {
     CAPNP_DECLARE_STRUCT_HEADER(9bf4190d43974873, 0, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct CacheTrieNode {
+  CacheTrieNode() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+  struct Child;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(a8ad3354398596ea, 1, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct CacheTrieNode::Child {
+  Child() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(dd69239f4ac6e0fb, 0, 2)
+    #if !CAPNP_LITE
+    static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
+    #endif  // !CAPNP_LITE
+  };
+};
+
+struct CacheTrie {
+  CacheTrie() = delete;
+
+  class Reader;
+  class Builder;
+  class Pipeline;
+
+  struct _capnpPrivate {
+    CAPNP_DECLARE_STRUCT_HEADER(9c5557266b9e5def, 0, 1)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -1481,6 +1530,278 @@ private:
 };
 #endif  // !CAPNP_LITE
 
+class CacheTrieNode::Reader {
+public:
+  typedef CacheTrieNode Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasValue() const;
+  inline  ::CacheAssignment::Reader getValue() const;
+
+  inline  ::uint8_t getLast() const;
+
+  inline bool hasChildren() const;
+  inline  ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Reader getChildren() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class CacheTrieNode::Builder {
+public:
+  typedef CacheTrieNode Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasValue();
+  inline  ::CacheAssignment::Builder getValue();
+  inline void setValue( ::CacheAssignment::Reader value);
+  inline  ::CacheAssignment::Builder initValue();
+  inline void adoptValue(::capnp::Orphan< ::CacheAssignment>&& value);
+  inline ::capnp::Orphan< ::CacheAssignment> disownValue();
+
+  inline  ::uint8_t getLast();
+  inline void setLast( ::uint8_t value);
+
+  inline bool hasChildren();
+  inline  ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Builder getChildren();
+  inline void setChildren( ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Reader value);
+  inline  ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Builder initChildren(unsigned int size);
+  inline void adoptChildren(::capnp::Orphan< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>> disownChildren();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class CacheTrieNode::Pipeline {
+public:
+  typedef CacheTrieNode Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::CacheAssignment::Pipeline getValue();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class CacheTrieNode::Child::Reader {
+public:
+  typedef Child Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasExpr() const;
+  inline  ::CacheExpr::Reader getExpr() const;
+
+  inline bool hasNode() const;
+  inline  ::CacheTrieNode::Reader getNode() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class CacheTrieNode::Child::Builder {
+public:
+  typedef Child Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasExpr();
+  inline  ::CacheExpr::Builder getExpr();
+  inline void setExpr( ::CacheExpr::Reader value);
+  inline  ::CacheExpr::Builder initExpr();
+  inline void adoptExpr(::capnp::Orphan< ::CacheExpr>&& value);
+  inline ::capnp::Orphan< ::CacheExpr> disownExpr();
+
+  inline bool hasNode();
+  inline  ::CacheTrieNode::Builder getNode();
+  inline void setNode( ::CacheTrieNode::Reader value);
+  inline  ::CacheTrieNode::Builder initNode();
+  inline void adoptNode(::capnp::Orphan< ::CacheTrieNode>&& value);
+  inline ::capnp::Orphan< ::CacheTrieNode> disownNode();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class CacheTrieNode::Child::Pipeline {
+public:
+  typedef Child Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::CacheExpr::Pipeline getExpr();
+  inline  ::CacheTrieNode::Pipeline getNode();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
+class CacheTrie::Reader {
+public:
+  typedef CacheTrie Reads;
+
+  Reader() = default;
+  inline explicit Reader(::capnp::_::StructReader base): _reader(base) {}
+
+  inline ::capnp::MessageSize totalSize() const {
+    return _reader.totalSize().asPublic();
+  }
+
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const {
+    return ::capnp::_::structString(_reader, *_capnpPrivate::brand());
+  }
+#endif  // !CAPNP_LITE
+
+  inline bool hasRoot() const;
+  inline  ::CacheTrieNode::Reader getRoot() const;
+
+private:
+  ::capnp::_::StructReader _reader;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::List;
+  friend class ::capnp::MessageBuilder;
+  friend class ::capnp::Orphanage;
+};
+
+class CacheTrie::Builder {
+public:
+  typedef CacheTrie Builds;
+
+  Builder() = delete;  // Deleted to discourage incorrect usage.
+                       // You can explicitly initialize to nullptr instead.
+  inline Builder(decltype(nullptr)) {}
+  inline explicit Builder(::capnp::_::StructBuilder base): _builder(base) {}
+  inline operator Reader() const { return Reader(_builder.asReader()); }
+  inline Reader asReader() const { return *this; }
+
+  inline ::capnp::MessageSize totalSize() const { return asReader().totalSize(); }
+#if !CAPNP_LITE
+  inline ::kj::StringTree toString() const { return asReader().toString(); }
+#endif  // !CAPNP_LITE
+
+  inline bool hasRoot();
+  inline  ::CacheTrieNode::Builder getRoot();
+  inline void setRoot( ::CacheTrieNode::Reader value);
+  inline  ::CacheTrieNode::Builder initRoot();
+  inline void adoptRoot(::capnp::Orphan< ::CacheTrieNode>&& value);
+  inline ::capnp::Orphan< ::CacheTrieNode> disownRoot();
+
+private:
+  ::capnp::_::StructBuilder _builder;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+  friend class ::capnp::Orphanage;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::_::PointerHelpers;
+};
+
+#if !CAPNP_LITE
+class CacheTrie::Pipeline {
+public:
+  typedef CacheTrie Pipelines;
+
+  inline Pipeline(decltype(nullptr)): _typeless(nullptr) {}
+  inline explicit Pipeline(::capnp::AnyPointer::Pipeline&& typeless)
+      : _typeless(kj::mv(typeless)) {}
+
+  inline  ::CacheTrieNode::Pipeline getRoot();
+private:
+  ::capnp::AnyPointer::Pipeline _typeless;
+  friend class ::capnp::PipelineHook;
+  template <typename, ::capnp::Kind>
+  friend struct ::capnp::ToDynamic_;
+};
+#endif  // !CAPNP_LITE
+
 // =======================================================================================
 
 inline bool CacheArray::Reader::hasName() const {
@@ -2607,6 +2928,210 @@ inline void CapCache::Elem::Builder::adoptAssignment(
 inline ::capnp::Orphan< ::CacheAssignment> CapCache::Elem::Builder::disownAssignment() {
   return ::capnp::_::PointerHelpers< ::CacheAssignment>::disown(_builder.getPointerField(
       ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool CacheTrieNode::Reader::hasValue() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool CacheTrieNode::Builder::hasValue() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::CacheAssignment::Reader CacheTrieNode::Reader::getValue() const {
+  return ::capnp::_::PointerHelpers< ::CacheAssignment>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::CacheAssignment::Builder CacheTrieNode::Builder::getValue() {
+  return ::capnp::_::PointerHelpers< ::CacheAssignment>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::CacheAssignment::Pipeline CacheTrieNode::Pipeline::getValue() {
+  return  ::CacheAssignment::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void CacheTrieNode::Builder::setValue( ::CacheAssignment::Reader value) {
+  ::capnp::_::PointerHelpers< ::CacheAssignment>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::CacheAssignment::Builder CacheTrieNode::Builder::initValue() {
+  return ::capnp::_::PointerHelpers< ::CacheAssignment>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void CacheTrieNode::Builder::adoptValue(
+    ::capnp::Orphan< ::CacheAssignment>&& value) {
+  ::capnp::_::PointerHelpers< ::CacheAssignment>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::CacheAssignment> CacheTrieNode::Builder::disownValue() {
+  return ::capnp::_::PointerHelpers< ::CacheAssignment>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline  ::uint8_t CacheTrieNode::Reader::getLast() const {
+  return _reader.getDataField< ::uint8_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint8_t CacheTrieNode::Builder::getLast() {
+  return _builder.getDataField< ::uint8_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS);
+}
+inline void CacheTrieNode::Builder::setLast( ::uint8_t value) {
+  _builder.setDataField< ::uint8_t>(
+      ::capnp::bounded<0>() * ::capnp::ELEMENTS, value);
+}
+
+inline bool CacheTrieNode::Reader::hasChildren() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool CacheTrieNode::Builder::hasChildren() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Reader CacheTrieNode::Reader::getChildren() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Builder CacheTrieNode::Builder::getChildren() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void CacheTrieNode::Builder::setChildren( ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>::Builder CacheTrieNode::Builder::initChildren(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), size);
+}
+inline void CacheTrieNode::Builder::adoptChildren(
+    ::capnp::Orphan< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>> CacheTrieNode::Builder::disownChildren() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheTrieNode::Child,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool CacheTrieNode::Child::Reader::hasExpr() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool CacheTrieNode::Child::Builder::hasExpr() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::CacheExpr::Reader CacheTrieNode::Child::Reader::getExpr() const {
+  return ::capnp::_::PointerHelpers< ::CacheExpr>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::CacheExpr::Builder CacheTrieNode::Child::Builder::getExpr() {
+  return ::capnp::_::PointerHelpers< ::CacheExpr>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::CacheExpr::Pipeline CacheTrieNode::Child::Pipeline::getExpr() {
+  return  ::CacheExpr::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void CacheTrieNode::Child::Builder::setExpr( ::CacheExpr::Reader value) {
+  ::capnp::_::PointerHelpers< ::CacheExpr>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::CacheExpr::Builder CacheTrieNode::Child::Builder::initExpr() {
+  return ::capnp::_::PointerHelpers< ::CacheExpr>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void CacheTrieNode::Child::Builder::adoptExpr(
+    ::capnp::Orphan< ::CacheExpr>&& value) {
+  ::capnp::_::PointerHelpers< ::CacheExpr>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::CacheExpr> CacheTrieNode::Child::Builder::disownExpr() {
+  return ::capnp::_::PointerHelpers< ::CacheExpr>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+
+inline bool CacheTrieNode::Child::Reader::hasNode() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline bool CacheTrieNode::Child::Builder::hasNode() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS).isNull();
+}
+inline  ::CacheTrieNode::Reader CacheTrieNode::Child::Reader::getNode() const {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::get(_reader.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline  ::CacheTrieNode::Builder CacheTrieNode::Child::Builder::getNode() {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::get(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::CacheTrieNode::Pipeline CacheTrieNode::Child::Pipeline::getNode() {
+  return  ::CacheTrieNode::Pipeline(_typeless.getPointerField(1));
+}
+#endif  // !CAPNP_LITE
+inline void CacheTrieNode::Child::Builder::setNode( ::CacheTrieNode::Reader value) {
+  ::capnp::_::PointerHelpers< ::CacheTrieNode>::set(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), value);
+}
+inline  ::CacheTrieNode::Builder CacheTrieNode::Child::Builder::initNode() {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::init(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+inline void CacheTrieNode::Child::Builder::adoptNode(
+    ::capnp::Orphan< ::CacheTrieNode>&& value) {
+  ::capnp::_::PointerHelpers< ::CacheTrieNode>::adopt(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::CacheTrieNode> CacheTrieNode::Child::Builder::disownNode() {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::disown(_builder.getPointerField(
+      ::capnp::bounded<1>() * ::capnp::POINTERS));
+}
+
+inline bool CacheTrie::Reader::hasRoot() const {
+  return !_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline bool CacheTrie::Builder::hasRoot() {
+  return !_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
+}
+inline  ::CacheTrieNode::Reader CacheTrie::Reader::getRoot() const {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::get(_reader.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline  ::CacheTrieNode::Builder CacheTrie::Builder::getRoot() {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::get(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+#if !CAPNP_LITE
+inline  ::CacheTrieNode::Pipeline CacheTrie::Pipeline::getRoot() {
+  return  ::CacheTrieNode::Pipeline(_typeless.getPointerField(0));
+}
+#endif  // !CAPNP_LITE
+inline void CacheTrie::Builder::setRoot( ::CacheTrieNode::Reader value) {
+  ::capnp::_::PointerHelpers< ::CacheTrieNode>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::CacheTrieNode::Builder CacheTrie::Builder::initRoot() {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::init(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
+}
+inline void CacheTrie::Builder::adoptRoot(
+    ::capnp::Orphan< ::CacheTrieNode>&& value) {
+  ::capnp::_::PointerHelpers< ::CacheTrieNode>::adopt(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
+}
+inline ::capnp::Orphan< ::CacheTrieNode> CacheTrie::Builder::disownRoot() {
+  return ::capnp::_::PointerHelpers< ::CacheTrieNode>::disown(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 
 

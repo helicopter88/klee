@@ -8,23 +8,30 @@
 #include <klee/util/Assignment.h>
 
 namespace klee {
+    struct ExprComparator {
+    public:
+        bool operator()(const ref<Expr> &lhs, const ref<Expr> &rhs) const {
+            return lhs->hash() < rhs->hash();
+        }
+    };
+
     class Trie {
-        struct ExprComparator {
-        public:
-            bool operator()(const ref<Expr> &lhs, const ref<Expr> &rhs) const {
-                return lhs->hash() < rhs->hash();
-            }
-        };
 
     private:
+
         struct TrieNode {
-            std::map<ref<Expr>, TrieNode *, ExprComparator> children;
+            std::map<ref<Expr>, TrieNode *> children;
             Assignment **value;
             bool last;
         public:
             TrieNode() : value(nullptr), last(false) {}
 
+            void storeNode(CacheTrieNode::Builder &&nodeBuilder) const;
+
             explicit TrieNode(Assignment **pAssignment) : value(pAssignment), last(false) {}
+
+            explicit TrieNode(std::map<ref<Expr>, TrieNode *> &&_children, Assignment **_value,
+                              bool _last) : children(_children), value(_value), last(_last) {}
         };
 
         static TrieNode *createTrieNode() {
@@ -37,36 +44,46 @@ namespace klee {
             return newNode;
         }
 
+
+        size_t size;
         TrieNode *root;
 
         void insertInternal(TrieNode *node,
-                            const std::set<ref<Expr>> &, std::set<ref<Expr>>::iterator expr, Assignment **);
+                            const std::set<ref<Expr>> &, std::set<ref<Expr>>::const_iterator expr, Assignment **);
 
         Assignment **searchInternal(TrieNode *node,
-                                    const std::set<ref<Expr>> &, std::set<ref<Expr>>::iterator expr);
+                                    const std::set<ref<Expr>> &, std::set<ref<Expr>>::const_iterator expr,
+                                    bool &hasSolution) const;
 
         Assignment **existsSubsetInternal(TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                          std::set<ref<Expr>>::iterator expr);
+                                          std::set<ref<Expr>>::iterator expr) const;
 
         Assignment **existsSupersetInternal(TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                            std::set<ref<Expr>>::iterator expr);
+                                            std::set<ref<Expr>>::iterator expr) const;
 
-        void dumpNode(const TrieNode *node);
+        void dumpNode(const TrieNode *node) const;
+
+        TrieNode *createTrieNode(CacheTrieNode::Reader &&node);
 
     public:
-        explicit Trie() : root(createTrieNode()) {
+        explicit Trie() : size(0), root(createTrieNode()) {
+        }
 
+        explicit Trie(CacheTrie::Reader &&builder) : size(0),
+                                                     root(createTrieNode(builder.getRoot())) {
         }
 
         void insert(const std::set<ref<Expr>> &exprs, Assignment *pAssignment);
 
-        Assignment **search(const std::set<ref<Expr>> &exprs);
+        Assignment **search(const std::set<ref<Expr>> &exprs, bool &hasSolution) const;
 
-        Assignment **existsSubset(const std::set<ref<Expr>> &exprs);
+        Assignment **existsSubset(const std::set<ref<Expr>> &exprs) const;
 
-        Assignment **existsSuperset(const std::set<ref<Expr>> &exprs);
+        Assignment **existsSuperset(const std::set<ref<Expr>> &exprs) const;
 
-        void dump();
+        void dump() const;
+
+        void store(CacheTrie::Builder &&node) const;
     };
 }
 
