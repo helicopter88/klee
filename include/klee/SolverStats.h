@@ -28,6 +28,7 @@ namespace klee {
         extern Statistic queryCounterexamples;
         extern Statistic queryTime;
         // Persistent cache related statistics
+        extern Statistic pcacheTime;
         extern Statistic pcacheHits;
         extern Statistic pcacheMisses;
         extern Statistic pcacheLookupTime;

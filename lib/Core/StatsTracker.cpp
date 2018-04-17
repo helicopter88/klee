@@ -448,6 +448,7 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::queryCexCacheMisses
              << "," << stats::queryCexCacheHits
              << "," << stats::queryCounterexamples
+             << "," << stats::pcacheTime / 1000000.
              << "," << stats::pcacheHits
              << "," << stats::pcacheMisses
              << "," << stats::pcacheLookupTime / 1000000.

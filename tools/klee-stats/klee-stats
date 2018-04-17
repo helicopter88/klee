@@ -48,6 +48,7 @@ Legend = [
     ('QCexCMisses', 'Counter example cache misses'),
     ('QCexCHits', 'Counter example cache hits'),
     ('QCex', 'Counter example cache size'),
+    ('PCacheTime', 'Previous cache time'),
     ('PCacheHits', 'Previous cache hits'),
     ('PCacheMisses', 'Previous cache misses'),
     ('PCacheSTime', 'Previous cache Lookup time'),
@@ -168,7 +169,8 @@ def getLabels(pr):
         labels = ('Path', 'Instrs', 'Time(s)', 'ICov(%)', 'BCov(%)', 'ICount',
                   'TSolver(%)', 'States', 'maxStates', 'avgStates', 'Mem(MB)',
                   'maxMem(MB)', 'avgMem(MB)', 'Queries', 'AvgQC', 'Tcex(%)',
-                  'Tfork(%)', 'QCexCMisses', 'QCexCHits', 'QCex', 'PCacheHits', 'PCacheMisses', 'PCacheSTime', 'PCacheDTime', 'PCacheRSize', 'PCachePMSize')
+                  'Tfork(%)', 'QCexCMisses', 'QCexCHits', 'QCex',
+                  'PCacheTime', 'PCacheHits', 'PCacheMisses', 'PCacheSTime', 'PCacheDTime', 'PCacheRSize', 'PCachePMSize')
     elif pr == 'reltime':
         labels = ('Path', 'Time(s)', 'TUser(%)', 'TSolver(%)',
                   'Tcex(%)', 'Tfork(%)', 'TResolve(%)')
@@ -190,7 +192,7 @@ def getRow(record, stats, pr):
     """Compose data for the current run into a row."""
     I, BFull, BPart, BTot, T, St, Mem, QTot, QCon,\
         _, Treal, SCov, SUnc, _, Ts, Tcex, Tf, Tr, QCexMiss, QCexHits, QCex, \
-        PCacheHits, PCacheMisses, PCacheSTime, PCacheDTime, PCacheRSize, PCachePMSize = record
+        PCacheTime, PCacheHits, PCacheMisses, PCacheSTime, PCacheDTime, PCacheRSize, PCachePMSize = record
     maxMem, avgMem, maxStates, avgStates = stats
 
     # special case for straight-line code: report 100% branch coverage
@@ -205,7 +207,8 @@ def getRow(record, stats, pr):
                100 * (2 * BFull + BPart) / (2 * BTot), SCov + SUnc,
                100 * Ts / Treal, St, maxStates, avgStates,
                Mem, maxMem, avgMem, QTot, AvgQC,
-               100 * Tcex / Treal, 100 * Tf / Treal, QCexMiss, QCexHits, QCex, PCacheHits, PCacheMisses, 100 * PCacheSTime / Treal, 100 * PCacheDTime / Treal, PCacheRSize, PCachePMSize)
+               100 * Tcex / Treal, 100 * Tf / Treal, QCexMiss, QCexHits, QCex,
+               100 * PCacheTime / Treal, PCacheHits, PCacheMisses, 100 * PCacheSTime / Treal, 100 * PCacheDTime / Treal, PCacheRSize, PCachePMSize)
     elif pr == 'reltime':
         row = (Treal, 100 * T / Treal, 100 * Ts / Treal,
                100 * Tcex / Treal, 100 * Tf / Treal,

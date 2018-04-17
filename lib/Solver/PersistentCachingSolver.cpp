@@ -14,37 +14,63 @@
 #include "klee/util/Assignment.h"
 #include "klee/util/ExprUtil.h"
 
-#include "../klee-pcache/ExactMatchFinder.h"
-#include "../klee-pcache/SubSupersetFinder.h"
+#include "../klee-pcache/RedisFinder.h"
+#include "../klee-pcache/PersistentMapOfSetsFinder.h"
 #include "../klee-pcache/NameNormalizer.h"
 #include "../klee-pcache/Trie.h"
 #include "../klee-pcache/TrieFinder.h"
+#include "../klee-pcache/NameNormalizerFinder.h"
+#include "../klee-pcache/Predicates.h"
 
 using namespace llvm;
 namespace {
-    llvm::cl::opt<std::string> PCachePath("pcache-path",
-                                          cl::init("/home/klee/cache"),
-                                          cl::desc("Path for the persistent cache"));
+    cl::opt<std::string> PCachePath("pcache-path",
+                                    cl::init("/home/klee/cache"),
+                                    cl::desc("Path for the persistent cache"
+                                             "name normalized cache will be stored in the same path followed by 'nn'"
+                                             "i.e. '/home/klee/cachenn'"));
+
+    cl::opt<bool> PCacheUseNameNormalizer("pcache-use-name", cl::init(false),
+                                          cl::desc(
+                                                  "EXPERIMENTAL: Use the name normalizer when looking up queries in the caches"));
+
+    cl::opt<std::string> PCacheRedisUrl("pcache-redis-url",
+                                        cl::init("127.0.0.1"),
+                                        cl::desc("Url for the redis instances"));
+
+    cl::opt<bool> PCacheTryAll("pcache-try-all", cl::init(false),cl::desc("EXPERIMENTAL: try everything(trie sub/superset, persistent map sub/superset and namenormalizers)"
+                                                                          "when looking up in the caches"));
+
 }
 namespace klee {
     typedef std::set<ref<Expr>> KeyType;
 
     class PersistentCachingSolver : public SolverImpl {
     private:
-        TrieFinder trie;
-        SubSupersetFinder finder;
-
+        /** Underlying solver **/
         Solver *solver;
+        /** Cache backend with PersistentMapOfSets used for direct lookups **/
+        PersistentMapOfSetsFinder persistentMapOfSetsFinder;
+        /** Cache backend with Trie used for direct lookups **/
+        /** and cache backend with Trie used to build a NameNormalizerFinder **/
+        TrieFinder trieFinder, secondTrieFinder;
+        /** Cache backend backed by Redis used for direct lookups and to build a NameNormalizerFinder **/
+        RedisFinder redisFinder, secondRedisFinder;
+        /** NameNormalizerFinders, only used when @var{PCacheUseNameNormalizer} is set **/
+        NameNormalizerFinder nnTrieFinder, nnRedisFinder;
+        /** Debug stats **/
+        size_t redisHits = 0, pmapHits = 0, trieHits = 0;
 
-        ExactMatchFinder emf;
 
         bool getAssignment(const Query &query, Assignment *&result);
+
+        /** TODO: this method is broken currently **/
+        bool getAssignmentParallel(KeyType &key, const Query &query, Assignment *&result);
 
         bool lookupAssignment(const Query &query, KeyType &key, Assignment *&result);
 
         bool searchForAssignment(KeyType &key, Assignment *&result);
 
-        double timeout;
     public:
 
         bool computeTruth(const Query &, bool &isValid) override;
@@ -67,19 +93,40 @@ namespace klee {
         explicit PersistentCachingSolver(Solver *pSolver);
 
         ~PersistentCachingSolver() noexcept override {
-            finder.close();
-            emf.close();
+            redisFinder.storeFinder();
+            trieFinder.storeFinder();
+            persistentMapOfSetsFinder.storeFinder();
+            if (PCacheUseNameNormalizer) {
+                nnTrieFinder.storeFinder();
+                nnRedisFinder.storeFinder();
+            }
+#if DEBUG
+            llvm::errs() << "R: " << redisHits << " P: " << pmapHits << " T: " << trieHits << "\n";
+#endif
         };
+
+
     };
 
 
-    PersistentCachingSolver::PersistentCachingSolver(Solver *pSolver) : finder(PCachePath), solver(pSolver),
-                                                                        timeout(1000.0) {
+    PersistentCachingSolver::PersistentCachingSolver(Solver *pSolver) : solver(pSolver),
+                                                                        persistentMapOfSetsFinder(PCachePath),
+                                                                        trieFinder(PCachePath),
+                                                                        secondTrieFinder(PCachePath + "nn"),
+                                                                        redisFinder(PCacheRedisUrl),
+                                                                        secondRedisFinder(PCacheRedisUrl, 6379, 1),
+                                                                        nnTrieFinder(secondTrieFinder),
+                                                                        nnRedisFinder(secondRedisFinder) {
+        // Close the NameNormalizers immediately if they are not meant to be used
+        if (!PCacheUseNameNormalizer) {
+            nnRedisFinder.storeFinder();
+            nnTrieFinder.storeFinder();
+        }
 
     }
 
     bool PersistentCachingSolver::computeTruth(const Query &query, bool &isValid) {
-        TimerStatIncrementer t(stats::cexCacheTime);
+        TimerStatIncrementer t(stats::pcacheTime);
 
         // There is a small amount of redundancy here. We only need to know
         // truth and do not really need to compute an assignment. This means
@@ -100,10 +147,13 @@ namespace klee {
     }
 
     bool PersistentCachingSolver::computeValidity(const Query &query, Solver::Validity &result) {
-        TimerStatIncrementer t(stats::cexCacheTime);
+        TimerStatIncrementer t(stats::pcacheTime);
         Assignment *a;
         if (!getAssignment(query.withFalse(), a))
             return false;
+        if (!a) {
+            query.dump();
+        }
         assert(a && "computeValidity() must have assignment");
         ref<Expr> q = a->evaluate(query.expr);
         assert(isa<ConstantExpr>(q) &&
@@ -123,22 +173,50 @@ namespace klee {
     }
 
     bool PersistentCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
-        Assignment **r = trie.find(key);//finder.find(key);
+
+        Assignment **r;
+        r = trieFinder.find(key);
         if (r) {
+            trieHits++;
             result = *r;
             return true;
         }
-        r = emf.find(key);
+        r = persistentMapOfSetsFinder.find(key);
         if (r) {
             result = *r;
-            finder.insert(key, *r);
+            pmapHits++;
+            return true;
+        }
+        r = redisFinder.find(key);
+        if (r) {
+            redisHits++;
+            result = *r;
+            delete r;
             return true;
         }
 
-        if (!UseCexCache) {
-            r = finder.findSubSuperSet(key);
+        if(PCacheTryAll) {
+            r = trieFinder.findSpecial(key);
+            if(r) {
+                result = *r;
+                return true
+            }
+            r = persistentMapOfSetsFinder.findSpecial(key);
+            if(r) {
+                result = *r;
+                return true;
+            }
+        }
+        if (PCacheTryAll || PCacheUseNameNormalizer) {
+            r = nnTrieFinder.findSpecial(key);
             if (r) {
                 result = *r;
+                return true;
+            }
+            r = nnRedisFinder.findSpecial(key);
+            if (r) {
+                result = *r;
+                delete r;
                 return true;
             }
         }
@@ -149,11 +227,60 @@ namespace klee {
         TimerStatIncrementer t(stats::pcacheLookupTime);
 
         bool found = searchForAssignment(key, result);
+
         if (found)
             ++stats::pcacheHits;
         else ++stats::pcacheMisses;
 
         return found;
+    }
+
+    /** TODO: this does not yet work, figure out why! **/
+    bool PersistentCachingSolver::getAssignmentParallel(KeyType &key, const Query &query, Assignment *&result) {
+        std::future<Assignment **> nnFind = std::async([&]() -> Assignment ** {
+            Assignment **r = nnTrieFinder.findSpecial(key);
+            if (r) {
+                return r;
+            }
+            r = nnRedisFinder.findSpecial(key);
+            if (r) {
+                return r;
+            }
+            return nullptr;
+        });
+        std::future<Assignment **> solverFind = std::async([=]() -> Assignment ** {
+            Assignment **r = nullptr;
+
+            std::vector<const Array *> objects;
+            findSymbolicObjects(key.cbegin(), key.cend(), objects);
+
+            std::vector<std::vector<unsigned char> > values;
+
+            bool hasSolution;
+            if (!solver->impl->computeInitialValues(query, objects, values,
+                                                    hasSolution))
+                return r;
+            r = new Assignment *;
+            if (hasSolution) {
+                *r = new Assignment(objects, values);
+            } else {
+                *r = nullptr;
+            }
+            return r;
+        });
+        nnFind.wait();
+        Assignment **r = nnFind.get();
+        if (r) {
+            result = *r;
+            return true;
+        }
+        solverFind.wait();
+        r = solverFind.get();
+        if (!r) {
+            return false;
+        }
+        result = *r;
+        return true;
     }
 
     bool PersistentCachingSolver::getAssignment(const Query &query, Assignment *&result) {
@@ -169,11 +296,12 @@ namespace klee {
             key.insert(neg);
         }
 
-        if (lookupAssignment(query, key, result))
+        if (lookupAssignment(query, key, result)) {
             return true;
+        }
 
 #ifdef DEBUG
-        errs() << "We did not find a match in the caches for: \n";
+        errs() << "We did not find a match in the direct caches for: \n";
         for (const auto &e : key) e->dump();
         errs() << "\n";
 #endif
@@ -192,15 +320,19 @@ namespace klee {
             result = nullptr;
         }
         TimerStatIncrementer statIncrementer(stats::pcacheInsertionTime);
-        finder.insert(key, result);
-        emf.insert(key, result);
-        trie.insert(key, result);
+        redisFinder.insert(key, result);
+        trieFinder.insert(key, result);
+        persistentMapOfSetsFinder.insert(key, result);
+        if (PCacheUseNameNormalizer) {
+            nnTrieFinder.insert(key, result);
+            nnRedisFinder.insert(key, result);
+        }
         return true;
     }
 
 
     bool PersistentCachingSolver::computeValue(const Query &query, ref<Expr> &result) {
-        TimerStatIncrementer t(stats::cexCacheTime);
+        TimerStatIncrementer t(stats::pcacheTime);
 
         Assignment *a;
         if (!getAssignment(query.withFalse(), a)) {
@@ -217,7 +349,7 @@ namespace klee {
     PersistentCachingSolver::computeInitialValues(const Query &query, const std::vector<const Array *> &objects,
                                                   std::vector<std::vector<unsigned char> > &values,
                                                   bool &hasSolution) {
-        TimerStatIncrementer t(stats::cexCacheTime);
+        TimerStatIncrementer t(stats::pcacheTime);
         Assignment *a;
         if (!getAssignment(query, a))
             return false;
@@ -254,7 +386,6 @@ namespace klee {
     }
 
     void PersistentCachingSolver::setCoreSolverTimeout(double timeout) {
-        this->timeout = timeout;
         solver->impl->setCoreSolverTimeout(timeout);
     }
 
