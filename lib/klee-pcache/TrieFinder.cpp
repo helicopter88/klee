@@ -79,7 +79,7 @@ namespace klee {
             return;
         }
         capnp::ReaderOptions ro;
-        ro.nestingLimit = 1024;
+        ro.nestingLimit = 10240;
         ro.traversalLimitInWords = UINT64_MAX >> 12;
         capnp::PackedFdMessageReader pfd(fd, ro);
         CacheTrie::Reader reader = pfd.getRoot<CacheTrie>();

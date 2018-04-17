@@ -199,7 +199,7 @@ namespace klee {
             r = trieFinder.findSpecial(key);
             if(r) {
                 result = *r;
-                return true
+                return true;
             }
             r = persistentMapOfSetsFinder.findSpecial(key);
             if(r) {

@@ -12,7 +12,7 @@ using namespace klee;
 ProtoAssignment* pa;
 ProtoAssignment * emptyAssignment;
 
-RedisFinder::ExactMatchFinder(const std::string& url, size_t port, int dbNum) : instance(url, port, dbNum) {
+RedisFinder::RedisFinder(const std::string& url, size_t port, int dbNum) : instance(url, port, dbNum) {
     emptyAssignment = new ProtoAssignment;
     emptyAssignment->set_nobinding(true);
     pa = new ProtoAssignment;

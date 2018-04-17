@@ -47,7 +47,7 @@ namespace klee {
                 break;
             }
             ::capnp::ReaderOptions readerOptions;
-            readerOptions.nestingLimit = 256;
+            readerOptions.nestingLimit = 10240;
             readerOptions.traversalLimitInWords = MAX_SIZE << 1;
             ::capnp::PackedFdMessageReader *pfd = new capnp::PackedFdMessageReader(fd, readerOptions);
             CapCache::Reader cacheReader = pfd->getRoot<CapCache>();
