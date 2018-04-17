@@ -3,6 +3,10 @@ FROM helicopter88/klee:base
 # RUN mkdir ${KLEE_SRC}
 ADD / ${KLEE_SRC}
 
+USER root
+RUN mv ${KLEE_SRC}/redis.conf /etc/redis/redis.conf
+
+USER klee
 # Build KLEE (use TravisCI script)
 RUN cd ${BUILD_DIR} && ${KLEE_SRC}/.travis/klee.sh
 
