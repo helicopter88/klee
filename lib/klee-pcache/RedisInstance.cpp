@@ -21,6 +21,7 @@ int64_t RedisInstance::getSize() {
     client.dbsize([&](const cpp_redis::reply &reply) {
         size = reply.as_integer();
     });
+    client.sync_commit();
     return size;
 }
 
@@ -43,7 +44,7 @@ const std::string RedisInstance::get(const std::string &key) {
 
 void RedisInstance::set(const std::string &key, const std::string &value) {
     client.set(key, value, [](const cpp_redis::reply &r) {});
-    client.commit();
+    client.sync_commit();
 }
 
 void RedisInstance::store() {

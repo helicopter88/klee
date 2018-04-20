@@ -8,6 +8,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <capnp/serialize-packed.h>
+#include <klee/SolverStats.h>
 #include "TrieFinder.h"
 #include "NameNormalizer.h"
 #include "Predicates.h"
@@ -15,7 +16,6 @@
 namespace klee {
 
     Assignment **TrieFinder::find(std::set<ref<Expr>> &exprs) {
-        //NameNormalizer nn;
         if (exprs.empty())
             return nullptr;
         bool hasSolution = false;
@@ -23,11 +23,6 @@ namespace klee {
         if (hasSolution) {
             return ret;
         }
-//        ret = trieFinder.existsSubset(exprs);
-//        if (ret && !*ret) {
-//            *ret = nullptr;
-//            return ret;
-//        }
         return nullptr;
     }
 
@@ -52,7 +47,7 @@ namespace klee {
     }
 
     void TrieFinder::insert(std::set<ref<Expr>> &exprs, Assignment *assignment) {
-        //NameNormalizer nn;
+        ++stats::pcacheTrieSize;
         trie.insert(exprs, assignment);
     }
 

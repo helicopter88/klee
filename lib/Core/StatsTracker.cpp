@@ -415,6 +415,13 @@ void StatsTracker::writeStatsHeader() {
              << "'QueryCexCacheMisses',"
              << "'QueryCexCacheHits',"
              << "'QueriesCEX',"
+             <<  "'PCacheTime',"
+             <<  "'PCacheMiss',"
+             <<  "'PCacheHits',"
+             <<  "'PCacheLookupTime',"
+             <<  "'PCacheInsertionTime',"
+             <<  "'PCacheRSize',"
+             <<  "'PCachePMSize',"
 #ifdef DEBUG
 	     << "'ArrayHashTime',"
 #endif
@@ -455,6 +462,7 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::pcacheInsertionTime / 1000000.
              << "," << stats::pcacheRedisSize
              << "," << stats::pcachePMapSize
+             << "," << stats::pcacheTrieSize
 #ifdef DEBUG
              << "," << stats::arrayHashTime / 1000000.
 #endif

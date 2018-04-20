@@ -73,11 +73,11 @@ struct CapCache {
 
 struct CacheTrieNode {
     struct Child {
-        expr @0: CacheExpr;
+        expr @0: UInt32;
         node @1: CacheTrieNode;
     }
     value @0: CacheAssignment;
-    last @1: UInt8;
+    last @1: Bool;
     children @2: List(Child);
 }
 

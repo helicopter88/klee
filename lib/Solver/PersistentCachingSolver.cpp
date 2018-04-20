@@ -38,8 +38,9 @@ namespace {
                                         cl::init("127.0.0.1"),
                                         cl::desc("Url for the redis instances"));
 
-    cl::opt<bool> PCacheTryAll("pcache-try-all", cl::init(false),cl::desc("EXPERIMENTAL: try everything(trie sub/superset, persistent map sub/superset and namenormalizers)"
-                                                                          "when looking up in the caches"));
+    cl::opt<bool> PCacheTryAll("pcache-try-all", cl::init(false), cl::desc(
+            "EXPERIMENTAL: try everything(trie sub/superset, persistent map sub/superset and namenormalizers)"
+            "when looking up in the caches"));
 
 }
 namespace klee {
@@ -100,7 +101,7 @@ namespace klee {
                 nnTrieFinder.storeFinder();
                 nnRedisFinder.storeFinder();
             }
-#if DEBUG
+#ifdef DEBUG
             llvm::errs() << "R: " << redisHits << " P: " << pmapHits << " T: " << trieHits << "\n";
 #endif
         };
@@ -181,28 +182,32 @@ namespace klee {
             result = *r;
             return true;
         }
-        r = persistentMapOfSetsFinder.find(key);
-        if (r) {
-            result = *r;
-            pmapHits++;
-            return true;
-        }
         r = redisFinder.find(key);
         if (r) {
             redisHits++;
             result = *r;
+            trieFinder.insert(key, result);
             delete r;
             return true;
         }
+        r = persistentMapOfSetsFinder.find(key);
+        if (r) {
+            result = *r;
+            trieFinder.insert(key, result);
+            redisFinder.insert(key, result);
+            pmapHits++;
+            return true;
+        }
 
-        if(PCacheTryAll) {
+
+        if (PCacheTryAll) {
             r = trieFinder.findSpecial(key);
-            if(r) {
+            if (r) {
                 result = *r;
                 return true;
             }
             r = persistentMapOfSetsFinder.findSpecial(key);
-            if(r) {
+            if (r) {
                 result = *r;
                 return true;
             }

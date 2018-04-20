@@ -1,14 +1,13 @@
 /** TODO: ADD PERSISTENCE **/
 #include <capnp/message.h>
+#include <klee/SolverStats.h>
 #include "Trie.h"
-#include "../Solver/STPBuilder.h"
 
+using namespace llvm;
 namespace klee {
     void Trie::dumpNode(const TrieNode *node) const {
-        //if(node->value) node->value-dump(); else llvm::errs() << "No assignment";
         llvm::errs() << " Is last: " << node->last << "\n";
         for (const auto &m : node->children) {
-            m.first->dump();
             llvm::errs() << "\t";
             dumpNode(m.second);
             llvm::errs() << " | ";
@@ -17,7 +16,6 @@ namespace klee {
 
     void Trie::dump() const {
         for (const auto &m : root->children) {
-            m.first->dump();
             llvm::errs() << "\n\t";
             dumpNode(m.second);
         }
@@ -32,22 +30,22 @@ namespace klee {
             return;
         }
         TrieNode *next;
-        auto iter = node->children.find(*expr);
+        auto iter = node->children.find((*expr)->hash());
         if (iter != node->children.cend()) {
             next = iter->second;
         } else {
             next = createTrieNode();
-            node->children.insert(std::make_pair(*expr, next));
+            node->children.insert(std::make_pair((*expr)->hash(), next));
         }
         insertInternal(next, exprs, ++expr, ass);
     }
 
     void Trie::insert(const std::set<ref<Expr>> &exprs, Assignment *ass) {
-        if(exprs.empty()) {
+        if (exprs.empty()) {
             return;
         }
         size++;
-        Assignment **pAssignment = new Assignment*;
+        Assignment **pAssignment = new Assignment *;
         *pAssignment = ass;
         insertInternal(root, exprs, exprs.cbegin(), pAssignment);
     }
@@ -61,7 +59,7 @@ namespace klee {
             return node->value;
         }
 
-        auto iter = node->children.find(*expr);
+        auto iter = node->children.find((*expr)->hash());
         if (iter == node->children.end()) {
             hasSolution = false;
             return nullptr;
@@ -80,29 +78,26 @@ namespace klee {
         return searchInternal(root, exprs, exprs.cbegin(), hasSolution);
     }
 
-    Assignment **Trie::existsSubsetInternal(TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                           std::set<ref<Expr>>::iterator expr) const {
+    Assignment **Trie::existsSubsetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
+                                            std::set<ref<Expr>>::const_iterator expr) const {
         if (pNode->last) {
             return pNode->value;
         }
-        if (expr == exprs.end()) {
+        if (expr == exprs.cend()) {
             return nullptr;
         }
-        Assignment **found = nullptr;
-        auto iter = pNode->children.find(*expr);
-        if (iter != pNode->children.end()) {
-            found = existsSubsetInternal(iter->second, exprs, ++expr);
+        auto iter = pNode->children.find((*expr)->hash());
+        if (iter != pNode->children.cend()) {
+            return existsSubsetInternal(iter->second, exprs, ++expr);
         }
-        if (!found) {
-            return existsSubsetInternal(pNode, exprs, ++expr);
-        }
-        return found;
+        return existsSubsetInternal(pNode, exprs, ++expr);
     }
 
-    Assignment **Trie::existsSupersetInternal(TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                             std::set<ref<Expr>>::iterator expr) const {
+    Assignment **Trie::existsSupersetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
+                                              std::set<ref<Expr>>::const_iterator expr, bool &hasResult) const {
 
-        if (expr == exprs.end()) {
+        if (expr == exprs.cend()) {
+            hasResult = true;
             return pNode->value;
         }
         Assignment **found = nullptr;
@@ -118,21 +113,22 @@ namespace klee {
 
         // TODO: figure out how to lowerbound & upperbound
         for (auto &child : pNode->children) {
-            if (found) {
+            if (child.first == expr->get()->hash()) {
+                found = existsSupersetInternal(child.second, exprs, ++expr, hasResult);
+            } else {
+                found = existsSupersetInternal(child.second, exprs, expr, hasResult);
+            }
+            if (hasResult) {
                 return found;
             }
-
-            if (child.first == expr->get()) {
-                found = existsSupersetInternal(child.second, exprs, ++expr);
-            } else {
-                found = existsSupersetInternal(child.second, exprs, expr);
-            }
         }
+        hasResult = false;
         return found;
     }
 
     Assignment **Trie::existsSuperset(const std::set<ref<Expr>> &exprs) const {
-        return existsSupersetInternal(root, exprs, exprs.cbegin());
+        bool hasResult = false;
+        return existsSupersetInternal(root, exprs, exprs.cbegin(), hasResult);
     }
 
     Assignment **Trie::existsSubset(const std::set<ref<Expr>> &exprs) const {
@@ -143,30 +139,30 @@ namespace klee {
         root->storeNode(std::forward<CacheTrieNode::Builder>(builder.initRoot()));
     }
 
-    Trie::TrieNode* Trie::createTrieNode(CacheTrieNode::Reader &&node) {
+    Trie::TrieNode *Trie::createTrieNode(CacheTrieNode::Reader &&node) {
         Assignment **pAssignment = nullptr;
         size++;
         if (node.hasValue()) {
-            pAssignment = new Assignment*;
+            pAssignment = new Assignment *;
             *pAssignment = Assignment::deserialize(node.getValue());
         }
-        std::map<ref<Expr>, TrieNode *> children;
+        std::map<unsigned, TrieNode *> children;
         for (const CacheTrieNode::Child::Reader &child : node.getChildren()) {
-            children.insert(std::make_pair(Expr::deserialize(child.getExpr()), createTrieNode(child.getNode())));
+            children.insert(std::make_pair(child.getExpr(), createTrieNode(child.getNode())));
         }
         return new TrieNode(std::move(children), pAssignment, (bool) node.getLast());
     }
 
 
     void Trie::TrieNode::storeNode(CacheTrieNode::Builder &&nodeBuilder) const {
-        nodeBuilder.setLast(static_cast<uint8_t>(this->last));
+        nodeBuilder.setLast(this->last);
         if (value && *value) {
             (*value)->serialize(nodeBuilder.initValue());
         }
         unsigned i = 0;
         auto map = nodeBuilder.initChildren(children.size());
         for (const auto &child : children) {
-            child.first->serialize(map[i].initExpr());
+            map[i].setExpr(child.first);
             child.second->storeNode(map[i].initNode());
             i++;
         }

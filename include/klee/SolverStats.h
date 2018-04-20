@@ -35,6 +35,7 @@ namespace klee {
         extern Statistic pcacheInsertionTime;
         extern Statistic pcacheRedisSize;
         extern Statistic pcachePMapSize;
+        extern Statistic pcacheTrieSize;
 
 #ifdef DEBUG
         extern Statistic arrayHashTime;

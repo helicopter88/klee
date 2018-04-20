@@ -30,6 +30,7 @@ Statistic stats::pcacheLookupTime("PreviousCacheLookupTime", "PCacheSTime");
 Statistic stats::pcacheInsertionTime("PreviousCacheDeserializationTime", "PCacheDTime");
 Statistic stats::pcacheRedisSize("PreviousCacheRedisSize", "PCacheRSize");
 Statistic stats::pcachePMapSize("PreviousCachePersistentMapSize", "PCachePMSize");
+Statistic stats::pcacheTrieSize("PreviousCacheTrieSize", "PCacheTSize");
 #ifdef DEBUG
 Statistic stats::arrayHashTime("ArrayHashTime", "AHtime");
 #endif

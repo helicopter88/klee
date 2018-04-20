@@ -20,7 +20,7 @@ namespace klee {
     private:
 
         struct TrieNode {
-            std::map<ref<Expr>, TrieNode *> children;
+            std::map<unsigned, TrieNode *> children;
             Assignment **value;
             bool last;
         public:
@@ -30,7 +30,7 @@ namespace klee {
 
             explicit TrieNode(Assignment **pAssignment) : value(pAssignment), last(false) {}
 
-            explicit TrieNode(std::map<ref<Expr>, TrieNode *> &&_children, Assignment **_value,
+            explicit TrieNode(std::map<unsigned, TrieNode *> &&_children, Assignment **_value,
                               bool _last) : children(_children), value(_value), last(_last) {}
         };
 
@@ -45,7 +45,8 @@ namespace klee {
         }
 
 
-        size_t size;
+        size_t size = 0;
+
         TrieNode *root;
 
         void insertInternal(TrieNode *node,
@@ -55,22 +56,22 @@ namespace klee {
                                     const std::set<ref<Expr>> &, std::set<ref<Expr>>::const_iterator expr,
                                     bool &hasSolution) const;
 
-        Assignment **existsSubsetInternal(TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                          std::set<ref<Expr>>::iterator expr) const;
+        Assignment **existsSubsetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
+                                          std::set<ref<Expr>>::const_iterator expr) const;
 
-        Assignment **existsSupersetInternal(TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                            std::set<ref<Expr>>::iterator expr) const;
+        Assignment **existsSupersetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
+                                            std::set<ref<Expr>>::const_iterator expr, bool &hasResult) const;
 
         void dumpNode(const TrieNode *node) const;
 
         TrieNode *createTrieNode(CacheTrieNode::Reader &&node);
 
     public:
-        explicit Trie() : size(0), root(createTrieNode()) {
+        explicit Trie() : root(createTrieNode()) {
         }
 
-        explicit Trie(CacheTrie::Reader &&builder) : size(0),
-                                                     root(createTrieNode(builder.getRoot())) {
+        explicit Trie(CacheTrie::Reader &&builder) :
+                root(createTrieNode(builder.getRoot())) {
         }
 
         void insert(const std::set<ref<Expr>> &exprs, Assignment *pAssignment);
