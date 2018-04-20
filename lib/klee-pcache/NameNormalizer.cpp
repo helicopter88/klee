@@ -93,6 +93,10 @@ namespace klee {
             const Array *orig = bin.first;
             const auto &iterator = namesMappings.find(orig->getName());
             if (iterator == namesMappings.cend()) {
+                assignment->dump();
+                for(const auto& b : namesMappings) {
+                    std::cout << b.first << "->" << b.second << std::endl;
+                }
                 assert("Name was not in the mapping" && false);
             }
             const std::string &newName = iterator->second;

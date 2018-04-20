@@ -44,6 +44,31 @@ namespace {
 
 }
 namespace klee {
+    class ChainingFinder : public Finder<Assignment *> {
+        Finder<Assignment *> &_f, &_parent;
+
+        ChainingFinder(Finder &&f, Finder &&parent) : _f(f), _parent(parent) {};
+    public:
+        Assignment **find(std::set<ref<Expr>> &exprs) override {
+            Assignment **ret = _f.find(exprs);
+            if (ret) {
+                return ret;
+            }
+
+            return _parent.find(exprs);
+        }
+
+        void insert(std::set<ref<Expr>> &exprs, Assignment *assignment) override {
+            _f.insert(exprs, assignment);
+            _parent.insert(exprs, assignment);
+        }
+
+        void storeFinder() override {
+            _f.storeFinder();
+            _parent.storeFinder();
+        }
+    };
+
     typedef std::set<ref<Expr>> KeyType;
 
     class PersistentCachingSolver : public SolverImpl {
@@ -119,7 +144,7 @@ namespace klee {
                                                                         nnTrieFinder(secondTrieFinder),
                                                                         nnRedisFinder(secondRedisFinder) {
         // Close the NameNormalizers immediately if they are not meant to be used
-        if (!PCacheUseNameNormalizer) {
+        if (!PCacheUseNameNormalizer && !PCacheTryAll) {
             nnRedisFinder.storeFinder();
             nnTrieFinder.storeFinder();
         }
@@ -182,23 +207,39 @@ namespace klee {
             result = *r;
             return true;
         }
-        r = redisFinder.find(key);
-        if (r) {
-            redisHits++;
-            result = *r;
-            trieFinder.insert(key, result);
-            delete r;
-            return true;
+        if (!UseCexCache) {
+            r = redisFinder.find(key);
+            if (r) {
+                redisHits++;
+                result = *r;
+                trieFinder.insert(key, result);
+                delete r;
+                return true;
+            }
+            r = persistentMapOfSetsFinder.find(key);
+            if (r) {
+                result = *r;
+                trieFinder.insert(key, result);
+                redisFinder.insert(key, result);
+                pmapHits++;
+                return true;
+            }
         }
-        r = persistentMapOfSetsFinder.find(key);
-        if (r) {
-            result = *r;
-            trieFinder.insert(key, result);
-            redisFinder.insert(key, result);
-            pmapHits++;
-            return true;
+        if (PCacheTryAll || PCacheUseNameNormalizer) {
+            NameNormalizer nn;
+            std::set<ref<Expr>> nnKey = nn.normalizeExpressions(key);
+            r = secondTrieFinder.find(nnKey);
+            if (r) {
+                result = nn.denormalizeAssignment(*r);
+                return true;
+            }
+            r = secondRedisFinder.findSpecial(nnKey);
+            if (r) {
+                result = nn.denormalizeAssignment(*r);
+                delete r;
+                return true;
+            }
         }
-
 
         if (PCacheTryAll) {
             r = trieFinder.findSpecial(key);
@@ -209,19 +250,6 @@ namespace klee {
             r = persistentMapOfSetsFinder.findSpecial(key);
             if (r) {
                 result = *r;
-                return true;
-            }
-        }
-        if (PCacheTryAll || PCacheUseNameNormalizer) {
-            r = nnTrieFinder.findSpecial(key);
-            if (r) {
-                result = *r;
-                return true;
-            }
-            r = nnRedisFinder.findSpecial(key);
-            if (r) {
-                result = *r;
-                delete r;
                 return true;
             }
         }
@@ -328,7 +356,7 @@ namespace klee {
         redisFinder.insert(key, result);
         trieFinder.insert(key, result);
         persistentMapOfSetsFinder.insert(key, result);
-        if (PCacheUseNameNormalizer) {
+        if (PCacheTryAll || PCacheUseNameNormalizer) {
             nnTrieFinder.insert(key, result);
             nnRedisFinder.insert(key, result);
         }
