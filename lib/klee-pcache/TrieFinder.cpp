@@ -16,8 +16,11 @@
 namespace klee {
 
     Assignment **TrieFinder::find(std::set<ref<Expr>> &exprs) {
-        if (exprs.empty())
-            return nullptr;
+        if (exprs.empty()) {
+            auto **nAss = new Assignment *;
+            *nAss = new Assignment;
+            return nAss;
+        }
         bool hasSolution = false;
         Assignment **ret = trie.search(exprs, hasSolution);
         if (hasSolution) {
@@ -27,10 +30,14 @@ namespace klee {
     }
 
     Assignment **TrieFinder::findSpecial(std::set<ref<Expr>> &exprs) {
-        if (exprs.empty()) return nullptr;
+        if (exprs.empty()) {
+            auto **nAss = new Assignment *;
+            *nAss = new Assignment;
+            return nAss;
+        };
         Assignment **ret = trie.existsSubset(exprs);
         if (ret) {
-            NullOrNotSatisfyingAssignment s;
+            NullOrNotSatisfyingAssignment s(exprs);
             if (s(*ret)) {
                 return ret;
             }
@@ -38,7 +45,7 @@ namespace klee {
 
         ret = trie.existsSuperset(exprs);
         if(ret) {
-            SatisfyingAssignment s = SatisfyingAssignment(exprs);
+            SatisfyingAssignment s;
             if (s(*ret)) {
                 return ret;
             }
@@ -80,6 +87,10 @@ namespace klee {
         CacheTrie::Reader reader = pfd.getRoot<CacheTrie>();
         trie = Trie(std::forward<CacheTrie::Reader>(reader));
         close(fd);
+    }
+
+    std::string TrieFinder::name() const {
+        return "TrieFinder";
     }
 
 };

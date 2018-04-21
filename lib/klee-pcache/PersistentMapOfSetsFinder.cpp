@@ -26,4 +26,8 @@ namespace klee {
     PersistentMapOfSetsFinder::PersistentMapOfSetsFinder(const std::string& path) : persistentCache(path) {
 
     }
+
+    std::string PersistentMapOfSetsFinder::name() const {
+        return "PMapFinder";
+    }
 }

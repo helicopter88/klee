@@ -8,15 +8,38 @@
 #include <klee/util/Cache.pb.h>
 #include <klee/util/Assignment.h>
 #include "klee/Expr.h"
+
 namespace klee {
-    template <typename Result> class Finder {
+    class Finder {
+    private:
+        size_t hits = 0;
+        size_t misses = 0;
     public:
-        virtual Result* find(std::set<ref<Expr>>& exprs) = 0;
-        virtual Result* findSpecial(std::set<ref<Expr>>& exprs) {
+        virtual Assignment **find(std::set<ref<Expr>> &exprs) = 0;
+
+        virtual Assignment **findSpecial(std::set<ref<Expr>> &exprs) {
             return find(exprs);
         }
-        virtual void insert(std::set<ref<Expr>>& exprs, Assignment* assignment) = 0;
+
+        virtual void insert(std::set<ref<Expr>> &exprs, Assignment *assignment) = 0;
+
         virtual void storeFinder() = 0;
+
+        virtual ~Finder() {};
+
+        void incrementHits() {
+            hits++;
+        }
+
+        void incrementMisses() {
+            misses++;
+        }
+
+        virtual std::string name() const { return ""; };
+
+        virtual void printStats() const {
+            std::cout << name() << " H: " << hits << " M: " << misses << std::endl;
+        }
     };
 }
 

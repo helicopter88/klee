@@ -9,7 +9,7 @@
 #include "PersistentMapOfSets.h"
 
 namespace klee {
-    class PersistentMapOfSetsFinder : public Finder<Assignment*> {
+    class PersistentMapOfSetsFinder : public Finder {
     private:
         PersistentMapOfSets persistentCache;
     public:
@@ -22,6 +22,8 @@ namespace klee {
         void storeFinder() override;
 
         explicit PersistentMapOfSetsFinder(const std::string& opt);
+
+        std::string name() const override;
     };
 }
 

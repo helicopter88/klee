@@ -8,19 +8,37 @@
 #include "Finder.h"
 
 namespace klee {
-    class NameNormalizerFinder : public Finder<Assignment *> {
+    class NameNormalizerFinder : public Finder {
     private:
-        Finder &f;
+        std::vector<Finder *> finders;
     public:
         Assignment **find(std::set<ref<Expr>> &exprs) override;
 
         void insert(std::set<ref<Expr>> &exprs, Assignment *assignment) override;
 
-        void storeFinder() final { f.storeFinder(); };
+        void storeFinder() final {
+            for (Finder *finder : finders) {
+                finder->storeFinder();
+            }
+        };
 
-        Assignment **findSpecial(std::set<ref<Expr>>& exprs) override;
+        Assignment **findSpecial(std::set<ref<Expr>> &exprs) override;
 
-        explicit NameNormalizerFinder(Finder &_f) : f(_f) {};
+        NameNormalizerFinder(std::initializer_list<Finder *> _f) : finders(_f) {};
+
+        ~NameNormalizerFinder() override {
+            for (Finder *finder : finders) {
+                delete finder;
+            }
+        }
+
+        void printStats() const override {
+            std::cout << "NameNormalized: " << std::endl;
+            for (Finder *finder : finders) {
+                finder->printStats();
+            }
+            std::cout << "NameNormalized end" << std::endl;
+        }
     };
 }
 

@@ -6,7 +6,7 @@
 #include "Trie.h"
 
 namespace klee {
-    class TrieFinder : public Finder<Assignment*> {
+    class TrieFinder : public Finder {
     private:
         Trie trie;
         std::string path;
@@ -20,6 +20,8 @@ namespace klee {
         void storeFinder() override;
 
         explicit TrieFinder(const std::string& opt);
+
+        std::string name() const override;
     };
 }
 #endif //KLEE_TRIEFINDER_H

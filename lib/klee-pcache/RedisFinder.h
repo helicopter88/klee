@@ -14,7 +14,7 @@
 #include <capnp/serialize.h>
 
 namespace klee {
-    class RedisFinder : public Finder<Assignment *> {
+    class RedisFinder : public Finder {
     private:
 
         RedisInstance instance;
@@ -22,7 +22,7 @@ namespace klee {
         std::string serializeToString(const std::set<ref<Expr>> &expressions);
 
     public:
-        RedisFinder(const std::string &url = "127.0.0.1", size_t port = 6379, int dbNum = 0);
+        explicit RedisFinder(const std::string &url = "127.0.0.1", size_t port = 6379, int dbNum = 0);
 
         Assignment **find(std::set<ref<Expr>> &expressions) final;
 
@@ -33,6 +33,10 @@ namespace klee {
         std::future<cpp_redis::reply> future_find(std::set<ref<Expr>> &expressions);
 
         Assignment **processResponse(std::future<cpp_redis::reply> &&reply) const;
+
+        std::string name() const override {
+            return "RedisFinder";
+        }
     };
 }
 
