@@ -30,42 +30,95 @@ namespace {
                                              "name normalized cache will be stored in the same path followed by 'nn'"
                                              "i.e. '/home/klee/cachenn'"));
 
-    cl::opt<bool> PCacheUseNameNormalizer("pcache-use-name", cl::init(false),
+    cl::opt<bool> PCacheUsePMap("pcache-use-pmap",
+                                cl::init(false),
+                                cl::desc("Use the Persistent Map of Sets instead of"
+                                         " the Set-Trie backend for the persistent cache"));
+
+    cl::opt<bool> PCacheUseNameNormalizer("pcache-use-name",
+                                          cl::init(false),
                                           cl::desc(
                                                   "EXPERIMENTAL: Use the name normalizer when looking up queries in the caches"));
 
     cl::opt<std::string> PCacheRedisUrl("pcache-redis-url",
                                         cl::init("127.0.0.1"),
-                                        cl::desc("Url for the redis instances"));
+                                        cl::desc("Url for the redis instances, use 'none' to disable redis"));
 
-    cl::opt<bool> PCacheTryAll("pcache-try-all", cl::init(false), cl::desc(
-            "EXPERIMENTAL: try everything(trie sub/superset, persistent map sub/superset and namenormalizers)"
-            "when looking up in the caches"));
+    cl::opt<size_t> PCacheRedisPort("pcache-redis-port",
+                                cl::init(6379),
+                                cl::desc("Port for the redis instances"));
+
+    cl::opt<bool> PCacheTryAll("pcache-try-all",
+                               cl::init(false),
+                               cl::desc("EXPERIMENTAL: try everything(trie sub/superset,"
+                                        " persistent map sub/superset and namenormalizers)"
+                                        "when looking up in the caches"));
 
 }
 namespace klee {
-    class ChainingFinder : public Finder<Assignment *> {
-        Finder<Assignment *> &_f, &_parent;
 
-        ChainingFinder(Finder &&f, Finder &&parent) : _f(f), _parent(parent) {};
+    class ChainingFinder : public Finder {
+        std::vector<Finder *> finders;
+
     public:
+        explicit ChainingFinder(std::vector<Finder *> _finders) : finders(std::move(_finders)) {};
+
         Assignment **find(std::set<ref<Expr>> &exprs) override {
-            Assignment **ret = _f.find(exprs);
-            if (ret) {
-                return ret;
+            std::vector<Finder *> missedFs;
+
+            for (Finder *_f : finders) {
+                Assignment **ret = _f->find(exprs);
+                if (ret) {
+                    _f->incrementHits();
+                    for (Finder *mF : missedFs) {
+                        mF->insert(exprs, *ret);
+                    }
+                    return ret;
+                }
+                _f->incrementMisses();
+                missedFs.emplace_back(_f);
             }
 
-            return _parent.find(exprs);
+            return nullptr;
         }
 
         void insert(std::set<ref<Expr>> &exprs, Assignment *assignment) override {
-            _f.insert(exprs, assignment);
-            _parent.insert(exprs, assignment);
+            for (Finder *_f : finders) {
+                _f->insert(exprs, assignment);
+            }
+        }
+
+        Assignment **findSpecial(std::set<ref<Expr>> &exprs) override {
+            std::vector<Finder *> missedFs;
+            for (Finder *_f : finders) {
+                Assignment **ret = _f->findSpecial(exprs);
+                if (ret) {
+                    _f->incrementHits();
+                    for (Finder *mF : missedFs) {
+                        mF->insert(exprs, *ret);
+                    }
+                    return ret;
+                }
+                missedFs.emplace_back(_f);
+                _f->incrementMisses();
+            }
+            return nullptr;
         }
 
         void storeFinder() override {
-            _f.storeFinder();
-            _parent.storeFinder();
+            this->printStats();
+            for (Finder *_f: finders) {
+                _f->storeFinder();
+                delete _f;
+            }
+        }
+
+        void printStats() const final {
+#if DEBUG
+            for (Finder *f : finders) {
+                f->printStats();
+            }
+#endif
         }
     };
 
@@ -73,25 +126,12 @@ namespace klee {
 
     class PersistentCachingSolver : public SolverImpl {
     private:
-        /** Underlying solver **/
         Solver *solver;
-        /** Cache backend with PersistentMapOfSets used for direct lookups **/
-        PersistentMapOfSetsFinder persistentMapOfSetsFinder;
-        /** Cache backend with Trie used for direct lookups **/
-        /** and cache backend with Trie used to build a NameNormalizerFinder **/
-        TrieFinder trieFinder, secondTrieFinder;
-        /** Cache backend backed by Redis used for direct lookups and to build a NameNormalizerFinder **/
-        RedisFinder redisFinder, secondRedisFinder;
-        /** NameNormalizerFinders, only used when @var{PCacheUseNameNormalizer} is set **/
-        NameNormalizerFinder nnTrieFinder, nnRedisFinder;
-        /** Debug stats **/
-        size_t redisHits = 0, pmapHits = 0, trieHits = 0;
+
+        ChainingFinder chainingFinder;
 
 
         bool getAssignment(const Query &query, Assignment *&result);
-
-        /** TODO: this method is broken currently **/
-        bool getAssignmentParallel(KeyType &key, const Query &query, Assignment *&result);
 
         bool lookupAssignment(const Query &query, KeyType &key, Assignment *&result);
 
@@ -119,35 +159,35 @@ namespace klee {
         explicit PersistentCachingSolver(Solver *pSolver);
 
         ~PersistentCachingSolver() noexcept override {
-            redisFinder.storeFinder();
-            trieFinder.storeFinder();
-            persistentMapOfSetsFinder.storeFinder();
-            if (PCacheUseNameNormalizer) {
-                nnTrieFinder.storeFinder();
-                nnRedisFinder.storeFinder();
-            }
-#ifdef DEBUG
-            llvm::errs() << "R: " << redisHits << " P: " << pmapHits << " T: " << trieHits << "\n";
-#endif
+            chainingFinder.storeFinder();
         };
 
-
+        ChainingFinder constructChainingFinder() const;
     };
 
+    ChainingFinder PersistentCachingSolver::constructChainingFinder() const {
+        std::vector<Finder *> finders;
+        if (!PCacheUsePMap) {
+            finders.emplace_back(new TrieFinder(PCachePath));
+        } else {
+            finders.emplace_back(new PersistentMapOfSetsFinder(PCachePath));
+        }
+        if (PCacheRedisUrl != "none") {
+            finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
+        }
+        if (PCacheUseNameNormalizer || PCacheTryAll) {
+            if (PCacheRedisUrl != "none") {
+                finders.emplace_back(new NameNormalizerFinder(
+                        {new TrieFinder(PCachePath + "nn"), new RedisFinder(PCacheRedisUrl, PCacheRedisPort, 1)}));
+            } else {
+                finders.emplace_back(new NameNormalizerFinder({new TrieFinder(PCachePath + "nn")}));
+            }
+        }
+        return ChainingFinder(finders);
+    }
 
     PersistentCachingSolver::PersistentCachingSolver(Solver *pSolver) : solver(pSolver),
-                                                                        persistentMapOfSetsFinder(PCachePath),
-                                                                        trieFinder(PCachePath),
-                                                                        secondTrieFinder(PCachePath + "nn"),
-                                                                        redisFinder(PCacheRedisUrl),
-                                                                        secondRedisFinder(PCacheRedisUrl, 6379, 1),
-                                                                        nnTrieFinder(secondTrieFinder),
-                                                                        nnRedisFinder(secondRedisFinder) {
-        // Close the NameNormalizers immediately if they are not meant to be used
-        if (!PCacheUseNameNormalizer && !PCacheTryAll) {
-            nnRedisFinder.storeFinder();
-            nnTrieFinder.storeFinder();
-        }
+                                                                        chainingFinder(constructChainingFinder()) {
 
     }
 
@@ -200,54 +240,13 @@ namespace klee {
 
     bool PersistentCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
 
-        Assignment **r;
-        r = trieFinder.find(key);
+        Assignment **r = chainingFinder.find(key);
         if (r) {
-            trieHits++;
             result = *r;
             return true;
         }
-        if (!UseCexCache) {
-            r = redisFinder.find(key);
-            if (r) {
-                redisHits++;
-                result = *r;
-                trieFinder.insert(key, result);
-                delete r;
-                return true;
-            }
-            r = persistentMapOfSetsFinder.find(key);
-            if (r) {
-                result = *r;
-                trieFinder.insert(key, result);
-                redisFinder.insert(key, result);
-                pmapHits++;
-                return true;
-            }
-        }
-        if (PCacheTryAll || PCacheUseNameNormalizer) {
-            NameNormalizer nn;
-            std::set<ref<Expr>> nnKey = nn.normalizeExpressions(key);
-            r = secondTrieFinder.find(nnKey);
-            if (r) {
-                result = nn.denormalizeAssignment(*r);
-                return true;
-            }
-            r = secondRedisFinder.findSpecial(nnKey);
-            if (r) {
-                result = nn.denormalizeAssignment(*r);
-                delete r;
-                return true;
-            }
-        }
-
         if (PCacheTryAll) {
-            r = trieFinder.findSpecial(key);
-            if (r) {
-                result = *r;
-                return true;
-            }
-            r = persistentMapOfSetsFinder.findSpecial(key);
+            r = chainingFinder.findSpecial(key);
             if (r) {
                 result = *r;
                 return true;
@@ -268,58 +267,10 @@ namespace klee {
         return found;
     }
 
-    /** TODO: this does not yet work, figure out why! **/
-    bool PersistentCachingSolver::getAssignmentParallel(KeyType &key, const Query &query, Assignment *&result) {
-        std::future<Assignment **> nnFind = std::async([&]() -> Assignment ** {
-            Assignment **r = nnTrieFinder.findSpecial(key);
-            if (r) {
-                return r;
-            }
-            r = nnRedisFinder.findSpecial(key);
-            if (r) {
-                return r;
-            }
-            return nullptr;
-        });
-        std::future<Assignment **> solverFind = std::async([=]() -> Assignment ** {
-            Assignment **r = nullptr;
-
-            std::vector<const Array *> objects;
-            findSymbolicObjects(key.cbegin(), key.cend(), objects);
-
-            std::vector<std::vector<unsigned char> > values;
-
-            bool hasSolution;
-            if (!solver->impl->computeInitialValues(query, objects, values,
-                                                    hasSolution))
-                return r;
-            r = new Assignment *;
-            if (hasSolution) {
-                *r = new Assignment(objects, values);
-            } else {
-                *r = nullptr;
-            }
-            return r;
-        });
-        nnFind.wait();
-        Assignment **r = nnFind.get();
-        if (r) {
-            result = *r;
-            return true;
-        }
-        solverFind.wait();
-        r = solverFind.get();
-        if (!r) {
-            return false;
-        }
-        result = *r;
-        return true;
-    }
-
     bool PersistentCachingSolver::getAssignment(const Query &query, Assignment *&result) {
         KeyType key = KeyType(query.constraints.begin(), query.constraints.end());
         ref<Expr> neg = Expr::createIsZero(query.expr);
-        if (ConstantExpr *CE = dyn_cast<ConstantExpr>(neg)) {
+        if (auto *CE = dyn_cast<ConstantExpr>(neg)) {
             if (CE->isFalse()) {
                 result = nullptr;
                 ++stats::pcacheHits;
@@ -353,13 +304,7 @@ namespace klee {
             result = nullptr;
         }
         TimerStatIncrementer statIncrementer(stats::pcacheInsertionTime);
-        redisFinder.insert(key, result);
-        trieFinder.insert(key, result);
-        persistentMapOfSetsFinder.insert(key, result);
-        if (PCacheTryAll || PCacheUseNameNormalizer) {
-            nnTrieFinder.insert(key, result);
-            nnRedisFinder.insert(key, result);
-        }
+        chainingFinder.insert(key, result);
         return true;
     }
 
@@ -386,7 +331,7 @@ namespace klee {
         Assignment *a;
         if (!getAssignment(query, a))
             return false;
-        hasSolution = !!a;
+        hasSolution = a != nullptr;
 
         if (!a)
             return true;
