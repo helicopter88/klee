@@ -24,9 +24,8 @@ namespace {
         ref<Expr> read8_2 = Expr::createTempRead(array2, 8);
         set1.insert(read8_2);
 
-        bool found1 = false, found2 = true, found3 = true;
         trie.insert(set1, assignment);
-        EXPECT_TRUE(trie.search(set1, found1));
+        EXPECT_TRUE(trie.search(set1));
 
         ref<Expr> extract1 = ExtractExpr::create(read64, 36, 4);
         set2.insert(extract1);
@@ -34,8 +33,8 @@ namespace {
         ref<Expr> extract2 = ExtractExpr::create(read64, 32, 4);
         set2.insert(extract2);
 
-        EXPECT_FALSE(trie.search(set2, found2));
-        EXPECT_FALSE(trie.search(set3, found3));
+        EXPECT_FALSE(trie.search(set2));
+        EXPECT_FALSE(trie.search(set3));
 
         delete assignment;
     }
@@ -68,12 +67,9 @@ namespace {
 
         trie.insert(set2, assignment);
 
-        bool found = true, found2 = false;
-        trie.search(set1, found);
-        EXPECT_FALSE(found);
+        EXPECT_FALSE(trie.search(set1));
 
-        trie.search(set2, found2);
-        EXPECT_TRUE(found2);
+        EXPECT_TRUE(trie.search(set2));
         EXPECT_TRUE(trie.existsSubset(set1));
         EXPECT_FALSE(trie.existsSubset(emptySet));
 
@@ -110,9 +106,8 @@ namespace {
         set1.insert(extract5);
 
         trie.insert(set1, assignment);
-        bool found = false;
-        trie.search(set1, found);
-        EXPECT_TRUE(found);
+
+        EXPECT_TRUE(trie.search(set1));
         EXPECT_TRUE(trie.existsSuperset(set1));
         EXPECT_TRUE(trie.existsSuperset(set2));
         EXPECT_FALSE(trie.existsSuperset(set3));
@@ -141,8 +136,7 @@ namespace {
         CacheTrie::Reader reader = builder.asReader();
 
         Trie t2(std::forward<CacheTrie::Reader>(reader));
-        bool found = false;
-        Assignment** res = t2.search(set1, found);
+        Assignment **res = t2.search(set1);
         EXPECT_TRUE(res);
     }
 }

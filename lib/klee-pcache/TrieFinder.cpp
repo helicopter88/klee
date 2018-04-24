@@ -21,9 +21,8 @@ namespace klee {
             *nAss = new Assignment;
             return nAss;
         }
-        bool hasSolution = false;
-        Assignment **ret = trie.search(exprs, hasSolution);
-        if (hasSolution) {
+        Assignment **ret = trie.search(exprs);
+        if (ret) {
             return ret;
         }
         return nullptr;

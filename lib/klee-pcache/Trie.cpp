@@ -44,42 +44,38 @@ namespace klee {
         if (exprs.empty()) {
             return;
         }
-        size++;
+        ++stats::pcacheTrieSize;
+        ++size;
         Assignment **pAssignment = new Assignment *;
         *pAssignment = ass;
         insertInternal(root, exprs, exprs.cbegin(), pAssignment);
     }
 
 
-    Assignment **
-    Trie::searchInternal(TrieNode *node, const std::set<ref<Expr>> &exprs, std::set<ref<Expr>>::const_iterator expr,
-                         bool &hasSolution) const {
+    Assignment **Trie::searchInternal(TrieNode *node, const Key &exprs, constIterator expr) const {
         if (expr == exprs.cend()) {
-            hasSolution = true;
             return node->value;
         }
 
-        auto iter = node->children.find((*expr)->hash());
-        if (iter == node->children.end()) {
-            hasSolution = false;
+        const auto& iter = node->children.find((*expr)->hash());
+        if (iter == node->children.cend()) {
             return nullptr;
         }
-        return searchInternal(iter->second, exprs, ++expr, hasSolution);
+        return searchInternal(iter->second, exprs, ++expr);
 
     }
 
-    Assignment **Trie::search(const std::set<ref<Expr>> &exprs, bool &hasSolution) const {
+    Assignment **Trie::search(const Key &exprs) const {
         assert(!this->root->last && "LAST SET FOR ROOT");
         assert(!this->root->value && "VALUE SET FOR ROOT");
         if (!size) {
-            hasSolution = false;
             return nullptr;
         }
-        return searchInternal(root, exprs, exprs.cbegin(), hasSolution);
+        return searchInternal(root, exprs, exprs.cbegin());
     }
 
     Assignment **Trie::existsSubsetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                            std::set<ref<Expr>>::const_iterator expr) const {
+                                            constIterator expr) const {
         if (pNode->last) {
             return pNode->value;
         }
@@ -93,8 +89,8 @@ namespace klee {
         return existsSubsetInternal(pNode, exprs, ++expr);
     }
 
-    Assignment **Trie::existsSupersetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                              std::set<ref<Expr>>::const_iterator expr, bool &hasResult) const {
+    Assignment **Trie::existsSupersetInternal(const TrieNode *pNode, const Key &exprs,
+                                              constIterator expr, bool &hasResult) const {
 
         if (expr == exprs.cend()) {
             hasResult = true;
@@ -126,12 +122,12 @@ namespace klee {
         return found;
     }
 
-    Assignment **Trie::existsSuperset(const std::set<ref<Expr>> &exprs) const {
+    Assignment **Trie::existsSuperset(const Key &exprs) const {
         bool hasResult = false;
         return existsSupersetInternal(root, exprs, exprs.cbegin(), hasResult);
     }
 
-    Assignment **Trie::existsSubset(const std::set<ref<Expr>> &exprs) const {
+    Assignment **Trie::existsSubset(const Key &exprs) const {
         return existsSubsetInternal(root, exprs, exprs.cbegin());
     }
 
@@ -143,6 +139,7 @@ namespace klee {
         Assignment **pAssignment = nullptr;
         size++;
         if (node.hasValue()) {
+            ++klee::stats::pcacheTrieSize;
             pAssignment = new Assignment *;
             *pAssignment = Assignment::deserialize(node.getValue());
         }

@@ -15,6 +15,10 @@ namespace klee {
         }
     };
 
+    typedef std::set<ref<Expr>>::const_iterator constIterator;
+
+    typedef const std::set<ref<Expr>> Key;
+
     class Trie {
 
     private:
@@ -49,18 +53,15 @@ namespace klee {
 
         TrieNode *root;
 
-        void insertInternal(TrieNode *node,
-                            const std::set<ref<Expr>> &, std::set<ref<Expr>>::const_iterator expr, Assignment **);
+        void insertInternal(TrieNode *node, const Key &, constIterator expr, Assignment **);
 
-        Assignment **searchInternal(TrieNode *node,
-                                    const std::set<ref<Expr>> &, std::set<ref<Expr>>::const_iterator expr,
-                                    bool &hasSolution) const;
+        Assignment **searchInternal(TrieNode *node, const Key & exprs, constIterator expr) const;
 
-        Assignment **existsSubsetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                          std::set<ref<Expr>>::const_iterator expr) const;
+        Assignment **existsSubsetInternal(const TrieNode *pNode, const Key &exprs,
+                                          constIterator expr) const;
 
-        Assignment **existsSupersetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
-                                            std::set<ref<Expr>>::const_iterator expr, bool &hasResult) const;
+        Assignment **existsSupersetInternal(const TrieNode *pNode, const Key &exprs,
+                                            constIterator expr, bool &hasResult) const;
 
         void dumpNode(const TrieNode *node) const;
 
@@ -74,13 +75,13 @@ namespace klee {
                 root(createTrieNode(builder.getRoot())) {
         }
 
-        void insert(const std::set<ref<Expr>> &exprs, Assignment *pAssignment);
+        void insert(const Key &exprs, Assignment *pAssignment);
 
-        Assignment **search(const std::set<ref<Expr>> &exprs, bool &hasSolution) const;
+        Assignment **search(const Key &exprs) const;
 
-        Assignment **existsSubset(const std::set<ref<Expr>> &exprs) const;
+        Assignment **existsSubset(const Key &exprs) const;
 
-        Assignment **existsSuperset(const std::set<ref<Expr>> &exprs) const;
+        Assignment **existsSuperset(const Key &exprs) const;
 
         void dump() const;
 
