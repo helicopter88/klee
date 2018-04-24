@@ -22,8 +22,7 @@ namespace klee {
     }
 
     void
-    Trie::insertInternal(TrieNode *node, const std::set<ref<Expr>> &exprs, std::set<ref<Expr>>::const_iterator expr,
-                         Assignment **ass) {
+    Trie::insertInternal(TrieNode *node, const Key &exprs, constIterator expr, Assignment **ass) {
         if (expr == exprs.cend()) {
             node->last = true;
             node->value = ass;
@@ -147,14 +146,19 @@ namespace klee {
         for (const CacheTrieNode::Child::Reader &child : node.getChildren()) {
             children.insert(std::make_pair(child.getExpr(), createTrieNode(child.getNode())));
         }
-        return new TrieNode(std::move(children), pAssignment, (bool) node.getLast());
+        return new TrieNode(std::move(children), pAssignment, node.getLast());
     }
 
 
     void Trie::TrieNode::storeNode(CacheTrieNode::Builder &&nodeBuilder) const {
         nodeBuilder.setLast(this->last);
-        if (value && *value) {
-            (*value)->serialize(nodeBuilder.initValue());
+        if (value) {
+            CacheAssignment::Builder builder = nodeBuilder.initValue();
+            if(*value) {
+                (*value)->serialize(std::forward<CacheAssignment::Builder>(builder));
+            } else {
+                builder.setNoBinding(true);
+            }
         }
         unsigned i = 0;
         auto map = nodeBuilder.initChildren(children.size());
