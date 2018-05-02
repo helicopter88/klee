@@ -33,11 +33,11 @@ namespace klee {
         }
 
         void printStats() const override {
-            std::cout << "NameNormalized: " << std::endl;
+            llvm::errs() << "NameNormalized: \n";
             for (Finder *finder : finders) {
                 finder->printStats();
             }
-            std::cout << "NameNormalized end" << std::endl;
+            llvm::errs() << "NameNormalized end\n";
         }
     };
 }

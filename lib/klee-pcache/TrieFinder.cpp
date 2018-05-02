@@ -36,19 +36,19 @@ namespace klee {
         };
         Assignment **ret = trie.existsSubset(exprs);
         if (ret) {
-            NullOrNotSatisfyingAssignment s(exprs);
+            NullAssignment s;
             if (s(*ret)) {
                 return ret;
             }
         }
 
-        ret = trie.existsSuperset(exprs);
+        /*ret = trie.existsSuperset(exprs);
         if(ret) {
-            SatisfyingAssignment s;
+            NullOrSatisfyingAssignment s(exprs);
             if (s(*ret)) {
                 return ret;
             }
-        }
+        }*/
         return nullptr;
     }
 

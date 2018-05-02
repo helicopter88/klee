@@ -16,8 +16,11 @@ namespace klee {
         if (orig->constantValues.empty()) {
             newArray = ac.CreateArray(newName, orig->size, nullptr, nullptr, orig->domain, orig->range);
         } else {
-            newArray = ac.CreateArray(newName, orig->size, &orig->constantValues[0],
-                                      &orig->constantValues[0] + orig->constantValues.size(), orig->domain,
+            newArray = ac.CreateArray(newName,
+                                      orig->size,
+                                      &orig->constantValues[0],
+                                      &orig->constantValues[0] + orig->constantValues.size(),
+                                      orig->domain,
                                       orig->range);
         }
         return newArray;
@@ -43,7 +46,7 @@ namespace klee {
         ExprVisitor::Action visitRead(const ReadExpr &rExpr) override {
             const Array *orig = rExpr.updates.root;
             const auto &iterator = namesMapping.find(orig->getName());
-            if (iterator == namesMapping.cend()) {
+            if (iterator == namesMapping.end()) {
                 assert("Name was not in the mapping" && false);
             }
             const std::string &newName = iterator->second;
@@ -92,11 +95,13 @@ namespace klee {
         for (const auto &bin : assignment->bindings) {
             const Array *orig = bin.first;
             const auto &iterator = namesMappings.find(orig->getName());
-            if (iterator == namesMappings.cend()) {
+            if (iterator == namesMappings.end()) {
+#ifndef NDEBUG
                 assignment->dump();
-                for(const auto& b : namesMappings) {
+                for (const auto &b : namesMappings) {
                     std::cout << b.first << "->" << b.second << std::endl;
                 }
+#endif
                 assert("Name was not in the mapping" && false);
             }
             const std::string &newName = iterator->second;
@@ -117,21 +122,25 @@ namespace klee {
             const Array *orig = bin.first;
             const auto &iterator = reverseMappings.find(orig->getName());
             std::string newName;
-            if (iterator == reverseMappings.cend()) {
-#if DEBUG
+            if (iterator == reverseMappings.end()) {
+#ifndef NDEBUG
+                assignment->dump();
+                for (const auto &b : namesMappings) {
+                    llvm::errs() << b.first << "->" << b.second << "\n";
+                }
+                for (const auto &b : reverseMappings) {
+                    llvm::errs() << b.first << "->" << b.second << "\n";
+                }
                 llvm::errs() << "Could not find: " << orig->getName() << "\n";
 #endif
-                //assert("Name was not in the mapping" && false);
                 newName = orig->getName();
             } else {
                 newName = iterator->second;
             }
-            //const std::string &newName = iterator->second;
             const Array *arr = newArray(orig, newName);
             arrays.push_back(arr);
             bvs.push_back(bin.second);
         }
-        delete assignment;
         return new Assignment(arrays, bvs);
     }
 }

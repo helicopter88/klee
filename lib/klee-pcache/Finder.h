@@ -38,7 +38,7 @@ namespace klee {
         virtual std::string name() const { return ""; };
 
         virtual void printStats() const {
-            std::cout << name() << " H: " << hits << " M: " << misses << std::endl;
+            llvm::errs() << name() << " H: " << hits << " M: " << misses << "\n";
         }
     };
 }

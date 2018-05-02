@@ -10,12 +10,17 @@
 using namespace klee;
 
 ProtoAssignment *pa;
-ProtoAssignment *emptyAssignment;
+std::string emptyAssignmentStr;
+Assignment **ret;
 
 RedisFinder::RedisFinder(const std::string &url, size_t port, int dbNum) : instance(url, port, dbNum) {
-    emptyAssignment = new ProtoAssignment;
+    // Empty assignment is always the same, so serialize it only once
+    auto *emptyAssignment = new ProtoAssignment;
     emptyAssignment->set_nobinding(true);
+    emptyAssignmentStr = emptyAssignment->SerializeAsString();
+
     pa = new ProtoAssignment;
+    ret = new Assignment *;
     stats::pcacheRedisSize += instance.getSize();
 }
 
@@ -26,7 +31,6 @@ Assignment **RedisFinder::find(std::set<ref<Expr>> &expressions) {
         return nullptr;
     }
     pa->ParseFromString(res);
-    Assignment **ret = new Assignment *();
     *ret = Assignment::deserialize(*pa);
     return ret;
 }
@@ -58,7 +62,6 @@ Assignment **RedisFinder::processResponse(std::future<cpp_redis::reply> &&reply)
     }
     const std::string &result = r.as_string();
     pa->ParseFromString(result);
-    Assignment **ret = new Assignment *();
     *ret = Assignment::deserialize(*pa);
     return ret;
 
@@ -67,15 +70,17 @@ Assignment **RedisFinder::processResponse(std::future<cpp_redis::reply> &&reply)
 void RedisFinder::insert(std::set<ref<Expr>> &expressions, Assignment *value) {
     const std::string &serialized = serializeToString(expressions);
 
-    ProtoAssignment *assignment;
     if (value) {
-        assignment = value->serialize();
+        ProtoAssignment *assignment = value->serialize();
+        instance.set(serialized, assignment->SerializeAsString());
     } else {
-        assignment = emptyAssignment;
+        instance.set(serialized, emptyAssignmentStr);
     }
-    instance.set(serialized, assignment->SerializeAsString());
     ++stats::pcacheRedisSize;
 }
 
-void RedisFinder::storeFinder() {}
+void RedisFinder::storeFinder() {
+    delete ret;
+    delete pa;
+}
 
