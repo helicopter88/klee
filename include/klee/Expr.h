@@ -92,7 +92,7 @@ Todo: Shouldn't bool \c Xor just be written as not equal?
 class Expr {
 public:
   static unsigned count;
-  static const unsigned MAGIC_HASH_CONSTANT = 39;
+  static const unsigned MAGIC_HASH_CONSTANT = 41;
 
   /// The type of an expression is simply its width, in bits.
   typedef unsigned Width;

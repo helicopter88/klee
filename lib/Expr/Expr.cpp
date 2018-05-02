@@ -199,10 +199,10 @@ void Expr::printKind(llvm::raw_ostream &os, Kind k) {
 unsigned Expr::computeHash() {
   unsigned res = getKind() * Expr::MAGIC_HASH_CONSTANT;
 
-  int n = getNumKids();
-  for (int i = 0; i < n; i++) {
-    res <<= 1;
-    res ^= getKid(i)->hash() * Expr::MAGIC_HASH_CONSTANT;
+  unsigned n = getNumKids();
+  for (unsigned i = 0; i < n; i++) {
+    //res <<= 1;
+    res = res * Expr::MAGIC_HASH_CONSTANT ^ getKid(i)->hash();
   }
 
   hashValue = res;
