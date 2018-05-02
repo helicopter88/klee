@@ -41,7 +41,7 @@ namespace {
                                                   "EXPERIMENTAL: Use the name normalizer when looking up queries in the caches"));
 
     cl::opt<std::string> PCacheRedisUrl("pcache-redis-url",
-                                        cl::init("127.0.0.1"),
+                                        cl::init("none"),
                                         cl::desc("Url for the redis instances, use 'none' to disable redis"));
 
     cl::opt<size_t> PCacheRedisPort("pcache-redis-port",
@@ -114,7 +114,7 @@ namespace klee {
         }
 
         void printStats() const final {
-#if DEBUG
+#ifndef NDEBUG
             for (Finder *f : finders) {
                 f->printStats();
             }
@@ -175,7 +175,7 @@ namespace klee {
         if (PCacheRedisUrl != "none") {
             finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
         }
-        if (PCacheUseNameNormalizer || PCacheTryAll) {
+        if (PCacheUseNameNormalizer) {
             if (PCacheRedisUrl != "none") {
                 finders.emplace_back(new NameNormalizerFinder(
                         {new TrieFinder(PCachePath + "nn"), new RedisFinder(PCacheRedisUrl, PCacheRedisPort, 1)}));
@@ -217,9 +217,11 @@ namespace klee {
         Assignment *a;
         if (!getAssignment(query.withFalse(), a))
             return false;
+#ifndef NDEBUG
         if (!a) {
             query.dump();
         }
+#endif
         assert(a && "computeValidity() must have assignment");
         ref<Expr> q = a->evaluate(query.expr);
         assert(isa<ConstantExpr>(q) &&
@@ -284,10 +286,10 @@ namespace klee {
             return true;
         }
 
-#ifdef DEBUG
-        errs() << "We did not find a match in the direct caches for: \n";
-        for (const auto &e : key) e->dump();
-        errs() << "\n";
+#ifndef NDEBUG
+        errs() << "PCache: did not find a match in the caches for: \n";
+        for (const auto &e : key) { e->dump(); errs() << "hash: " << e->hash() << "\n"; }
+        errs() << "--\n";
 #endif
         std::vector<const Array *> objects;
         findSymbolicObjects(key.cbegin(), key.cend(), objects);
@@ -296,8 +298,9 @@ namespace klee {
 
         bool hasSolution;
         if (!solver->impl->computeInitialValues(query, objects, values,
-                                                hasSolution))
+                                                hasSolution)) {
             return false;
+        }
         if (hasSolution) {
             result = new Assignment(objects, values);
         } else {
@@ -323,10 +326,10 @@ namespace klee {
         return true;
     }
 
-    bool
-    PersistentCachingSolver::computeInitialValues(const Query &query, const std::vector<const Array *> &objects,
-                                                  std::vector<std::vector<unsigned char> > &values,
-                                                  bool &hasSolution) {
+    bool PersistentCachingSolver::computeInitialValues(const Query &query,
+                                                       const std::vector<const Array *> &objects,
+                                                       std::vector<std::vector<unsigned char> > &values,
+                                                       bool &hasSolution) {
         TimerStatIncrementer t(stats::pcacheTime);
         Assignment *a;
         if (!getAssignment(query, a))
