@@ -1,4 +1,3 @@
-/** TODO: ADD PERSISTENCE **/
 #include <capnp/message.h>
 #include <klee/SolverStats.h>
 #include "Trie.h"
@@ -21,8 +20,7 @@ namespace klee {
         }
     }
 
-    void
-    Trie::insertInternal(TrieNode *node, const Key &exprs, constIterator expr, Assignment **ass) {
+    void Trie::insertInternal(TrieNode *node, const Key &exprs, constIterator expr, Assignment **ass) {
         if (expr == exprs.cend()) {
             node->last = true;
             node->value = ass;
@@ -56,7 +54,7 @@ namespace klee {
             return node->value;
         }
 
-        const auto& iter = node->children.find((*expr)->hash());
+        const auto &iter = node->children.find((*expr)->hash());
         if (iter == node->children.cend()) {
             return nullptr;
         }
@@ -65,8 +63,6 @@ namespace klee {
     }
 
     Assignment **Trie::search(const Key &exprs) const {
-        assert(!this->root->last && "LAST SET FOR ROOT");
-        assert(!this->root->value && "VALUE SET FOR ROOT");
         if (!size) {
             return nullptr;
         }
@@ -96,17 +92,7 @@ namespace klee {
             return pNode->value;
         }
         Assignment **found = nullptr;
-        //const ref<Expr>& from = *expr;
-        //auto upto = ++expr;
-        //auto lowerBound = pNode->children.lower_bound(from);
-        //std::map<ref<Expr>, TrieNode*>::iterator upperBound;
-        /*if(upto != exprs.end()) {
-            upperBound = pNode->children.upper_bound(*upto);
-        } else {
-            upperBound = pNode->children.end();
-        }*/
 
-        // TODO: figure out how to lowerbound & upperbound
         for (auto &child : pNode->children) {
             if (child.first == expr->get()->hash()) {
                 found = existsSupersetInternal(child.second, exprs, ++expr, hasResult);
@@ -134,10 +120,10 @@ namespace klee {
         root->storeNode(std::forward<CacheTrieNode::Builder>(builder.initRoot()));
     }
 
-    Trie::TrieNode *Trie::createTrieNode(CacheTrieNode::Reader &&node) {
+    Trie::TrieNode *Trie::createTrieNode(const CacheTrieNode::Reader &&node) {
         Assignment **pAssignment = nullptr;
-        size++;
         if (node.hasValue()) {
+            size++;
             ++klee::stats::pcacheTrieSize;
             pAssignment = new Assignment *;
             *pAssignment = Assignment::deserialize(node.getValue());
@@ -154,7 +140,7 @@ namespace klee {
         nodeBuilder.setLast(this->last);
         if (value) {
             CacheAssignment::Builder builder = nodeBuilder.initValue();
-            if(*value) {
+            if (*value) {
                 (*value)->serialize(std::forward<CacheAssignment::Builder>(builder));
             } else {
                 builder.setNoBinding(true);
