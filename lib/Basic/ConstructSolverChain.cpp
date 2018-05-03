@@ -46,15 +46,14 @@ Solver *constructSolverChain(Solver *coreSolver,
   if (UseCexCache)
     solver = createCexCachingSolver(solver);
 
-  if (UseCache)
-    solver = createCachingSolver(solver);
-
   if (UsePersistentCache)
     solver = createPersistentCachingSolver(solver);
 
+  if (UseCache)
+    solver = createCachingSolver(solver);
+
   if (UseIndependentSolver)
     solver = createIndependentSolver(solver);
-
 
   if (DebugValidateSolver)
     solver = createValidatingSolver(solver, coreSolver);
