@@ -1,5 +1,5 @@
-# RUN: %kleaver %s > %t
-# RUN: %kleaver --clear-array-decls-after-query %s > %t
+# RUN: %kleaver -use-pcex-cache=0 %s > %t
+# RUN: %kleaver -use-pcex-cache=0 --clear-array-decls-after-query %s > %t
 
 array A-data[8] : w32 -> w8 = symbolic
 array A-data-stat[144] : w32 -> w8 = symbolic
