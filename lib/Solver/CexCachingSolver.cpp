@@ -23,6 +23,7 @@
 #include "klee/Internal/Support/ErrorHandling.h"
 
 #include "llvm/Support/CommandLine.h"
+#include "../klee-pcache/Predicates.h"
 
 using namespace klee;
 using namespace llvm;
@@ -92,26 +93,6 @@ public:
   SolverRunStatus getOperationStatusCode();
   char *getConstraintLog(const Query& query);
   void setCoreSolverTimeout(double timeout);
-};
-
-///
-
-struct NullAssignment {
-  bool operator()(Assignment *a) const { return !a; }
-};
-
-struct NonNullAssignment {
-  bool operator()(Assignment *a) const { return a!=0; }
-};
-
-struct NullOrSatisfyingAssignment {
-  KeyType &key;
-  
-  NullOrSatisfyingAssignment(KeyType &_key) : key(_key) {}
-
-  bool operator()(Assignment *a) const { 
-    return !a || a->satisfies(key.begin(), key.end()); 
-  }
 };
 
 /// searchForAssignment - Look for a cached solution for a query.
