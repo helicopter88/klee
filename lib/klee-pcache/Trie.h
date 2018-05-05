@@ -65,7 +65,7 @@ namespace klee {
 
         void dumpNode(const TrieNode *node) const;
 
-        TrieNode *createTrieNode(CacheTrieNode::Reader &&node);
+        TrieNode *createTrieNode(const CacheTrieNode::Reader &&node);
 
     public:
         explicit Trie() : root(createTrieNode()) {

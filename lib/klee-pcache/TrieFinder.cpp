@@ -15,40 +15,39 @@
 
 namespace klee {
 
+    Assignment **emptyAssignment = new Assignment *;
+
     Assignment **TrieFinder::find(std::set<ref<Expr>> &exprs) {
         if (exprs.empty()) {
-            auto **nAss = new Assignment *;
-            *nAss = new Assignment;
-            return nAss;
+            return emptyAssignment;
         }
         Assignment **ret = trie.search(exprs);
         if (ret) {
             return ret;
         }
-        return nullptr;
-    }
 
-    Assignment **TrieFinder::findSpecial(std::set<ref<Expr>> &exprs) {
-        if (exprs.empty()) {
-            auto **nAss = new Assignment *;
-            *nAss = new Assignment;
-            return nAss;
-        };
-        Assignment **ret = trie.existsSubset(exprs);
+        ret = trie.existsSubset(exprs);
         if (ret) {
             NullAssignment s;
             if (s(*ret)) {
                 return ret;
             }
         }
+        return nullptr;
+    }
 
-        /*ret = trie.existsSuperset(exprs);
-        if(ret) {
+    Assignment **TrieFinder::findSpecial(std::set<ref<Expr>> &exprs) {
+        if (exprs.empty()) {
+            return emptyAssignment;
+        };
+
+        Assignment **ret = trie.existsSuperset(exprs);
+        if (ret) {
             NullOrSatisfyingAssignment s(exprs);
             if (s(*ret)) {
                 return ret;
             }
-        }*/
+        }
         return nullptr;
     }
 
@@ -73,6 +72,9 @@ namespace klee {
     }
 
     TrieFinder::TrieFinder(const std::string &opt) : path(opt) {
+        // Store an empty assignment to not malloc every time it is requested
+        *emptyAssignment = new Assignment;
+
         const std::string &cPath = path + "/tree_cache.bin";
         int fd = open(cPath.c_str(), O_SYNC,
                       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
