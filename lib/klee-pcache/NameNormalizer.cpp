@@ -67,7 +67,7 @@ namespace klee {
         std::vector<ref<ReadExpr>> readExprs;
         std::set<std::string> names;
 
-        findReads(expr, false, readExprs);
+        findReads(expr, true, readExprs);
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
         }
@@ -75,8 +75,9 @@ namespace klee {
         for (const std::string &name : names) {
             if (namesMappings.find(name) == namesMappings.cend()) {
                 const auto number = i++;
-                namesMappings.insert(std::make_pair(name, "___" + std::to_string(number)));
-                reverseMappings.insert(std::make_pair("___" + std::to_string(number), name));
+                const std::string &normalized = "VAR" + std::to_string(number);
+                namesMappings.insert(std::make_pair(name, normalized));
+                reverseMappings.insert(std::make_pair(normalized, name));
             }
 
         }
@@ -89,7 +90,7 @@ namespace klee {
         std::vector<ref<ReadExpr>> readExprs;
         std::set<ref<Expr>> result;
         for (const ref<Expr> &expr : exprs) {
-            findReads(expr, false, readExprs);
+            findReads(expr, true, readExprs);
         }
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
@@ -97,8 +98,8 @@ namespace klee {
         unsigned i = 0;
         for (const std::string &name : names) {
             const auto number = i++;
-            namesMappings.insert(std::make_pair(name, "___" + std::to_string(number)));
-            reverseMappings.insert(std::make_pair("___" + std::to_string(number), name));
+            namesMappings.insert(std::make_pair(name, "VAR" + std::to_string(number)));
+            reverseMappings.insert(std::make_pair("VAR" + std::to_string(number), name));
         }
         RenamerVisitor rv(namesMappings);
         for (const ref<Expr> &expr : exprs) {
