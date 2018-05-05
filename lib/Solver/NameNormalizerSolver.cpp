@@ -28,13 +28,15 @@ namespace klee {
         SolverRunStatus getOperationStatusCode() override;
 
         explicit NameNormalizerSolver(Solver *_solver) : solver(_solver) {}
+
     };
 
     SolverImpl::SolverRunStatus NameNormalizerSolver::getOperationStatusCode() {
         return solver->impl->getOperationStatusCode();
     }
 
-    bool NameNormalizerSolver::computeInitialValues(const Query &query, const std::vector<const Array *> &objects,
+    bool NameNormalizerSolver::computeInitialValues(const Query &query,
+                                                    const std::vector<const Array *> &objects,
                                                     std::vector<std::vector<unsigned char> > &values,
                                                     bool &hasSolution) {
         NameNormalizer nn;
@@ -43,14 +45,19 @@ namespace klee {
         std::vector<ref<Expr>> v(nConstraints.begin(), nConstraints.end());
         ConstraintManager cm(v);
 
-        const Query q(cm, query.expr);
-
+        const Query q(cm, nn.normalizeExpression(query.expr));
         std::vector<const Array *> nObjects = nn.normalizeArrays(objects);
 
         bool res = solver->impl->computeInitialValues(q, nObjects, values, hasSolution);
         //nn.denormalizeArrays(objects);
-        return res;
+        if (!res) {
+            q.dump();
+            assert(false);
+        }
+
+        return true;
     }
+
 
     bool NameNormalizerSolver::computeValue(const Query &query, ref<Expr> &result) {
         NameNormalizer nn;
@@ -58,40 +65,41 @@ namespace klee {
         std::set<ref<Expr>> nConstraints = nn.normalizeExpressions(constraints);
         std::vector<ref<Expr>> v(nConstraints.begin(), nConstraints.end());
         ConstraintManager cm(v);
+        const Query q(cm, nn.normalizeExpression(query.expr));
 
-        const Query q(cm, query.expr);
-
-
-        return solver->impl->computeValue(q, result);
+        if (!solver->impl->computeValue(q, result)) {
+            q.dump();
+            assert(false);
+        }
+        return true;
 
     }
 
     bool NameNormalizerSolver::computeTruth(const Query &query, bool &isValid) {
+
         NameNormalizer nn;
         std::set<ref<Expr>> constraints(query.constraints.begin(), query.constraints.end());
         std::set<ref<Expr>> nConstraints = nn.normalizeExpressions(constraints);
         std::vector<ref<Expr>> v(nConstraints.begin(), nConstraints.end());
         ConstraintManager cm(v);
-
-        const Query q(cm, query.expr);
-
+        const Query q(cm, nn.normalizeExpression(query.expr));
         return solver->impl->computeTruth(q, isValid);
     }
 
     bool NameNormalizerSolver::computeValidity(const Query &query, Solver::Validity &result) {
-        /*NameNormalizer nn;
+
+        NameNormalizer nn;
         std::set<ref<Expr>> constraints(query.constraints.begin(), query.constraints.end());
         std::set<ref<Expr>> nConstraints = nn.normalizeExpressions(constraints);
         std::vector<ref<Expr>> v(nConstraints.begin(), nConstraints.end());
         ConstraintManager cm(v);
-
-        const Query q(cm, query.expr);
-*/
-        return solver->impl->computeValidity(query, result);
+        const Query q(cm, nn.normalizeExpression(query.expr));
+        return solver->impl->computeValidity(q, result);
     }
 
 
     Solver *createNameNormalizerSolver(Solver *_solver) {
         return new Solver(new NameNormalizerSolver(_solver));
     }
+
 }

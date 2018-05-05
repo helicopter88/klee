@@ -44,6 +44,11 @@ UseCache("use-cache",
          cl::desc("Use validity caching (default=on)"));
 
 cl::opt<bool>
+            UseNameNormalizer("use-name-normalizer",
+                     cl::init(true),
+                     cl::desc("Normalize names before solving (default=on)"));
+
+cl::opt<bool>
 UseIndependentSolver("use-independent-solver",
                      cl::init(true),
                      cl::desc("Use constraint independence (default=on)"));

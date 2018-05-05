@@ -63,12 +63,33 @@ namespace klee {
     };
 
 
+    ref<Expr> NameNormalizer::normalizeExpression(const ref<Expr> &expr) {
+        std::vector<ref<ReadExpr>> readExprs;
+        std::set<std::string> names;
+
+        findReads(expr, false, readExprs);
+        for (const ref<ReadExpr> &rExpr: readExprs) {
+            names.insert(rExpr->updates.root->getName());
+        }
+        unsigned i = namesMappings.size();
+        for (const std::string &name : names) {
+            if (namesMappings.find(name) == namesMappings.cend()) {
+                const auto number = i++;
+                namesMappings.insert(std::make_pair(name, "___" + std::to_string(number)));
+                reverseMappings.insert(std::make_pair("___" + std::to_string(number), name));
+            }
+
+        }
+        RenamerVisitor rv(namesMappings);
+        return rv.visit(expr);
+    }
+
     std::set<ref<Expr>> NameNormalizer::normalizeExpressions(const std::set<ref<Expr>> &exprs) {
         std::set<std::string> names;
         std::vector<ref<ReadExpr>> readExprs;
         std::set<ref<Expr>> result;
         for (const ref<Expr> &expr : exprs) {
-            findReads(expr, true, readExprs);
+            findReads(expr, false, readExprs);
         }
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
@@ -100,7 +121,7 @@ namespace klee {
     }
 
     const Array *NameNormalizer::normalizeArray(const Array *orig) const {
-        if(!orig) {
+        if (!orig) {
             return nullptr;
         }
         const auto &iterator = namesMappings.find(orig->getName());
@@ -137,7 +158,7 @@ namespace klee {
 #ifndef NDEBUG
             for (const auto &b : namesMappings) {
                 llvm::errs() << b.first << "->" << b.second << "\n";
-            }       
+            }
             for (const auto &b : reverseMappings) {
                 llvm::errs() << b.first << "->" << b.second << "\n";
             }

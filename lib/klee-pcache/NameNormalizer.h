@@ -33,6 +33,8 @@ namespace klee {
         const Array *normalizeArray(const Array *orig) const;
 
         std::vector<const Array *> normalizeArrays(const std::vector<const Array *> &arrays) const;
+
+        ref<Expr> normalizeExpression(const ref <Expr> &expr);
     };
 }
 #endif //KLEE_NAMENORMALIZER_H

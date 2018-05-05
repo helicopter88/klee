@@ -45,8 +45,8 @@ namespace {
                                         cl::desc("Url for the redis instances, use 'none' to disable redis"));
 
     cl::opt<size_t> PCacheRedisPort("pcache-redis-port",
-                                cl::init(6379),
-                                cl::desc("Port for the redis instances"));
+                                    cl::init(6379),
+                                    cl::desc("Port for the redis instances"));
 
     cl::opt<bool> PCacheTryAll("pcache-try-all",
                                cl::init(false),
@@ -63,6 +63,7 @@ namespace klee {
     public:
         explicit ChainingFinder(std::vector<Finder *> _finders) : finders(std::move(_finders)) {};
 
+        ~ChainingFinder() { storeFinder(); }
         Assignment **find(std::set<ref<Expr>> &exprs) override {
             std::vector<Finder *> missedFs;
 
@@ -106,6 +107,7 @@ namespace klee {
         }
 
         void storeFinder() override {
+            errs() << "Storing\n";
             this->printStats();
             for (Finder *_f: finders) {
                 _f->storeFinder();
@@ -114,11 +116,9 @@ namespace klee {
         }
 
         void printStats() const final {
-#ifndef NDEBUG
             for (Finder *f : finders) {
                 f->printStats();
             }
-#endif
         }
     };
 
@@ -175,14 +175,6 @@ namespace klee {
         if (PCacheRedisUrl != "none") {
             finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
         }
-        if (PCacheUseNameNormalizer) {
-            if (PCacheRedisUrl != "none") {
-                finders.emplace_back(new NameNormalizerFinder(
-                        {new TrieFinder(PCachePath + "nn"), new RedisFinder(PCacheRedisUrl, PCacheRedisPort, 1)}));
-            } else {
-                finders.emplace_back(new NameNormalizerFinder({new TrieFinder(PCachePath + "nn")}));
-            }
-        }
         return ChainingFinder(finders);
     }
 
@@ -218,9 +210,9 @@ namespace klee {
         if (!getAssignment(query.withFalse(), a))
             return false;
 #ifndef NDEBUG
-        if (!a) {
-            query.dump();
-        }
+            if (!a) {
+                query.dump();
+            }
 #endif
         assert(a && "computeValidity() must have assignment");
         ref<Expr> q = a->evaluate(query.expr);
