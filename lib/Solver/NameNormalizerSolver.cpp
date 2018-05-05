@@ -29,6 +29,10 @@ namespace klee {
 
         explicit NameNormalizerSolver(Solver *_solver) : solver(_solver) {}
 
+        ~NameNormalizerSolver() override {
+            delete solver;
+        }
+
     };
 
     SolverImpl::SolverRunStatus NameNormalizerSolver::getOperationStatusCode() {

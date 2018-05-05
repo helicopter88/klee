@@ -63,7 +63,6 @@ namespace klee {
     public:
         explicit ChainingFinder(std::vector<Finder *> _finders) : finders(std::move(_finders)) {};
 
-        ~ChainingFinder() { storeFinder(); }
         Assignment **find(std::set<ref<Expr>> &exprs) override {
             std::vector<Finder *> missedFs;
 
@@ -107,7 +106,6 @@ namespace klee {
         }
 
         void storeFinder() override {
-            errs() << "Storing\n";
             this->printStats();
             for (Finder *_f: finders) {
                 _f->storeFinder();
@@ -160,6 +158,7 @@ namespace klee {
 
         ~PersistentCachingSolver() noexcept override {
             chainingFinder.storeFinder();
+            delete solver;
         };
 
         ChainingFinder constructChainingFinder() const;
@@ -298,6 +297,7 @@ namespace klee {
         } else {
             result = nullptr;
         }
+
         TimerStatIncrementer statIncrementer(stats::pcacheInsertionTime);
         chainingFinder.insert(key, result);
         return true;
