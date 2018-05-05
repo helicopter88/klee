@@ -46,7 +46,7 @@ namespace klee {
         ExprVisitor::Action visitRead(const ReadExpr &rExpr) override {
             const Array *orig = rExpr.updates.root;
             const auto &iterator = namesMapping.find(orig->getName());
-            if (iterator == namesMapping.end()) {
+            if (iterator == namesMapping.cend()) {
                 assert("Name was not in the mapping" && false);
             }
             const std::string &newName = iterator->second;
@@ -93,24 +93,29 @@ namespace klee {
         std::vector<const Array *> arrays;
         std::vector<std::vector<unsigned char>> bvs;
         for (const auto &bin : assignment->bindings) {
-            const Array *orig = bin.first;
-            const auto &iterator = namesMappings.find(orig->getName());
-            if (iterator == namesMappings.end()) {
-#ifndef NDEBUG
-                assignment->dump();
-                for (const auto &b : namesMappings) {
-                    std::cout << b.first << "->" << b.second << std::endl;
-                }
-#endif
-                assert("Name was not in the mapping" && false);
-            }
-            const std::string &newName = iterator->second;
-            const Array *arr = newArray(orig, newName);
-            arrays.push_back(arr);
+            arrays.push_back(normalizeArray(bin.first));
             bvs.push_back(bin.second);
         }
         return new Assignment(arrays, bvs);
     }
+
+    const Array *NameNormalizer::normalizeArray(const Array *orig) const {
+        if(!orig) {
+            return nullptr;
+        }
+        const auto &iterator = namesMappings.find(orig->getName());
+        if (iterator == namesMappings.cend()) {
+#ifndef NDEBUG
+            for (const auto &b : namesMappings) {
+                std::cout << b.first << "->" << b.second << std::endl;
+            }
+#endif
+            assert("Name was not in the mapping" && false);
+        }
+        const std::string &newName = iterator->second;
+        return newArray(orig, iterator->second);
+    }
+
 
     Assignment *NameNormalizer::denormalizeAssignment(const Assignment *assignment) const {
         if (!assignment) {
@@ -119,28 +124,40 @@ namespace klee {
         std::vector<const Array *> arrays;
         std::vector<std::vector<unsigned char>> bvs;
         for (const auto &bin : assignment->bindings) {
-            const Array *orig = bin.first;
-            const auto &iterator = reverseMappings.find(orig->getName());
-            std::string newName;
-            if (iterator == reverseMappings.end()) {
-#ifndef NDEBUG
-                assignment->dump();
-                for (const auto &b : namesMappings) {
-                    llvm::errs() << b.first << "->" << b.second << "\n";
-                }
-                for (const auto &b : reverseMappings) {
-                    llvm::errs() << b.first << "->" << b.second << "\n";
-                }
-                llvm::errs() << "Could not find: " << orig->getName() << "\n";
-#endif
-                newName = orig->getName();
-            } else {
-                newName = iterator->second;
-            }
-            const Array *arr = newArray(orig, newName);
-            arrays.push_back(arr);
+            arrays.push_back(denormalizeArray(bin.first));
             bvs.push_back(bin.second);
         }
         return new Assignment(arrays, bvs);
+    }
+
+    const Array *NameNormalizer::denormalizeArray(const Array *orig) const {
+        const auto &iterator = reverseMappings.find(orig->getName());
+        std::string newName;
+        if (iterator == reverseMappings.cend()) {
+#ifndef NDEBUG
+            for (const auto &b : namesMappings) {
+                llvm::errs() << b.first << "->" << b.second << "\n";
+            }       
+            for (const auto &b : reverseMappings) {
+                llvm::errs() << b.first << "->" << b.second << "\n";
+            }
+            llvm::errs() << "Could not find: " << orig->getName() << "\n";
+#endif
+            newName = orig->getName();
+            return orig;
+        }
+        return newArray(orig, iterator->second);
+    }
+
+    std::vector<const Array *> NameNormalizer::normalizeArrays(const std::vector<const Array *> &arrays) const {
+        std::vector<const Array *> out;
+        for (const Array *arr : arrays) { out.emplace_back(normalizeArray(arr)); }
+        return out;
+    }
+
+    std::vector<const Array *> NameNormalizer::denormalizeArrays(const std::vector<const Array *> &arrays) const {
+        std::vector<const Array *> out(arrays.size());
+        for (const Array *arr : arrays) { out.emplace_back(denormalizeArray(arr)); }
+        return out;
     }
 }

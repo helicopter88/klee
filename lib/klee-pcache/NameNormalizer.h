@@ -26,6 +26,13 @@ namespace klee {
             return namesMappings;
         };
 
+        const Array *denormalizeArray(const Array *orig) const;
+
+        std::vector<const Array *> denormalizeArrays(const std::vector<const Array *> &arrays) const;
+
+        const Array *normalizeArray(const Array *orig) const;
+
+        std::vector<const Array *> normalizeArrays(const std::vector<const Array *> &arrays) const;
     };
 }
 #endif //KLEE_NAMENORMALIZER_H

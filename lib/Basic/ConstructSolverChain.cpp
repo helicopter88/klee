@@ -52,6 +52,8 @@ Solver *constructSolverChain(Solver *coreSolver,
   if (UseCache)
     solver = createCachingSolver(solver);
 
+  solver = createNameNormalizerSolver(solver);
+
   if (UseIndependentSolver)
     solver = createIndependentSolver(solver);
 

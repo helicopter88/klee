@@ -235,6 +235,9 @@ namespace klee {
   Solver *createCexCachingSolver(Solver *s);
 
     Solver *createPersistentCachingSolver(Solver *s);
+
+  Solver *createNameNormalizerSolver(Solver* s);
+
   /// createFastCexSolver - Create a "fast counterexample solver", which tries
   /// to quickly compute a satisfying assignment for a constraint set using
   /// value propogation and range analysis.
@@ -248,7 +251,7 @@ namespace klee {
   ///
   /// \param s - The underlying solver to use.
   Solver *createIndependentSolver(Solver *s);
-  
+
   /// createKQueryLoggingSolver - Create a solver which will forward all queries
   /// after writing them to the given path in .kquery format.
   Solver *createKQueryLoggingSolver(Solver *s, std::string path,
@@ -266,6 +269,7 @@ namespace klee {
 
   // Create a solver based on the supplied ``CoreSolverType``.
   Solver *createCoreSolver(CoreSolverType cst);
+
 }
 
 #endif

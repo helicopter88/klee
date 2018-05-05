@@ -17,6 +17,8 @@ klee_add_component(kleaverSolver
   IncompleteSolver.cpp
   IndependentSolver.cpp
   MetaSMTSolver.cpp
+  NameNormalizerSolver.cpp
+  PersistentCachingSolver.cpp
   KQueryLoggingSolver.cpp
   QueryLoggingSolver.cpp
   SMTLIBLoggingSolver.cpp
@@ -28,7 +30,6 @@ klee_add_component(kleaverSolver
   ValidatingSolver.cpp
   Z3Builder.cpp
   Z3Solver.cpp
-        PersistentCachingSolver.cpp
 )
 
 set(LLVM_COMPONENTS
@@ -41,6 +42,6 @@ target_link_libraries(kleaverSolver PRIVATE
   kleeBasic
   kleaverExpr
   kleeSupport
-        klee_pcache
+  klee_pcache
   ${KLEE_SOLVER_LIBRARIES})
 
