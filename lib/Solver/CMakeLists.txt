@@ -8,6 +8,7 @@
 #===------------------------------------------------------------------------===#
 klee_add_component(kleaverSolver
   AssignmentValidatingSolver.cpp
+  AlgebraComparisonNormalizer.cpp
   CachingSolver.cpp
   CexCachingSolver.cpp
   ConstantDivision.cpp

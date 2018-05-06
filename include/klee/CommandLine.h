@@ -23,6 +23,8 @@ extern llvm::cl::opt<bool> UseCache;
 
 extern llvm::cl::opt<bool> UseNameNormalizer;
 
+extern llvm::cl::opt<bool> UseAlgebraNormalizer;
+
 extern llvm::cl::opt<bool> UseIndependentSolver; 
 
 extern llvm::cl::opt<bool> DebugValidateSolver;

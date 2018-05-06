@@ -33,10 +33,10 @@ UseCexCache("use-cex-cache",
             cl::init(true),
             cl::desc("Use counterexample caching (default=on)"));
 
-    cl::opt<bool>
-    UsePersistentCache("use-pcex-cache",
-    cl::init(true),
-    cl::desc("Use persistent counterexample caching (default=on)"));
+cl::opt<bool>
+UsePersistentCache("use-pcex-cache",
+                   cl::init(true),
+                   cl::desc("Use persistent counterexample caching (default=on)"));
 
 cl::opt<bool>
 UseCache("use-cache",
@@ -44,9 +44,14 @@ UseCache("use-cache",
          cl::desc("Use validity caching (default=on)"));
 
 cl::opt<bool>
-            UseNameNormalizer("use-name-normalizer",
+UseNameNormalizer("use-name-normalizer",
+                  cl::init(true),
+                  cl::desc("Normalize names before solving (default=on)"));
+
+cl::opt<bool>
+UseAlgebraNormalizer("use-algebra-normalizer",
                      cl::init(true),
-                     cl::desc("Normalize names before solving (default=on)"));
+                     cl::desc("Normalize algebraic comparisons before solving (default=on)"));
 
 cl::opt<bool>
 UseIndependentSolver("use-independent-solver",
@@ -56,7 +61,7 @@ UseIndependentSolver("use-independent-solver",
 cl::opt<bool>
 DebugValidateSolver("debug-validate-solver",
                     cl::init(false));
-  
+
 cl::opt<int>
 MinQueryTimeToLog("min-query-time-to-log",
                   cl::init(0),
@@ -77,7 +82,7 @@ UseForkedCoreSolver("use-forked-solver",
                     cl::init(true));
 
 cl::opt<bool>
-CoreSolverOptimizeDivides("solver-optimize-divides", 
+CoreSolverOptimizeDivides("solver-optimize-divides",
                           cl::desc("Optimize constant divides into add/shift/multiplies before passing to core SMT solver (default=off)"),
                           cl::init(false));
 

@@ -1,6 +1,6 @@
 project(klee_pcache)
 
-klee_add_component(klee_pcache RedisInstance.cpp PersistentMapOfSets.cpp RedisFinder.cpp PersistentMapOfSetsFinder.cpp NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp NameNormalizerFinder.cpp Predicates.h)
+klee_add_component(klee_pcache RedisInstance.cpp PersistentMapOfSets.cpp RedisFinder.cpp PersistentMapOfSetsFinder.cpp NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp NameNormalizerFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
 set(LLVM_COMPONENTS
         support
         )

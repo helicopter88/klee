@@ -49,11 +49,14 @@ Solver *constructSolverChain(Solver *coreSolver,
   if (UsePersistentCache)
     solver = createPersistentCachingSolver(solver);
 
-  if (UseNameNormalizer)
-    solver = createNameNormalizerSolver(solver);
-
   if (UseCache)
     solver = createCachingSolver(solver);
+
+  if (UseAlgebraNormalizer)
+    solver = createAlgebraComparisonNormalizerSolver(solver);
+
+  if (UseNameNormalizer)
+    solver = createNameNormalizerSolver(solver);
 
   if (UseIndependentSolver)
     solver = createIndependentSolver(solver);

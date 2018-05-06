@@ -234,9 +234,11 @@ namespace klee {
   /// \param s - The underlying solver to use.
   Solver *createCexCachingSolver(Solver *s);
 
-    Solver *createPersistentCachingSolver(Solver *s);
+  Solver *createPersistentCachingSolver(Solver *s);
 
   Solver *createNameNormalizerSolver(Solver* s);
+
+  Solver *createAlgebraComparisonNormalizerSolver(Solver* s);
 
   /// createFastCexSolver - Create a "fast counterexample solver", which tries
   /// to quickly compute a satisfying assignment for a constraint set using
