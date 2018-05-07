@@ -414,14 +414,13 @@ void StatsTracker::writeStatsHeader() {
              << "'ResolveTime',"
              << "'QueryCexCacheMisses',"
              << "'QueryCexCacheHits',"
-             << "'QueriesCEX',"
-             <<  "'PCacheTime',"
-             <<  "'PCacheMiss',"
-             <<  "'PCacheHits',"
-             <<  "'PCacheLookupTime',"
-             <<  "'PCacheInsertionTime',"
-             <<  "'PCacheRSize',"
-             <<  "'PCachePMSize',"
+             << "'PCacheTime',"
+             << "'PCacheMiss',"
+             << "'PCacheHits',"
+             << "'PCacheLookupTime',"
+             << "'PCacheInsertionTime',"
+             << "'PCacheRSize',"
+             << "'PCachePMSize',"
 #ifdef DEBUG
 	     << "'ArrayHashTime',"
 #endif
@@ -454,7 +453,6 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::resolveTime / 1000000.
              << "," << stats::queryCexCacheMisses
              << "," << stats::queryCexCacheHits
-             << "," << stats::queryCounterexamples
              << "," << stats::pcacheTime / 1000000.
              << "," << stats::pcacheHits
              << "," << stats::pcacheMisses
