@@ -17,6 +17,10 @@ using namespace llvm;
 
 static const constexpr uint64_t MAX_SIZE = UINT64_MAX >> 10;
 namespace klee {
+    /** Transforms a set of expresions into a set of hashes **/
+#define TO_HASHES(key) std::set<unsigned> hashes; \
+                       std::transform((key).cbegin(), (key).cend(), std::inserter(hashes, hashes.end()), \
+                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
 
     struct NullAssignment {
         bool operator()(const Assignment *a) const { return !a; }
@@ -70,17 +74,13 @@ namespace klee {
     }
 
     Assignment **PersistentMapOfSets::get(std::set<ref<Expr>> &key) {
-        std::set<unsigned> hashes;
-        std::transform(key.cbegin(), key.cend(), std::inserter(hashes, hashes.end()),
-                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
+        TO_HASHES(key);
         Assignment **value = cache.lookup(hashes);
         return value;
     }
 
     Assignment **PersistentMapOfSets::tryAll_get(std::set<ref<Expr>> &key) {
-        std::set<unsigned> hashes;
-        std::transform(key.cbegin(), key.cend(), std::inserter(hashes, hashes.end()),
-                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
+        TO_HASHES(key);
         Assignment **value = cache.findSubset(hashes, NullAssignment());
         if (!value) {
             // If a superset is satisfiable then this subset must be satisfiable
@@ -96,9 +96,7 @@ namespace klee {
         if (key.empty()) {
             return;
         }
-        std::set<unsigned> hashes;
-        std::transform(key.cbegin(), key.cend(), std::inserter(hashes, hashes.end()),
-                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
+        TO_HASHES(key);
         ++stats::pcachePMapSize;
         cache.insert(hashes, *value);
     }
@@ -138,7 +136,7 @@ namespace klee {
             iter++;
         }
         int fd = open(nextFile(p, i, "cache"), O_TRUNC | O_RDWR | O_CREAT,
-                      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                                               S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (fd < 0) {
             errs() << "Could not store to file: " << strerror(errno) << "\n";
             return;
