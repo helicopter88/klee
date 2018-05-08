@@ -17,7 +17,7 @@ namespace klee {
             std::set<ref<Expr>> constraints(query.constraints.begin(), query.constraints.end());
             std::set<ref<Expr>> nConstraints = AlgebraComparisonNormalizer::normalizeExpressions(constraints);
             ConstraintManager cm(std::vector<ref<Expr>>(nConstraints.begin(), nConstraints.end()));
-            const Query q(cm, AlgebraComparisonNormalizer::normalizeExpr(query.expr));
+            const Query q(cm, query.expr);
             return solver->impl->computeValidity(q, result);
         }
 
@@ -33,7 +33,7 @@ namespace klee {
             std::set<ref<Expr>> constraints(query.constraints.begin(), query.constraints.end());
             std::set<ref<Expr>> nConstraints = AlgebraComparisonNormalizer::normalizeExpressions(constraints);
             ConstraintManager cm(std::vector<ref<Expr>>(nConstraints.begin(), nConstraints.end()));
-            const Query q(cm, AlgebraComparisonNormalizer::normalizeExpr(query.expr));
+            const Query q(cm, query.expr);
             return solver->impl->computeTruth(q, isValid);
 
         }
@@ -42,7 +42,7 @@ namespace klee {
             std::set<ref<Expr>> constraints(query.constraints.begin(), query.constraints.end());
             std::set<ref<Expr>> nConstraints = AlgebraComparisonNormalizer::normalizeExpressions(constraints);
             ConstraintManager cm(std::vector<ref<Expr>>(nConstraints.begin(), nConstraints.end()));
-            const Query q(cm, AlgebraComparisonNormalizer::normalizeExpr(query.expr));
+            const Query q(cm, query.expr);
             return solver->impl->computeValue(q, result);
         }
 
@@ -51,7 +51,7 @@ namespace klee {
             std::set<ref<Expr>> constraints(query.constraints.begin(), query.constraints.end());
             std::set<ref<Expr>> nConstraints = AlgebraComparisonNormalizer::normalizeExpressions(constraints);
             ConstraintManager cm(std::vector<ref<Expr>>(nConstraints.begin(), nConstraints.end()));
-            const Query q(cm, AlgebraComparisonNormalizer::normalizeExpr(query.expr));
+            const Query q(cm, query.expr);
             return solver->impl->computeInitialValues(q, objects, values, hasSolution);
         }
 

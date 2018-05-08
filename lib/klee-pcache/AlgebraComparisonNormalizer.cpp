@@ -13,6 +13,9 @@ protected:
     // x = k -> x <= k && -x <= -k
     // TODO: this should become a std::set<ref<Expr>> with the two expressions to improve reusability.
     Action visitEq(const EqExpr &expr) override {
+        if(expr.getWidth() == Expr::Bool) {
+            return Action::doChildren();
+        }
         ref<Expr> child1 = expr.getKid(0);
         ref<Expr> child2 = expr.getKid(1);
         const ref<ConstantExpr> &minusOne = ConstantExpr::create(1, child1->getWidth())->Neg();
@@ -79,6 +82,8 @@ ref<Expr> AlgebraComparisonNormalizer::normalizeExpr(const ref<Expr> &expr) {
 }
 
 std::set<ref<Expr>> AlgebraComparisonNormalizer::normalizeEqExpr(const ref<Expr> &expr) {
+    if(expr->getWidth() == Expr::Bool)
+        return {expr};
     EqExpr *eq = cast<EqExpr>(expr);
     ref<Expr> child1 = eq->getKid(0);
     ref<Expr> child2 = eq->getKid(1);
@@ -95,12 +100,12 @@ std::set<ref<Expr>> AlgebraComparisonNormalizer::normalizeEqExpr(const ref<Expr>
 std::set<ref<Expr>> AlgebraComparisonNormalizer::normalizeExpressions(const std::set<ref<Expr>> &exprs) {
     std::set<ref<Expr>> out;
     for (const ref<Expr> &expr: exprs) {
-        if (expr->getKind() == Expr::Eq) {
-            const std::set<ref<Expr>> &cstraints = normalizeEqExpr(expr);
-            out.insert(cstraints.cbegin(), cstraints.cend());
-        } else {
+        //if (expr->getKind() == Expr::Eq) {
+        //    const std::set<ref<Expr>> &cstraints = normalizeEqExpr(expr);
+        //    out.insert(cstraints.cbegin(), cstraints.cend());
+        //} else {
             out.insert(normalizeExpr(expr));
-        }
+        //}
     }
     return out;
 }
