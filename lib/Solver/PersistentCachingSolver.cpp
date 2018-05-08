@@ -10,6 +10,7 @@
 #include <klee/TimerStatIncrementer.h>
 #include <klee/SolverStats.h>
 #include <klee/Internal/Support/ErrorHandling.h>
+#include <klee/Internal/Support/Debug.h>
 
 #include "klee/util/Assignment.h"
 #include "klee/util/ExprUtil.h"
@@ -114,9 +115,10 @@ namespace klee {
         }
 
         void printStats() const final {
-            for (Finder *f : finders) {
-                f->printStats();
-            }
+            KLEE_DEBUG(
+                    for (Finder *f : finders) {
+                        f->printStats();
+                    });
         }
     };
 
@@ -209,9 +211,9 @@ namespace klee {
         if (!getAssignment(query.withFalse(), a))
             return false;
 #ifndef NDEBUG
-            if (!a) {
-                query.dump();
-            }
+        if (!a) {
+            query.dump();
+        }
 #endif
         assert(a && "computeValidity() must have assignment");
         ref<Expr> q = a->evaluate(query.expr);
@@ -277,11 +279,14 @@ namespace klee {
             return true;
         }
 
-#ifndef NDEBUG
-        errs() << "PCache: did not find a match in the caches for: \n";
-        for (const auto &e : key) { e->dump(); errs() << "hash: " << e->hash() << "\n"; }
-        errs() << "--\n";
-#endif
+        KLEE_DEBUG(
+                errs() << "PCache: did not find a match in the caches for: \n";
+                for (const auto &e : key) {
+                    e->dump();
+                    errs() << "hash: " << e->hash() << "\n";
+                }
+                errs() << "--\n";
+        );
         std::vector<const Array *> objects;
         findSymbolicObjects(key.cbegin(), key.cend(), objects);
 
