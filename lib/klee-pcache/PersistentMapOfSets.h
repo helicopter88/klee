@@ -16,7 +16,7 @@ namespace klee {
     private:
         unsigned size = 0;
         const std::string path;
-        MapOfSets<ref<Expr>, Assignment *> cache;
+        MapOfSets<unsigned, Assignment *> cache;
     public:
         explicit PersistentMapOfSets(const std::string &_path);
 

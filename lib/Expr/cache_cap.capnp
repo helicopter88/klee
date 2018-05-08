@@ -60,7 +60,7 @@ struct CacheExpr {
 }
 
 struct CacheExprList {
-	key @0: List(CacheExpr);
+	key @0: List(UInt32);
 }
 
 struct CapCache {

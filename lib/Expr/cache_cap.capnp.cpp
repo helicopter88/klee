@@ -872,8 +872,8 @@ static const ::capnp::_::AlignedData<37> b_bea231dc3c8767bf = {
       0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   3,   0,   1,   0,
-     16,   0,   0,   0,   0,   0,   0,   0,
-    223, 186,  87, 152, 163,  78, 248, 175,
+      8,   0,   0,   0,   0,   0,   0,   0,
+      0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
       0,   0,   0,   0,   0,   0,   0,   0,
      14,   0,   0,   0,   0,   0,   0,   0,
@@ -882,14 +882,11 @@ static const ::capnp::_::AlignedData<37> b_bea231dc3c8767bf = {
 };
 ::capnp::word const* const bp_bea231dc3c8767bf = b_bea231dc3c8767bf.words;
 #if !CAPNP_LITE
-static const ::capnp::_::RawSchema* const d_bea231dc3c8767bf[] = {
-  &s_aff84ea39857badf,
-};
 static const uint16_t m_bea231dc3c8767bf[] = {0};
 static const uint16_t i_bea231dc3c8767bf[] = {0};
 const ::capnp::_::RawSchema s_bea231dc3c8767bf = {
-  0xbea231dc3c8767bf, b_bea231dc3c8767bf.words, 37, d_bea231dc3c8767bf, m_bea231dc3c8767bf,
-  1, 1, i_bea231dc3c8767bf, nullptr, nullptr, { &s_bea231dc3c8767bf, nullptr, nullptr, 0, 0, nullptr }
+  0xbea231dc3c8767bf, b_bea231dc3c8767bf.words, 37, nullptr, m_bea231dc3c8767bf,
+  0, 1, i_bea231dc3c8767bf, nullptr, nullptr, { &s_bea231dc3c8767bf, nullptr, nullptr, 0, 0, nullptr }
 };
 #endif  // !CAPNP_LITE
 static const ::capnp::_::AlignedData<40> b_dd31e84586c9a967 = {

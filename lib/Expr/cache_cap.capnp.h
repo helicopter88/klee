@@ -1293,7 +1293,7 @@ public:
 #endif  // !CAPNP_LITE
 
   inline bool hasKey() const;
-  inline  ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Reader getKey() const;
+  inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader getKey() const;
 
 private:
   ::capnp::_::StructReader _reader;
@@ -1324,11 +1324,12 @@ public:
 #endif  // !CAPNP_LITE
 
   inline bool hasKey();
-  inline  ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Builder getKey();
-  inline void setKey( ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Reader value);
-  inline  ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Builder initKey(unsigned int size);
-  inline void adoptKey(::capnp::Orphan< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>&& value);
-  inline ::capnp::Orphan< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>> disownKey();
+  inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder getKey();
+  inline void setKey( ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader value);
+  inline void setKey(::kj::ArrayPtr<const  ::uint32_t> value);
+  inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder initKey(unsigned int size);
+  inline void adoptKey(::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>&& value);
+  inline ::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>> disownKey();
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -2786,29 +2787,33 @@ inline bool CacheExprList::Builder::hasKey() {
   return !_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS).isNull();
 }
-inline  ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Reader CacheExprList::Reader::getKey() const {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>::get(_reader.getPointerField(
+inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader CacheExprList::Reader::getKey() const {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::get(_reader.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline  ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Builder CacheExprList::Builder::getKey() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>::get(_builder.getPointerField(
+inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder CacheExprList::Builder::getKey() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::get(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
-inline void CacheExprList::Builder::setKey( ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Reader value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>::set(_builder.getPointerField(
+inline void CacheExprList::Builder::setKey( ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Reader value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), value);
 }
-inline  ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>::Builder CacheExprList::Builder::initKey(unsigned int size) {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>::init(_builder.getPointerField(
+inline void CacheExprList::Builder::setKey(::kj::ArrayPtr<const  ::uint32_t> value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::set(_builder.getPointerField(
+      ::capnp::bounded<0>() * ::capnp::POINTERS), value);
+}
+inline  ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>::Builder CacheExprList::Builder::initKey(unsigned int size) {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::init(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), size);
 }
 inline void CacheExprList::Builder::adoptKey(
-    ::capnp::Orphan< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>&& value) {
-  ::capnp::_::PointerHelpers< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>::adopt(_builder.getPointerField(
+    ::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>&& value) {
+  ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::adopt(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS), kj::mv(value));
 }
-inline ::capnp::Orphan< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>> CacheExprList::Builder::disownKey() {
-  return ::capnp::_::PointerHelpers< ::capnp::List< ::CacheExpr,  ::capnp::Kind::STRUCT>>::disown(_builder.getPointerField(
+inline ::capnp::Orphan< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>> CacheExprList::Builder::disownKey() {
+  return ::capnp::_::PointerHelpers< ::capnp::List< ::uint32_t,  ::capnp::Kind::PRIMITIVE>>::disown(_builder.getPointerField(
       ::capnp::bounded<0>() * ::capnp::POINTERS));
 }
 

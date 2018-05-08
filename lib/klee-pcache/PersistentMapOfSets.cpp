@@ -51,19 +51,18 @@ namespace klee {
             readerOptions.traversalLimitInWords = MAX_SIZE << 1;
             ::capnp::PackedFdMessageReader *pfd = new capnp::PackedFdMessageReader(fd, readerOptions);
             CapCache::Reader cacheReader = pfd->getRoot<CapCache>();
-            for (const auto &elem : cacheReader.getElems()) {
+            for (const CapCache::Elem::Reader &elem : cacheReader.getElems()) {
                 const auto &exprs = elem.getKey().getKey();
-                std::set<ref<Expr>> expressions;
+                std::set<unsigned> expressions;
                 for (auto expr : exprs) {
-                    expressions.insert(
-                            Expr::deserialize(std::forward<CacheExpr::Reader>(expr))
-                    );
+                    expressions.insert(expr);
                 }
                 Assignment *a = nullptr;
                 if (elem.hasAssignment()) {
                     a = Assignment::deserialize(elem.getAssignment());
                 }
-                set(expressions, &a);
+                this->cache.insert(expressions, a);
+                ++stats::pcachePMapSize;
             }
             close(fd);
             delete pfd;
@@ -71,28 +70,37 @@ namespace klee {
     }
 
     Assignment **PersistentMapOfSets::get(std::set<ref<Expr>> &key) {
-        Assignment **value = cache.lookup(key);
+        std::set<unsigned> hashes;
+        std::transform(key.cbegin(), key.cend(), std::inserter(hashes, hashes.end()),
+                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
+        Assignment **value = cache.lookup(hashes);
         return value;
     }
 
     Assignment **PersistentMapOfSets::tryAll_get(std::set<ref<Expr>> &key) {
-        Assignment **value = cache.findSubset(key, NullAssignment());
+        std::set<unsigned> hashes;
+        std::transform(key.cbegin(), key.cend(), std::inserter(hashes, hashes.end()),
+                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
+        Assignment **value = cache.findSubset(hashes, NullAssignment());
         if (!value) {
             // If a superset is satisfiable then this subset must be satisfiable
-            value = cache.findSuperset(key, NonNullAssignment());
+            value = cache.findSuperset(hashes, NonNullAssignment());
         }
         if (!value)
-            value = cache.findSubset(key, NullOrSatisfyingAssignment(key));
+            value = cache.findSubset(hashes, NullOrSatisfyingAssignment(key));
 
         return value;
     }
 
     void PersistentMapOfSets::set(std::set<ref<Expr>> &key, Assignment **const &value) {
-        if(key.empty()) {
+        if (key.empty()) {
             return;
         }
+        std::set<unsigned> hashes;
+        std::transform(key.cbegin(), key.cend(), std::inserter(hashes, hashes.end()),
+                       [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
         ++stats::pcachePMapSize;
-        cache.insert(key, *value);
+        cache.insert(hashes, *value);
     }
 
     const char *nextFile(SmallString<128> &p, int &i, const std::string &thing) {
@@ -112,10 +120,12 @@ namespace klee {
         CapCache::Builder cacheBuilder = messageBuilder.initRoot<CapCache>();
         auto capCache = cacheBuilder.initElems(stats::pcachePMapSize);
         for (const auto &c : cache) {
-            auto keyList = capCache[iter].initKey().initKey(c.first.size());
+            CacheExprList::Builder keyList = capCache[iter].initKey();
+            capnp::List<uint32_t>::Builder k = keyList.initKey(c.first.size());
             unsigned j = 0;
-            for (const ref<Expr> &expr : c.first) {
-                expr->serialize(keyList[j++]);
+            for (const unsigned expr : c.first) {
+                k.set(j++, expr);
+
             }
 
             auto ass = capCache[iter].initAssignment();
