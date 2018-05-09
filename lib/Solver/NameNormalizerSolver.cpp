@@ -53,12 +53,10 @@ namespace klee {
         std::vector<const Array *> nObjects = nn.normalizeArrays(objects);
 
         bool res = solver->impl->computeInitialValues(q, nObjects, values, hasSolution);
-        //nn.denormalizeArrays(objects);
         if (!res) {
             q.dump();
             assert(false);
         }
-
         return true;
     }
 

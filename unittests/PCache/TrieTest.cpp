@@ -24,8 +24,8 @@ namespace {
         ref<Expr> read8_2 = Expr::createTempRead(array2, 8);
         set1.insert(read8_2);
 
-        trie.insert(set1, assignment);
-        EXPECT_TRUE(trie.search(set1));
+        trie.set(set1, &assignment);
+        EXPECT_TRUE(trie.get(set1));
 
         ref<Expr> extract1 = ExtractExpr::create(read64, 36, 4);
         set2.insert(extract1);
@@ -33,8 +33,8 @@ namespace {
         ref<Expr> extract2 = ExtractExpr::create(read64, 32, 4);
         set2.insert(extract2);
 
-        EXPECT_FALSE(trie.search(set2));
-        EXPECT_FALSE(trie.search(set3));
+        EXPECT_FALSE(trie.get(set2));
+        EXPECT_FALSE(trie.get(set3));
 
         delete assignment;
     }
@@ -65,11 +65,11 @@ namespace {
         ref<Expr> extract5 = ExtractExpr::create(read64, 2, 8);
         set1.insert(extract5);
 
-        trie.insert(set2, assignment);
+        trie.set(set2, &assignment);
 
-        EXPECT_FALSE(trie.search(set1));
+        EXPECT_FALSE(trie.get(set1));
 
-        EXPECT_TRUE(trie.search(set2));
+        EXPECT_TRUE(trie.get(set2));
         EXPECT_TRUE(trie.existsSubset(set1));
         EXPECT_FALSE(trie.existsSubset(emptySet));
 
@@ -105,9 +105,9 @@ namespace {
         ref<Expr> extract5 = ExtractExpr::create(read64, 2, 8);
         set1.insert(extract5);
 
-        trie.insert(set1, assignment);
+        trie.set(set1, &assignment);
 
-        EXPECT_TRUE(trie.search(set1));
+        EXPECT_TRUE(trie.get(set1));
         EXPECT_TRUE(trie.existsSuperset(set1));
         EXPECT_TRUE(trie.existsSuperset(set2));
         EXPECT_FALSE(trie.existsSuperset(set3));
@@ -129,14 +129,14 @@ namespace {
         ref<Expr> read8_2 = Expr::createTempRead(array2, 8);
         set1.insert(read8_2);
 
-        trie.insert(set1, assignment);
+        trie.set(set1, &assignment);
         capnp::MallocMessageBuilder mmb;
         CacheTrie::Builder builder = mmb.initRoot<CacheTrie>();
         trie.store(std::forward<CacheTrie::Builder>(builder));
         CacheTrie::Reader reader = builder.asReader();
 
         Trie t2(std::forward<CacheTrie::Reader>(reader));
-        Assignment **res = t2.search(set1);
+        Assignment **res = t2.get(set1);
         EXPECT_TRUE(res);
     }
 }

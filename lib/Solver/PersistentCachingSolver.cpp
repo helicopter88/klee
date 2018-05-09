@@ -36,11 +36,6 @@ namespace {
                                 cl::desc("Use the Persistent Map of Sets instead of"
                                          " the Set-Trie backend for the persistent cache"));
 
-    cl::opt<bool> PCacheUseNameNormalizer("pcache-use-name",
-                                          cl::init(false),
-                                          cl::desc(
-                                                  "EXPERIMENTAL: Use the name normalizer when looking up queries in the caches"));
-
     cl::opt<std::string> PCacheRedisUrl("pcache-redis-url",
                                         cl::init("none"),
                                         cl::desc("Url for the redis instances, use 'none' to disable redis"));
@@ -52,7 +47,7 @@ namespace {
     cl::opt<bool> PCacheTryAll("pcache-try-all",
                                cl::init(false),
                                cl::desc("EXPERIMENTAL: try everything(trie sub/superset,"
-                                        " persistent map sub/superset and namenormalizers)"
+                                        " persistent map sub/superset)"
                                         "when looking up in the caches"));
 
 }

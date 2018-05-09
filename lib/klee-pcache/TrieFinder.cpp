@@ -21,7 +21,7 @@ namespace klee {
         if (exprs.empty()) {
             return emptyAssignment;
         }
-        Assignment **ret = trie.search(exprs);
+        Assignment **ret = trie.get(exprs);
         if (ret) {
             return ret;
         }
@@ -53,7 +53,7 @@ namespace klee {
 
     void TrieFinder::insert(std::set<ref<Expr>> &exprs, Assignment *assignment) {
         ++stats::pcacheTrieSize;
-        trie.insert(exprs, assignment);
+        trie.set(exprs, &assignment);
     }
 
     void TrieFinder::storeFinder() {

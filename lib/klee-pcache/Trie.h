@@ -6,20 +6,14 @@
 
 #include <klee/Expr.h>
 #include <klee/util/Assignment.h>
+#include "Storage.h"
 
 namespace klee {
-    struct ExprComparator {
-    public:
-        bool operator()(const ref<Expr> &lhs, const ref<Expr> &rhs) const {
-            return lhs->hash() < rhs->hash();
-        }
-    };
-
     typedef std::set<ref<Expr>>::const_iterator constIterator;
 
     typedef const std::set<ref<Expr>> Key;
 
-    class Trie {
+    class Trie : public Storage<Key, Assignment **> {
 
     private:
 
@@ -55,7 +49,7 @@ namespace klee {
 
         void insertInternal(TrieNode *node, const Key &, constIterator expr, Assignment **);
 
-        Assignment **searchInternal(TrieNode *node, const Key & exprs, constIterator expr) const;
+        Assignment **searchInternal(TrieNode *node, const Key &exprs, constIterator expr) const;
 
         Assignment **existsSubsetInternal(const TrieNode *pNode, const Key &exprs,
                                           constIterator expr) const;
@@ -75,9 +69,6 @@ namespace klee {
                 root(createTrieNode(builder.getRoot())) {
         }
 
-        void insert(const Key &exprs, Assignment *pAssignment);
-
-        Assignment **search(const Key &exprs) const;
 
         Assignment **existsSubset(const Key &exprs) const;
 
@@ -86,6 +77,17 @@ namespace klee {
         void dump() const;
 
         void store(CacheTrie::Builder &&node) const;
+
+        /** From Storage**/
+        Assignment **get(Key &key) override;
+
+        void set(Key &key, Assignment **const &value) override;
+
+
+        void store() override {
+            assert(false && "Do not use this method, use store(CacheTrie::Builder) instead");
+        };
+
     };
 }
 

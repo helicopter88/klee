@@ -6,8 +6,6 @@
 #define KLEE_STORAGE_H
 
 
-#include <cpp_redis/core/client.hpp>
-
 template<typename K, typename V>
 class Storage {
     virtual V get(K &key) = 0;

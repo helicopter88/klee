@@ -5,9 +5,8 @@
 #ifndef KLEE_PCACHE_FINDER_H
 #define KLEE_PCACHE_FINDER_H
 
-#include <klee/util/Cache.pb.h>
 #include <klee/util/Assignment.h>
-#include "klee/Expr.h"
+#include <klee/Expr.h>
 
 namespace klee {
     class Finder {

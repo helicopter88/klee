@@ -37,18 +37,6 @@ namespace klee {
         insertInternal(next, exprs, ++expr, ass);
     }
 
-    void Trie::insert(const std::set<ref<Expr>> &exprs, Assignment *ass) {
-        if (exprs.empty()) {
-            return;
-        }
-        ++stats::pcacheTrieSize;
-        ++size;
-        Assignment **pAssignment = new Assignment *;
-        *pAssignment = ass;
-        insertInternal(root, exprs, exprs.cbegin(), pAssignment);
-    }
-
-
     Assignment **Trie::searchInternal(TrieNode *node, const Key &exprs, constIterator expr) const {
         if (expr == exprs.cend()) {
             return node->value;
@@ -62,12 +50,6 @@ namespace klee {
 
     }
 
-    Assignment **Trie::search(const Key &exprs) const {
-        if (!size) {
-            return nullptr;
-        }
-        return searchInternal(root, exprs, exprs.cbegin());
-    }
 
     Assignment **Trie::existsSubsetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
                                             constIterator expr) const {
@@ -135,6 +117,23 @@ namespace klee {
         return new TrieNode(std::move(children), pAssignment, node.getLast());
     }
 
+    Assignment **Trie::get(Key &key) {
+        if (!size) {
+            return nullptr;
+        }
+        return searchInternal(root, key, key.cbegin());
+    }
+
+    void Trie::set(Key &key, Assignment **const &value) {
+        if (key.empty()) {
+            return;
+        }
+        ++stats::pcacheTrieSize;
+        ++size;
+        Assignment **pAssignment = new Assignment *;
+        *pAssignment = *value;
+        insertInternal(root, key, key.cbegin(), pAssignment);
+    }
 
     void Trie::TrieNode::storeNode(CacheTrieNode::Builder &&nodeBuilder) const {
         nodeBuilder.setLast(this->last);
