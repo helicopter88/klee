@@ -36,6 +36,10 @@ namespace {
                                 cl::desc("Use the Persistent Map of Sets instead of"
                                          " the Set-Trie backend for the persistent cache"));
 
+    cl::opt<bool> PCacheCollectOnly("pcache-collect-only",
+                                cl::init(false),
+                                cl::desc("Do not fetch the persistent caches, but populate them"));
+
     cl::opt<std::string> PCacheRedisUrl("pcache-redis-url",
                                         cl::init("none"),
                                         cl::desc("Url for the redis instances, use 'none' to disable redis"));
@@ -53,12 +57,51 @@ namespace {
 }
 namespace klee {
 
+    /**
+     * Use this Finder to create finders that do not perform lookups but only collect queries.
+     */
+    class CollectingFinder : public Finder {
+        Finder *base;
+    public:
+        explicit CollectingFinder(Finder *_base) : base(_base) {};
+
+        Assignment **find(std::set<ref<Expr>> &exprs) override {
+            return nullptr;
+        }
+
+        void insert(std::set<ref<Expr>> &exprs, Assignment *assignment) override {
+            base->insert(exprs, assignment);
+        }
+
+        void storeFinder() override {
+            base->storeFinder();
+        }
+
+        ~CollectingFinder() override {
+            delete base;
+        }
+
+        void printStats() const override {
+            KLEE_DEBUG(errs() << "Collection only\n";);
+            base->printStats();
+        }
+    };
+
+    /**
+     * Class used to build a chain of finders.
+     */
     class ChainingFinder : public Finder {
         std::vector<Finder *> finders;
 
     public:
         explicit ChainingFinder(std::vector<Finder *> _finders) : finders(std::move(_finders)) {};
 
+        /**
+         * Performs a lookup in all the finders passed in, one by one.
+         * If one finder has a hit, all the previous finders that missed will have the assignment inserted.
+         * @param exprs set of constraints to be looked up
+         * @return the assignment that matched the constraints or nullptr
+         */
         Assignment **find(std::set<ref<Expr>> &exprs) override {
             std::vector<Finder *> missedFs;
 
@@ -123,7 +166,7 @@ namespace klee {
     private:
         Solver *solver;
 
-        ChainingFinder chainingFinder;
+        Finder *finder;
 
 
         bool getAssignment(const Query &query, Assignment *&result);
@@ -154,14 +197,15 @@ namespace klee {
         explicit PersistentCachingSolver(Solver *pSolver);
 
         ~PersistentCachingSolver() noexcept override {
-            chainingFinder.storeFinder();
+            finder->storeFinder();
+            delete finder;
             delete solver;
         };
 
-        ChainingFinder constructChainingFinder() const;
+        Finder *constructChainingFinder() const;
     };
 
-    ChainingFinder PersistentCachingSolver::constructChainingFinder() const {
+    Finder *PersistentCachingSolver::constructChainingFinder() const {
         std::vector<Finder *> finders;
         if (!PCacheUsePMap) {
             finders.emplace_back(new TrieFinder(PCachePath));
@@ -171,11 +215,16 @@ namespace klee {
         if (PCacheRedisUrl != "none") {
             finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
         }
-        return ChainingFinder(finders);
+
+        Finder* cf = new ChainingFinder(finders);
+        if(PCacheCollectOnly) {
+            return new CollectingFinder(cf);
+        }
+        return cf;
     }
 
     PersistentCachingSolver::PersistentCachingSolver(Solver *pSolver) : solver(pSolver),
-                                                                        chainingFinder(constructChainingFinder()) {
+                                                                        finder(constructChainingFinder()) {
 
     }
 
@@ -230,13 +279,13 @@ namespace klee {
 
     bool PersistentCachingSolver::searchForAssignment(KeyType &key, Assignment *&result) {
 
-        Assignment **r = chainingFinder.find(key);
+        Assignment **r = finder->find(key);
         if (r) {
             result = *r;
             return true;
         }
         if (PCacheTryAll) {
-            r = chainingFinder.findSpecial(key);
+            r = finder->findSpecial(key);
             if (r) {
                 result = *r;
                 return true;
@@ -299,7 +348,7 @@ namespace klee {
         }
 
         TimerStatIncrementer statIncrementer(stats::pcacheInsertionTime);
-        chainingFinder.insert(key, result);
+        finder->insert(key, result);
         return true;
     }
 
