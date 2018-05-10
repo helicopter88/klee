@@ -27,6 +27,9 @@ namespace klee {
 
         void store() final;
 
+        ~PersistentMapOfSets() {
+            cache.clear();
+        }
     };
 }
 

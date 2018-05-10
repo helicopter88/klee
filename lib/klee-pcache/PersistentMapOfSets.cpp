@@ -2,16 +2,20 @@
 // Created by dmarino on 18/02/18.
 //
 
-#include <fstream>
-#include <klee/util/Cache.pb.h>
-#include <llvm/Support/Path.h>
 #include <capnp/message.h>
-#include "PersistentMapOfSets.h"
 #include <capnp/serialize.h>
 #include <capnp/serialize-packed.h>
+
 #include <fcntl.h>
+#include <fstream>
 #include <unistd.h>
+
+#include <klee/util/Cache.pb.h>
 #include <klee/SolverStats.h>
+#include <llvm/Support/Path.h>
+
+#include "PersistentMapOfSets.h"
+#include "Predicates.h"
 
 using namespace llvm;
 
@@ -21,24 +25,6 @@ namespace klee {
 #define TO_HASHES(key) std::set<unsigned> hashes; \
                        std::transform((key).cbegin(), (key).cend(), std::inserter(hashes, hashes.end()), \
                        [](const ref<Expr> &expr) -> unsigned { return expr->hash(); });
-
-    struct NullAssignment {
-        bool operator()(const Assignment *a) const { return !a; }
-    };
-
-    struct NonNullAssignment {
-        bool operator()(const Assignment *a) const { return a != nullptr; }
-    };
-
-    struct NullOrSatisfyingAssignment {
-        std::set<ref<Expr>> &key;
-
-        explicit NullOrSatisfyingAssignment(std::set<ref<Expr>> &_key) : key(_key) {}
-
-        bool operator()(Assignment *a) const {
-            return !a || a->satisfies(key.begin(), key.end());
-        }
-    };
 
     PersistentMapOfSets::PersistentMapOfSets(const std::string &_path) : path(_path) {
         for (int i = 0; i <= INT_MAX; i++) {
@@ -136,7 +122,7 @@ namespace klee {
             iter++;
         }
         int fd = open(nextFile(p, i, "cache"), O_TRUNC | O_RDWR | O_CREAT,
-                                               S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+                      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (fd < 0) {
             errs() << "Could not store to file: " << strerror(errno) << "\n";
             return;
