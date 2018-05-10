@@ -4,7 +4,7 @@
 
 using namespace llvm;
 namespace klee {
-    void Trie::dumpNode(const TrieNode *node) const {
+    void Trie::dumpNode(const tnodePtr& node) const {
         llvm::errs() << " Is last: " << node->last << "\n";
         for (const auto &m : node->children) {
             llvm::errs() << "\t";
@@ -20,13 +20,13 @@ namespace klee {
         }
     }
 
-    void Trie::insertInternal(TrieNode *node, const Key &exprs, constIterator expr, Assignment **ass) {
+    void Trie::insertInternal(tnodePtr node, const Key &exprs, constIterator expr, Assignment **ass) {
         if (expr == exprs.cend()) {
             node->last = true;
             node->value = ass;
             return;
         }
-        TrieNode *next;
+        tnodePtr next;
         auto iter = node->children.find((*expr)->hash());
         if (iter != node->children.cend()) {
             next = iter->second;
@@ -37,7 +37,7 @@ namespace klee {
         insertInternal(next, exprs, ++expr, ass);
     }
 
-    Assignment **Trie::searchInternal(TrieNode *node, const Key &exprs, constIterator expr) const {
+    Assignment **Trie::searchInternal(const tnodePtr& node, const Key &exprs, constIterator expr) const {
         if (expr == exprs.cend()) {
             return node->value;
         }
@@ -51,7 +51,7 @@ namespace klee {
     }
 
 
-    Assignment **Trie::existsSubsetInternal(const TrieNode *pNode, const std::set<ref<Expr>> &exprs,
+    Assignment **Trie::existsSubsetInternal(const tnodePtr& pNode, const std::set<ref<Expr>> &exprs,
                                             constIterator expr) const {
         if (pNode->last) {
             return pNode->value;
@@ -66,7 +66,7 @@ namespace klee {
         return existsSubsetInternal(pNode, exprs, ++expr);
     }
 
-    Assignment **Trie::existsSupersetInternal(const TrieNode *pNode, const Key &exprs,
+    Assignment **Trie::existsSupersetInternal(const tnodePtr& pNode, const Key &exprs,
                                               constIterator expr, bool &hasResult) const {
 
         if (expr == exprs.cend()) {
@@ -102,7 +102,7 @@ namespace klee {
         root->storeNode(std::forward<CacheTrieNode::Builder>(builder.initRoot()));
     }
 
-    Trie::TrieNode *Trie::createTrieNode(const CacheTrieNode::Reader &&node) {
+    std::shared_ptr<Trie::TrieNode> Trie::createTrieNode(const CacheTrieNode::Reader &&node) {
         Assignment **pAssignment = nullptr;
         if (node.hasValue()) {
             size++;
@@ -110,11 +110,11 @@ namespace klee {
             pAssignment = new Assignment *;
             *pAssignment = Assignment::deserialize(node.getValue());
         }
-        std::map<unsigned, TrieNode *> children;
+        std::map<unsigned, std::shared_ptr<Trie::TrieNode>> children;
         for (const CacheTrieNode::Child::Reader &child : node.getChildren()) {
             children.insert(std::make_pair(child.getExpr(), createTrieNode(child.getNode())));
         }
-        return new TrieNode(std::move(children), pAssignment, node.getLast());
+        return std::make_shared<Trie::TrieNode>(std::move(children), pAssignment, node.getLast());
     }
 
     Assignment **Trie::get(Key &key) {

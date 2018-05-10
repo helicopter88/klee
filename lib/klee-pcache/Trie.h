@@ -4,6 +4,7 @@
 #ifndef KLEE_TRIE_H
 #define KLEE_TRIE_H
 
+
 #include <klee/Expr.h>
 #include <klee/util/Assignment.h>
 #include "Storage.h"
@@ -13,12 +14,13 @@ namespace klee {
 
     typedef const std::set<ref<Expr>> Key;
 
+
     class Trie : public Storage<Key, Assignment **> {
 
     private:
 
         struct TrieNode {
-            std::map<unsigned, TrieNode *> children;
+            std::map<unsigned, std::shared_ptr<TrieNode>> children;
             Assignment **value;
             bool last;
         public:
@@ -28,38 +30,44 @@ namespace klee {
 
             explicit TrieNode(Assignment **pAssignment) : value(pAssignment), last(false) {}
 
-            explicit TrieNode(std::map<unsigned, TrieNode *> &&_children, Assignment **_value,
+            explicit TrieNode(std::map<unsigned, std::shared_ptr<TrieNode>> &&_children, Assignment **_value,
                               bool _last) : children(_children), value(_value), last(_last) {}
+            ~TrieNode() {
+                if(value)
+                    delete *value;
+                delete value;
+
+                children.clear();
+            }
         };
 
-        static TrieNode *createTrieNode() {
-            auto *newNode = new TrieNode;
-            return newNode;
+        static std::shared_ptr<TrieNode> createTrieNode() {
+            return std::make_shared<TrieNode>();
         }
 
-        static TrieNode *createTrieNode(Assignment **pAssignment) {
-            auto *newNode = new TrieNode(pAssignment);
-            return newNode;
+        static std::shared_ptr<TrieNode> createTrieNode(Assignment **pAssignment) {
+            return std::make_shared<TrieNode>(pAssignment);
         }
 
+        typedef std::shared_ptr<TrieNode> tnodePtr;
 
         size_t size = 0;
 
-        TrieNode *root;
+        tnodePtr root;
 
-        void insertInternal(TrieNode *node, const Key &, constIterator expr, Assignment **);
+        void insertInternal(tnodePtr node, const Key &, constIterator expr, Assignment **);
 
-        Assignment **searchInternal(TrieNode *node, const Key &exprs, constIterator expr) const;
+        Assignment **searchInternal(const tnodePtr& node, const Key &exprs, constIterator expr) const;
 
-        Assignment **existsSubsetInternal(const TrieNode *pNode, const Key &exprs,
+        Assignment **existsSubsetInternal(const tnodePtr& pNode, const Key &exprs,
                                           constIterator expr) const;
 
-        Assignment **existsSupersetInternal(const TrieNode *pNode, const Key &exprs,
+        Assignment **existsSupersetInternal(const tnodePtr& pNode, const Key &exprs,
                                             constIterator expr, bool &hasResult) const;
 
-        void dumpNode(const TrieNode *node) const;
+        void dumpNode(const tnodePtr& node) const;
 
-        TrieNode *createTrieNode(const CacheTrieNode::Reader &&node);
+        tnodePtr createTrieNode(const CacheTrieNode::Reader &&node);
 
     public:
         explicit Trie() : root(createTrieNode()) {
