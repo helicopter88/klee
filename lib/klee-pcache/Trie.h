@@ -20,7 +20,7 @@ namespace klee {
     private:
 
         struct TrieNode {
-            std::map<unsigned, std::shared_ptr<TrieNode>> children;
+            std::unordered_map<unsigned, std::shared_ptr<TrieNode>> children;
             Assignment **value;
             bool last;
         public:
@@ -30,8 +30,8 @@ namespace klee {
 
             explicit TrieNode(Assignment **pAssignment) : value(pAssignment), last(false) {}
 
-            explicit TrieNode(std::map<unsigned, std::shared_ptr<TrieNode>> &&_children, Assignment **_value,
-                              bool _last) : children(_children), value(_value), last(_last) {}
+            explicit TrieNode(std::unordered_map<unsigned, std::shared_ptr<TrieNode>> &&_children, Assignment **_value,
+                              bool _last) : children(std::move(_children)), value(_value), last(_last) {}
             ~TrieNode() {
                 if(value)
                     delete *value;

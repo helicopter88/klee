@@ -110,7 +110,7 @@ namespace klee {
             pAssignment = new Assignment *;
             *pAssignment = Assignment::deserialize(node.getValue());
         }
-        std::map<unsigned, std::shared_ptr<Trie::TrieNode>> children;
+        std::unordered_map<unsigned, std::shared_ptr<Trie::TrieNode>> children;
         for (const CacheTrieNode::Child::Reader &child : node.getChildren()) {
             children.insert(std::make_pair(child.getExpr(), createTrieNode(child.getNode())));
         }
