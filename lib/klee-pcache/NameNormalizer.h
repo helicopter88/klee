@@ -13,8 +13,8 @@ using namespace llvm;
 namespace klee {
     class NameNormalizer {
     private:
-        std::map<std::string, std::string> namesMappings;
-        std::map<std::string, std::string> reverseMappings;
+        std::unordered_map<std::string, std::string> namesMappings;
+        std::unordered_map<std::string, std::string> reverseMappings;
     public:
         std::set<ref<Expr>> normalizeExpressions(const std::set<ref<Expr>> &expressions);
 
@@ -22,7 +22,7 @@ namespace klee {
 
         Assignment *normalizeAssignment(const Assignment *assignment) const;
 
-        const std::map<std::string, std::string> &getMappings() const {
+        const std::unordered_map<std::string, std::string> &getMappings() const {
             return namesMappings;
         };
 

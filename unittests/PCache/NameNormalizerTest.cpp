@@ -22,7 +22,7 @@ namespace {
         const std::set<ref<Expr>> &nExprs = nn.normalizeExpressions(exprs);
         EXPECT_NE(exprs, nExprs);
 
-        const std::map<std::string, std::string> &mappings = nn.getMappings();
+        const std::unordered_map<std::string, std::string> &mappings = nn.getMappings();
         EXPECT_EQ(mappings.size(), 2);
 
         EXPECT_TRUE(mappings.find("arr1") != mappings.cend());

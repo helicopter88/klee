@@ -28,7 +28,7 @@ namespace klee {
 
     class RenamerVisitor : public ExprVisitor {
     private:
-        const std::map<std::string, std::string> &namesMapping;
+        const std::unordered_map<std::string, std::string> &namesMapping;
 
         UpdateNode *newNode(const UpdateNode *old) {
             UpdateNode *next = nullptr;
@@ -39,7 +39,7 @@ namespace klee {
         }
 
     public:
-        explicit RenamerVisitor(const std::map<std::string, std::string> &_namesMapping) : namesMapping(
+        explicit RenamerVisitor(const std::unordered_map<std::string, std::string> &_namesMapping) : namesMapping(
                 _namesMapping) {};
 
 
@@ -134,7 +134,6 @@ namespace klee {
 #endif
             assert("Name was not in the mapping" && false);
         }
-        const std::string &newName = iterator->second;
         return newArray(orig, iterator->second);
     }
 
@@ -154,7 +153,6 @@ namespace klee {
 
     const Array *NameNormalizer::denormalizeArray(const Array *orig) const {
         const auto &iterator = reverseMappings.find(orig->getName());
-        std::string newName;
         if (iterator == reverseMappings.cend()) {
 #ifndef NDEBUG
             for (const auto &b : namesMappings) {
@@ -165,7 +163,6 @@ namespace klee {
             }
             llvm::errs() << "Could not find: " << orig->getName() << "\n";
 #endif
-            newName = orig->getName();
             return orig;
         }
         return newArray(orig, iterator->second);
