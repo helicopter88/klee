@@ -60,12 +60,14 @@ namespace klee {
     }
 
     Assignment **PersistentMapOfSets::get(std::set<ref<Expr>> &key) {
+        if(key.empty()) return nullptr;
         TO_HASHES(key);
         Assignment **value = cache.lookup(hashes);
         return value;
     }
 
     Assignment **PersistentMapOfSets::tryAll_get(std::set<ref<Expr>> &key) {
+        if(key.empty()) return nullptr;
         TO_HASHES(key);
         Assignment **value = cache.findSubset(hashes, NullAssignment());
         if (!value) {
@@ -79,9 +81,7 @@ namespace klee {
     }
 
     void PersistentMapOfSets::set(std::set<ref<Expr>> &key, Assignment **const &value) {
-        if (key.empty()) {
-            return;
-        }
+        if(key.empty()) return;
         TO_HASHES(key);
         ++stats::pcachePMapSize;
         cache.insert(hashes, *value);
