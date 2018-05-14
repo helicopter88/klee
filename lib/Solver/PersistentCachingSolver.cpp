@@ -1,27 +1,18 @@
-//
-// Created by dmarino on 17/02/18.
-//
 #include <fstream>
-#include "klee/Solver.h"
 
-#include "klee/Constraints.h"
-
-#include "klee/SolverImpl.h"
-#include <klee/TimerStatIncrementer.h>
-#include <klee/SolverStats.h>
-#include <klee/Internal/Support/ErrorHandling.h>
+#include <klee/Constraints.h>
 #include <klee/Internal/Support/Debug.h>
+#include <klee/Solver.h>
+#include "klee/SolverImpl.h"
+#include <klee/SolverStats.h>
+#include <klee/TimerStatIncrementer.h>
 
 #include "klee/util/Assignment.h"
 #include "klee/util/ExprUtil.h"
 
-#include "../klee-pcache/RedisFinder.h"
 #include "../klee-pcache/PersistentMapOfSetsFinder.h"
-#include "../klee-pcache/NameNormalizer.h"
-#include "../klee-pcache/Trie.h"
+#include "../klee-pcache/RedisFinder.h"
 #include "../klee-pcache/TrieFinder.h"
-#include "../klee-pcache/NameNormalizerFinder.h"
-#include "../klee-pcache/Predicates.h"
 
 using namespace llvm;
 namespace {
@@ -148,7 +139,6 @@ namespace klee {
             this->printStats();
             for (Finder *_f: finders) {
                 _f->storeFinder();
-                delete _f;
             }
         }
 
@@ -157,6 +147,10 @@ namespace klee {
                     for (Finder *f : finders) {
                         f->printStats();
                     });
+        }
+
+        ~ChainingFinder() noexcept override {
+            for(Finder* _f : finders) delete _f;
         }
     };
 
@@ -230,14 +224,6 @@ namespace klee {
 
     bool PersistentCachingSolver::computeTruth(const Query &query, bool &isValid) {
         TimerStatIncrementer t(stats::pcacheTime);
-
-        // There is a small amount of redundancy here. We only need to know
-        // truth and do not really need to compute an assignment. This means
-        // that we could check the cache to see if we already know that
-        // state ^ query has no assignment. In that case, by the validity of
-        // state, we know that state ^ !query must have an assignment, and
-        // so query cannot be true (valid). This does get hits, but doesn't
-        // really seem to be worth the overhead.
 
         Assignment *a;
         if (!getAssignment(query, a))
@@ -380,8 +366,6 @@ namespace klee {
         if (!a)
             return true;
 
-        // FIXME: We should use smarter assignment for result so we don't
-        // need redundant copy.
         values = std::vector<std::vector<unsigned char> >(objects.size());
         for (unsigned i = 0; i < objects.size(); ++i) {
             const Array *os = objects[i];
