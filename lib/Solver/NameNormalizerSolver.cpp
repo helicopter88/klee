@@ -2,6 +2,7 @@
 // Created by dmarino on 04/05/18.
 //
 #include <klee/Constraints.h>
+#include <klee/Internal/Support/Debug.h>
 #include "klee/Solver.h"
 #include "klee/SolverImpl.h"
 #include "klee/SolverStats.h"
@@ -53,9 +54,15 @@ namespace klee {
         std::vector<const Array *> nObjects = nn.normalizeArrays(objects);
 
         bool res = solver->impl->computeInitialValues(q, nObjects, values, hasSolution);
-        if (!res) {
-            q.dump();
-            assert(false);
+        if (!res || !hasSolution) {
+            KLEE_DEBUG(
+                    llvm::errs() << "Could not find normalized solution for query:\n";
+                    q.dump();
+                    for (const auto &object : nObjects) llvm::errs() << object->getName() << "\n";
+                    llvm::errs() << "Trying clean query\n";
+            );
+            hasSolution = true;
+            return solver->impl->computeInitialValues(query, objects, values, hasSolution);
         }
         return true;
     }
@@ -73,6 +80,7 @@ namespace klee {
             q.dump();
             assert(false);
         }
+        result = nn.denormalizeExpression(result);
         return true;
 
     }

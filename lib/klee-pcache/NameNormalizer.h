@@ -5,16 +5,19 @@
 #ifndef KLEE_NAMENORMALIZER_H
 #define KLEE_NAMENORMALIZER_H
 
+
 #include <klee/util/Ref.h>
 #include <klee/Expr.h>
 #include <klee/util/Assignment.h>
 
 using namespace llvm;
 namespace klee {
+    typedef std::map<std::string, std::string> NameMapping;
+
     class NameNormalizer {
     private:
-        std::unordered_map<std::string, std::string> namesMappings;
-        std::unordered_map<std::string, std::string> reverseMappings;
+        NameMapping namesMappings;
+        NameMapping reverseMappings;
     public:
         std::set<ref<Expr>> normalizeExpressions(const std::set<ref<Expr>> &expressions);
 
@@ -22,7 +25,7 @@ namespace klee {
 
         Assignment *normalizeAssignment(const Assignment *assignment) const;
 
-        const std::unordered_map<std::string, std::string> &getMappings() const {
+        const NameMapping &getMappings() const {
             return namesMappings;
         };
 
@@ -34,7 +37,9 @@ namespace klee {
 
         std::vector<const Array *> normalizeArrays(const std::vector<const Array *> &arrays) const;
 
-        ref<Expr> normalizeExpression(const ref <Expr> &expr);
+        ref<Expr> normalizeExpression(const ref<Expr> &expr);
+
+        ref<Expr> denormalizeExpression(const ref<Expr> &expr) const;
     };
 }
 #endif //KLEE_NAMENORMALIZER_H

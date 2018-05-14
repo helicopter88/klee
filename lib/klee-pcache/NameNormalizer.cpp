@@ -28,7 +28,9 @@ namespace klee {
 
     class RenamerVisitor : public ExprVisitor {
     private:
-        const std::unordered_map<std::string, std::string> &namesMapping;
+        const NameMapping &namesMapping;
+        const NameMapping &reverseMapping;
+        bool reverse;
 
         UpdateNode *newNode(const UpdateNode *old) {
             UpdateNode *next = nullptr;
@@ -39,17 +41,30 @@ namespace klee {
         }
 
     public:
-        explicit RenamerVisitor(const std::unordered_map<std::string, std::string> &_namesMapping) : namesMapping(
-                _namesMapping) {};
+        explicit RenamerVisitor(const NameMapping &_namesMapping,
+                                const NameMapping &_reverseMapping,
+                                bool _reverse = false) :
+                                namesMapping(_namesMapping),
+                                reverseMapping(_reverseMapping),
+                                reverse(_reverse) {};
 
 
         ExprVisitor::Action visitRead(const ReadExpr &rExpr) override {
+            std::string newName;
             const Array *orig = rExpr.updates.root;
-            const auto &iterator = namesMapping.find(orig->getName());
-            if (iterator == namesMapping.cend()) {
-                assert("Name was not in the mapping" && false);
+            if (reverse) {
+                const auto &iterator = reverseMapping.find(orig->getName());
+                if (iterator == reverseMapping.cend()) {
+                    assert("Name was not in the mapping" && false);
+                }
+                newName = iterator->second;
+            } else {
+                const auto &iterator = namesMapping.find(orig->getName());
+                if (iterator == namesMapping.cend()) {
+                    assert("Name was not in the mapping" && false);
+                }
+                newName = iterator->second;
             }
-            const std::string &newName = iterator->second;
             const Array *newArr;
             newArr = newArray(orig, newName);
             UpdateNode *un = nullptr;
@@ -67,7 +82,7 @@ namespace klee {
         std::vector<ref<ReadExpr>> readExprs;
         std::set<std::string> names;
 
-        findReads(expr, true, readExprs);
+        findReads(expr, false, readExprs);
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
         }
@@ -81,7 +96,7 @@ namespace klee {
             }
 
         }
-        RenamerVisitor rv(namesMappings);
+        RenamerVisitor rv(namesMappings, reverseMappings);
         return rv.visit(expr);
     }
 
@@ -90,7 +105,7 @@ namespace klee {
         std::vector<ref<ReadExpr>> readExprs;
         std::set<ref<Expr>> result;
         for (const ref<Expr> &expr : exprs) {
-            findReads(expr, true, readExprs);
+            findReads(expr, false, readExprs);
         }
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
@@ -98,10 +113,11 @@ namespace klee {
         unsigned i = 0;
         for (const std::string &name : names) {
             const auto number = i++;
-            namesMappings.insert(std::make_pair(name, "VAR" + std::to_string(number)));
-            reverseMappings.insert(std::make_pair("VAR" + std::to_string(number), name));
+            const std::string &normalized = "VAR" + std::to_string(number);
+            namesMappings.insert(std::make_pair(name, normalized));
+            reverseMappings.insert(std::make_pair(normalized, name));
         }
-        RenamerVisitor rv(namesMappings);
+        RenamerVisitor rv(namesMappings, reverseMappings);
         for (const ref<Expr> &expr : exprs) {
             result.insert(rv.visit(expr));
         }
@@ -154,7 +170,6 @@ namespace klee {
     const Array *NameNormalizer::denormalizeArray(const Array *orig) const {
         const auto &iterator = reverseMappings.find(orig->getName());
         if (iterator == reverseMappings.cend()) {
-#ifndef NDEBUG
             for (const auto &b : namesMappings) {
                 llvm::errs() << b.first << "->" << b.second << "\n";
             }
@@ -162,7 +177,8 @@ namespace klee {
                 llvm::errs() << b.first << "->" << b.second << "\n";
             }
             llvm::errs() << "Could not find: " << orig->getName() << "\n";
-#endif
+
+            assert(false);
             return orig;
         }
         return newArray(orig, iterator->second);
@@ -178,5 +194,10 @@ namespace klee {
         std::vector<const Array *> out(arrays.size());
         for (const Array *arr : arrays) { out.emplace_back(denormalizeArray(arr)); }
         return out;
+    }
+
+    ref<Expr> NameNormalizer::denormalizeExpression(const ref<Expr> &expr) const {
+        RenamerVisitor rv(namesMappings, reverseMappings, true);
+        return rv.visit(expr);
     }
 }
