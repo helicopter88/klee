@@ -77,8 +77,12 @@ namespace klee {
         const Query q(cm, nn.normalizeExpression(query.expr));
 
         if (!solver->impl->computeValue(q, result)) {
-            q.dump();
-            assert(false);
+            KLEE_DEBUG(
+                    llvm::errs() << "Could not find normalized solution for query:\n";
+                    q.dump();
+                    llvm::errs() << "Trying clean query\n";
+            );
+            return solver->impl->computeValue(query, result);
         }
         result = nn.denormalizeExpression(result);
         return true;
@@ -93,7 +97,15 @@ namespace klee {
         std::vector<ref<Expr>> v(nConstraints.begin(), nConstraints.end());
         ConstraintManager cm(v);
         const Query q(cm, nn.normalizeExpression(query.expr));
-        return solver->impl->computeTruth(q, isValid);
+        if (!solver->impl->computeTruth(q, isValid)) {
+            KLEE_DEBUG(
+                    llvm::errs() << "Could not find normalized solution for query:\n";
+                    q.dump();
+                    llvm::errs() << "Trying clean query\n";
+            );
+            return solver->impl->computeTruth(query, isValid);
+        }
+        return true;
     }
 
     bool NameNormalizerSolver::computeValidity(const Query &query, Solver::Validity &result) {
@@ -104,7 +116,15 @@ namespace klee {
         std::vector<ref<Expr>> v(nConstraints.begin(), nConstraints.end());
         ConstraintManager cm(v);
         const Query q(cm, nn.normalizeExpression(query.expr));
-        return solver->impl->computeValidity(q, result);
+        if (!solver->impl->computeValidity(q, result)) {
+            KLEE_DEBUG(
+                    llvm::errs() << "Could not find normalized solution for query:\n";
+                    q.dump();
+                    llvm::errs() << "Trying clean query\n";
+            );
+            return solver->impl->computeValidity(query, result);
+        }
+        return true;
     }
 
 
