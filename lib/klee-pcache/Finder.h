@@ -13,6 +13,7 @@ namespace klee {
     private:
         size_t hits = 0;
         size_t misses = 0;
+        size_t specialHits = 0, specialMisses = 0;
     public:
         virtual Assignment **find(std::set<ref<Expr>> &exprs) = 0;
 
@@ -26,6 +27,14 @@ namespace klee {
 
         virtual ~Finder() {};
 
+        void incrementSpecialHits() {
+            specialHits++;
+        }
+
+        void incrementSpecialMisses() {
+            specialMisses++;
+        }
+
         void incrementHits() {
             hits++;
         }
@@ -38,6 +47,7 @@ namespace klee {
 
         virtual void printStats() const {
             llvm::errs() << name() << " H: " << hits << " M: " << misses << "\n";
+            llvm::errs() << name() << " SH: " << specialHits << " SM: " << specialMisses << "\n";
         }
     };
 }

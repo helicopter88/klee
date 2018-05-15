@@ -28,8 +28,8 @@ namespace {
                                          " the Set-Trie backend for the persistent cache"));
 
     cl::opt<bool> PCacheCollectOnly("pcache-collect-only",
-                                cl::init(false),
-                                cl::desc("Do not fetch the persistent caches, but populate them"));
+                                    cl::init(false),
+                                    cl::desc("Do not fetch the persistent caches, but populate them"));
 
     cl::opt<std::string> PCacheRedisUrl("pcache-redis-url",
                                         cl::init("none"),
@@ -123,14 +123,14 @@ namespace klee {
             for (Finder *_f : finders) {
                 Assignment **ret = _f->findSpecial(exprs);
                 if (ret) {
-                    _f->incrementHits();
+                    _f->incrementSpecialHits();
                     for (Finder *mF : missedFs) {
                         mF->insert(exprs, *ret);
                     }
                     return ret;
                 }
                 missedFs.emplace_back(_f);
-                _f->incrementMisses();
+                _f->incrementSpecialMisses();
             }
             return nullptr;
         }
@@ -150,7 +150,7 @@ namespace klee {
         }
 
         ~ChainingFinder() noexcept override {
-            for(Finder* _f : finders) delete _f;
+            for (Finder *_f : finders) delete _f;
         }
     };
 
@@ -210,8 +210,8 @@ namespace klee {
             finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
         }
 
-        Finder* cf = new ChainingFinder(finders);
-        if(PCacheCollectOnly) {
+        Finder *cf = new ChainingFinder(finders);
+        if (PCacheCollectOnly) {
             return new CollectingFinder(cf);
         }
         return cf;
