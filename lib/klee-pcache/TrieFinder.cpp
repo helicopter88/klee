@@ -40,12 +40,18 @@ namespace klee {
         if (exprs.empty()) {
             return emptyAssignment;
         };
-
-        Assignment **ret = trie.existsSuperset(exprs);
-        if (ret) {
-            NullOrSatisfyingAssignment s(exprs);
-            if (s(*ret)) {
-                return ret;
+        std::vector<Assignment**> assigments = trie.getSubsets(exprs);
+        NullAssignment p;
+        for(Assignment** pAssignment : assigments) {
+            if(p(*pAssignment)) {
+                return pAssignment;
+            }
+        }
+        SatisfyingAssignment s(exprs);
+        assigments = trie.getSupersets(exprs);
+        for(Assignment** pAssignment : assigments) {
+            if(s(*pAssignment)) {
+                return pAssignment;
             }
         }
         return nullptr;

@@ -4,7 +4,7 @@
 
 using namespace llvm;
 namespace klee {
-    void Trie::dumpNode(const tnodePtr& node) const {
+    void Trie::dumpNode(const tnodePtr &node) const {
         llvm::errs() << " Is last: " << node->last << "\n";
         for (const auto &m : node->children) {
             llvm::errs() << "\t";
@@ -37,7 +37,7 @@ namespace klee {
         insertInternal(next, exprs, ++expr, ass);
     }
 
-    Assignment **Trie::searchInternal(const tnodePtr& node, const Key &exprs, constIterator expr) const {
+    Assignment **Trie::searchInternal(const tnodePtr &node, const Key &exprs, constIterator expr) const {
         if (expr == exprs.cend()) {
             return node->value;
         }
@@ -51,7 +51,7 @@ namespace klee {
     }
 
 
-    Assignment **Trie::existsSubsetInternal(const tnodePtr& pNode, const std::set<ref<Expr>> &exprs,
+    Assignment **Trie::existsSubsetInternal(const tnodePtr &pNode, const std::set<ref<Expr>> &exprs,
                                             constIterator expr) const {
         if (pNode->last) {
             return pNode->value;
@@ -66,7 +66,7 @@ namespace klee {
         return existsSubsetInternal(pNode, exprs, ++expr);
     }
 
-    Assignment **Trie::existsSupersetInternal(const tnodePtr& pNode, const Key &exprs,
+    Assignment **Trie::existsSupersetInternal(const tnodePtr &pNode, const Key &exprs,
                                               constIterator expr, bool &hasResult) const {
 
         if (expr == exprs.cend()) {
@@ -89,13 +89,70 @@ namespace klee {
         return found;
     }
 
+    void Trie::findAssignments(const tnodePtr &node, std::vector<Assignment **> &set) const {
+        if(node->last)
+            set.emplace_back(node->value);
+        for(const auto& child : node->children) {
+           findAssignments(child.second, set);
+        }
+    }
+
+    bool Trie::getSupersetsInternal(const tnodePtr &pNode, const Key &exprs,
+                                              constIterator expr, std::vector<Assignment**>& assignments) const {
+
+        if (expr == exprs.cend()) {
+            findAssignments(pNode, assignments);
+            return true;
+        }
+        bool found = false;
+        for (auto &child : pNode->children) {
+            if (child.first == expr->get()->hash()) {
+                found = getSupersetsInternal(child.second, exprs, ++expr, assignments);
+            } else {
+                found = getSupersetsInternal(child.second, exprs, expr, assignments);
+            }
+            if (found) {
+                return found;
+            }
+        }
+        return false;
+    }
+
+    bool Trie::getSubsetsInternal(const tnodePtr &pNode, const Key &exprs, constIterator expr,
+                                  std::vector<Assignment **> &assignments) const {
+
+        if (pNode->last) {
+            assignments.emplace_back(pNode->value);
+        }
+        if (expr == exprs.cend()) {
+            return false;
+        }
+        auto iter = pNode->children.find((*expr)->hash());
+        if (iter != pNode->children.cend()) {
+            return getSubsetsInternal(iter->second, exprs, ++expr, assignments);
+        }
+        return getSubsetsInternal(pNode, exprs, ++expr, assignments);
+    }
+
+    std::vector<Assignment **> Trie::getSubsets(const Key &exprs) const {
+        std::vector<Assignment **> assignments;
+        getSubsetsInternal(root, exprs, exprs.cbegin(), assignments);
+        return assignments;
+    }
+
+    Assignment **Trie::existsSubset(const Key &exprs) const {
+        return existsSubsetInternal(root, exprs, exprs.cbegin());
+    }
+
     Assignment **Trie::existsSuperset(const Key &exprs) const {
         bool hasResult = false;
         return existsSupersetInternal(root, exprs, exprs.cbegin(), hasResult);
     }
 
-    Assignment **Trie::existsSubset(const Key &exprs) const {
-        return existsSubsetInternal(root, exprs, exprs.cbegin());
+    std::vector<Assignment **> Trie::getSupersets(const Key &exprs) const {
+        std::vector<Assignment **> assignments;
+        getSupersetsInternal(root, exprs, exprs.cbegin(), assignments);
+        return assignments;
     }
 
     void Trie::store(CacheTrie::Builder &&builder) const {
@@ -134,6 +191,7 @@ namespace klee {
         *pAssignment = *value;
         insertInternal(root, key, key.cbegin(), pAssignment);
     }
+
 
     void Trie::TrieNode::storeNode(CacheTrieNode::Builder &&nodeBuilder) const {
         nodeBuilder.setLast(this->last);

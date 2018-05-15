@@ -72,7 +72,8 @@ namespace {
         EXPECT_TRUE(trie.get(set2));
         EXPECT_TRUE(trie.existsSubset(set1));
         EXPECT_FALSE(trie.existsSubset(emptySet));
-
+        std::vector<Assignment**> assignments = trie.getSubsets(set1);
+        EXPECT_EQ(assignments.size(), 1);
         delete assignment;
     }
 
@@ -112,6 +113,10 @@ namespace {
         EXPECT_TRUE(trie.existsSuperset(set2));
         EXPECT_FALSE(trie.existsSuperset(set3));
         EXPECT_FALSE(trie.existsSuperset(emptySet));
+        std::vector<Assignment**> assignments = trie.getSupersets(set2);
+        EXPECT_EQ(assignments.size(), 1);
+        assignments = trie.getSupersets(set1);
+        EXPECT_EQ(assignments.size(), 1);
         delete assignment;
     }
 

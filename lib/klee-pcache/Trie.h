@@ -32,8 +32,9 @@ namespace klee {
 
             explicit TrieNode(std::unordered_map<unsigned, std::shared_ptr<TrieNode>> &&_children, Assignment **_value,
                               bool _last) : children(std::move(_children)), value(_value), last(_last) {}
+
             ~TrieNode() {
-                if(value)
+                if (value)
                     delete *value;
                 delete value;
 
@@ -57,17 +58,25 @@ namespace klee {
 
         void insertInternal(tnodePtr node, const Key &, constIterator expr, Assignment **);
 
-        Assignment **searchInternal(const tnodePtr& node, const Key &exprs, constIterator expr) const;
+        Assignment **searchInternal(const tnodePtr &node, const Key &exprs, constIterator expr) const;
 
-        Assignment **existsSubsetInternal(const tnodePtr& pNode, const Key &exprs,
+        Assignment **existsSubsetInternal(const tnodePtr &pNode, const Key &exprs,
                                           constIterator expr) const;
 
-        Assignment **existsSupersetInternal(const tnodePtr& pNode, const Key &exprs,
+        Assignment **existsSupersetInternal(const tnodePtr &pNode, const Key &exprs,
                                             constIterator expr, bool &hasResult) const;
 
-        void dumpNode(const tnodePtr& node) const;
+        void dumpNode(const tnodePtr &node) const;
 
         tnodePtr createTrieNode(const CacheTrieNode::Reader &&node);
+
+        bool getSubsetsInternal(const tnodePtr &pNode, const Key &exprs, constIterator expr,
+                                std::vector<Assignment **> &assignments) const;
+
+        bool getSupersetsInternal(const tnodePtr &pNode, const Key &exprs,
+                                  constIterator expr, std::vector<Assignment **> &assignments) const;
+
+        void findAssignments(const tnodePtr &shared_ptr, std::vector<Assignment **> &set) const;
 
     public:
         explicit Trie() : root(createTrieNode()) {
@@ -95,6 +104,10 @@ namespace klee {
         void store() override {
             assert(false && "Do not use this method, use store(CacheTrie::Builder) instead");
         };
+
+        std::vector<Assignment **> getSubsets(const Key &exprs) const;
+
+        std::vector<Assignment **> getSupersets(const Key &exprs) const;
 
     };
 }
