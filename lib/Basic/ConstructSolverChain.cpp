@@ -11,6 +11,7 @@
  * This file groups declarations that are common to both KLEE and Kleaver.
  */
 #include "klee/Common.h"
+#include "klee/Config/config.h"
 #include "klee/CommandLine.h"
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
@@ -46,8 +47,10 @@ Solver *constructSolverChain(Solver *coreSolver,
   if (UseCexCache)
     solver = createCexCachingSolver(solver);
 
+#ifdef ENABLE_PERSISTENT_CACHE
   if (UsePersistentCache)
     solver = createPersistentCachingSolver(solver);
+#endif
 
   if (UseCache)
     solver = createCachingSolver(solver);

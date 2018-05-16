@@ -92,4 +92,10 @@ macro for that. That would simplify the C++ code.  */
 /* Install directory for KLEE runtime */
 #define KLEE_INSTALL_RUNTIME_DIR "@KLEE_INSTALL_RUNTIME_DIR@"
 
+/* Build persistent cache support */
+#define ENABLE_PERSISTENT_CACHE "@ENABLE_PERSISTENT_CACHE@"
+
+/* Enable redis support in the persistent cache */
+#define PCACHE_ENABLE_REDIS "@ENABLE_REDIS@"
+
 #endif

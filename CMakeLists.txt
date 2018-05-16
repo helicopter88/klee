@@ -46,7 +46,7 @@ project(KLEE CXX C)
 # Project version
 ###############################################################################
 set(KLEE_VERSION_MAJOR 1)
-set(KLEE_VERSION_MINOR 4)
+set(KLEE_VERSION_MINOR 5)
 set(KLEE_VERSION_PATCH 0)
 set(KLEE_VERSION_TWEAK 0)
 set(KLEE_VERSION "${KLEE_VERSION_MAJOR}.${KLEE_VERSION_MINOR}.${KLEE_VERSION_PATCH}.${KLEE_VERSION_TWEAK}")
@@ -591,6 +591,11 @@ else()
   set(SUPPORT_KLEE_UCLIBC 0) # For config.h
 endif()
 
+option(ENABLE_PERSISTENT_CACHE "Enable building persistent cache support" ON)
+
+if (ENABLE_PERSISTENT_CACHE)
+  set(ENABLE_PERSISTENT_CACHE 1)
+endif()
 ################################################################################
 # Generate `config.h`
 ################################################################################
@@ -616,6 +621,8 @@ configure_file(${CMAKE_SOURCE_DIR}/include/klee/Config/CompileTimeInfo.h.cmin
   ${CMAKE_BINARY_DIR}/include/klee/Config/CompileTimeInfo.h
 )
 
+
+
 ################################################################################
 # Global include directories
 ################################################################################
@@ -638,12 +645,20 @@ message(STATUS "KLEE_COMPONENT_CXX_DEFINES: '${KLEE_COMPONENT_CXX_DEFINES}'")
 message(STATUS "KLEE_COMPONENT_CXX_FLAGS: '${KLEE_COMPONENT_CXX_FLAGS}'")
 message(STATUS "KLEE_COMPONENT_EXTRA_LIBRARIES: '${KLEE_COMPONENT_EXTRA_LIBRARIES}'")
 
+
 ################################################################################
 # KLEE components
 ################################################################################
 include("${CMAKE_SOURCE_DIR}/cmake/klee_add_component.cmake")
+################################################################################
+# Persistent cache
+################################################################################
+if (ENABLE_PERSISTENT_CACHE)
+  add_subdirectory(lib/klee-pcache)
+endif()
 add_subdirectory(lib)
 add_subdirectory(runtime)
+
 
 ################################################################################
 # KLEE tools
@@ -730,6 +745,8 @@ option(ENABLE_DOCS "Enable building documentation" ON)
 if (ENABLE_DOCS)
   add_subdirectory(docs)
 endif()
+
+
 
 ################################################################################
 # Miscellaneous install

@@ -1,4 +1,6 @@
-#include <fstream>
+
+#include "klee/Config/config.h"
+#ifdef ENABLE_PERSISTENT_CACHE
 
 #include <klee/Constraints.h>
 #include <klee/Internal/Support/Debug.h>
@@ -206,9 +208,11 @@ namespace klee {
         } else {
             finders.emplace_back(new PersistentMapOfSetsFinder(PCachePath));
         }
+#ifdef PCACHE_ENABLE_REDIS
         if (PCacheRedisUrl != "none") {
             finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
         }
+#endif
 
         Finder *cf = new ChainingFinder(finders);
         if (PCacheCollectOnly) {
@@ -400,3 +404,4 @@ namespace klee {
         return new Solver(new PersistentCachingSolver(_solver));
     }
 }
+#endif
