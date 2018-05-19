@@ -354,6 +354,9 @@ Executor::Executor(LLVMContext &ctx, const InterpreterOptions &opts,
 
   initializeSearchOptions();
 
+  if (OnlyOutputStatesCoveringNew && !StatsTracker::useIStats())
+    klee_error("To use --only-output-states-covering-new, you need to enable --output-istats.");
+
   if (DebugPrintInstructions.isSet(FILE_ALL) ||
       DebugPrintInstructions.isSet(FILE_COMPACT) ||
       DebugPrintInstructions.isSet(FILE_SRC)) {
@@ -1177,6 +1180,7 @@ void Executor::stepInstruction(ExecutionState &state) {
     statsTracker->stepInstruction(state);
 
   ++stats::instructions;
+  ++state.steppedInstructions;
   state.prevPC = state.pc;
   ++state.pc;
 
@@ -3023,6 +3027,12 @@ void Executor::callExternalFunction(ExecutionState &state,
       assert(success && "FIXME: Unhandled solver failure");
       (void) success;
       ce->toMemory(&args[wordIndex]);
+      ObjectPair op;
+      // Checking to see if the argument is a pointer to something
+      if (ce->getWidth() == Context::get().getPointerWidth() &&
+          state.addressSpace.resolveOne(ce, op)) {
+        op.second->flushToConcreteStore(solver, state);
+      }
       wordIndex += (ce->getWidth()+63)/64;
     } else {
       ref<Expr> arg = toUnique(state, *ai);

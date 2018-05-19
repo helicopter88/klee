@@ -236,9 +236,19 @@ SpecialFunctionHandler::readStringAtAddress(ExecutionState &state,
                                             ref<Expr> addressExpr) {
   ObjectPair op;
   addressExpr = executor.toUnique(state, addressExpr);
+  if (!isa<ConstantExpr>(addressExpr)) {
+    executor.terminateStateOnError(
+        state, "Symbolic string pointer passed to one of the klee_ functions",
+        Executor::TerminateReason::User);
+    return "";
+  }
   ref<ConstantExpr> address = cast<ConstantExpr>(addressExpr);
-  if (!state.addressSpace.resolveOne(address, op))
-    assert(0 && "XXX out of bounds / multiple resolution unhandled");
+  if (!state.addressSpace.resolveOne(address, op)) {
+    executor.terminateStateOnError(
+        state, "Invalid string pointer passed to one of the klee_ functions",
+        Executor::TerminateReason::User);
+    return "";
+  }
   bool res __attribute__ ((unused));
   assert(executor.solver->mustBeTrue(state, 
                                      EqExpr::create(address, 
@@ -342,7 +352,7 @@ void SpecialFunctionHandler::handleOpenMerge(ExecutionState &state,
   }
 
   state.openMergeStack.push_back(
-      ref<MergeHandler>(new MergeHandler(&executor)));
+      ref<MergeHandler>(new MergeHandler(&executor, &state)));
 
   if (DebugLogMerge)
     llvm::errs() << "open merge: " << &state << "\n";
@@ -365,6 +375,7 @@ void SpecialFunctionHandler::handleCloseMerge(ExecutionState &state,
     warning << &state << " ran into a close at " << i << " without a preceding open";
     klee_warning("%s", warning.str().c_str());
   } else {
+    executor.inCloseMerge.insert(&state);
     state.openMergeStack.back()->addClosedState(&state, i);
     state.openMergeStack.pop_back();
   }
