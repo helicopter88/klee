@@ -30,6 +30,10 @@ namespace klee {
 
         explicit NameNormalizerSolver(Solver *_solver) : solver(_solver) {}
 
+        char *getConstraintLog(const Query &query) override;
+
+        void setCoreSolverTimeout(double timeout) override;
+
         ~NameNormalizerSolver() override {
             delete solver;
         }
@@ -125,6 +129,14 @@ namespace klee {
             return solver->impl->computeValidity(query, result);
         }
         return true;
+    }
+
+    char *NameNormalizerSolver::getConstraintLog(const Query &query) {
+        return solver->impl->getConstraintLog(query);
+    }
+
+    void NameNormalizerSolver::setCoreSolverTimeout(double timeout) {
+        solver->impl->setCoreSolverTimeout(timeout);
     }
 
 

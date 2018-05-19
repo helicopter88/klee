@@ -13,12 +13,46 @@ protected:
     // x = k -> x <= k && -x <= -k
     // TODO: this should become a std::set<ref<Expr>> with the two expressions to improve reusability.
     Action visitEq(const EqExpr &expr) override {
-        if(expr.getWidth() == Expr::Bool) {
+        if (expr.getWidth() == Expr::Bool) {
             return Action::doChildren();
         }
         ref<Expr> child1 = expr.getKid(0);
         ref<Expr> child2 = expr.getKid(1);
         const ref<ConstantExpr> &minusOne = ConstantExpr::create(1, child1->getWidth())->Neg();
+        if (isa<ConstantExpr>(child1)) {
+            ConstantExpr *constantExpr = cast<ConstantExpr>(child1);
+            uint64_t value = constantExpr->getAPValue().getZExtValue();
+            switch (constantExpr->getWidth()) {
+#define SIZE_CHECK(S) \
+        case Expr::Int ## S: \
+            if(value >= INT##S##_MAX) { \
+                    std::cout << "Ignored: "<< value << std::endl;\
+                    return Action::skipChildren(); \
+            } \
+            break;
+
+                SIZE_CHECK(8);
+                SIZE_CHECK(16);
+                SIZE_CHECK(32);
+                SIZE_CHECK(64);
+                default:
+                    return Action::skipChildren();
+            }
+        }
+
+        if(isa<ConstantExpr>(child2)) {
+            ConstantExpr *constantExpr = cast<ConstantExpr>(child2);
+            uint64_t value = constantExpr->getAPValue().getZExtValue();
+            switch (constantExpr->getWidth()) {
+                SIZE_CHECK(8);
+                SIZE_CHECK(16);
+                SIZE_CHECK(32);
+                SIZE_CHECK(64);
+                default:
+                    return Action::skipChildren();
+            }
+        }
+
         return Action::changeTo(
                 AndExpr::create(SleExpr::create(child1, child2),
                                 SleExpr::create(
@@ -29,7 +63,7 @@ protected:
     }
 
     // x < k -> x <= k - 1
-    Action visitUlt(const UltExpr &expr) override {
+    /*Action visitUlt(const UltExpr &expr) override {
         ref<Expr> child1 = expr.getKid(0);
         ref<Expr> child2 = expr.getKid(1);
         // Don't do anything if it's 0 as it would become MAX_INT
@@ -40,7 +74,7 @@ protected:
         }
         return Action::changeTo(
                 UleExpr::create(child1, SubExpr::create(child2, ConstantExpr::create(1, child2->getWidth()))));
-    }
+    }*/
 
 
     // x < k -> x <= k - 1
@@ -74,7 +108,7 @@ protected:
 };
 
 ref<Expr> AlgebraComparisonNormalizer::normalizeExpr(const ref<Expr> &expr) {
-    if(expr.isNull()) {
+    if (expr.isNull()) {
         return expr;
     }
     ArithmeticVisitor av;
@@ -82,7 +116,7 @@ ref<Expr> AlgebraComparisonNormalizer::normalizeExpr(const ref<Expr> &expr) {
 }
 
 std::set<ref<Expr>> AlgebraComparisonNormalizer::normalizeEqExpr(const ref<Expr> &expr) {
-    if(expr->getWidth() == Expr::Bool)
+    if (expr->getWidth() == Expr::Bool)
         return {expr};
     EqExpr *eq = cast<EqExpr>(expr);
     ref<Expr> child1 = eq->getKid(0);
@@ -104,7 +138,7 @@ std::set<ref<Expr>> AlgebraComparisonNormalizer::normalizeExpressions(const std:
         //    const std::set<ref<Expr>> &cstraints = normalizeEqExpr(expr);
         //    out.insert(cstraints.cbegin(), cstraints.cend());
         //} else {
-            out.insert(normalizeExpr(expr));
+        out.insert(normalizeExpr(expr));
         //}
     }
     return out;
