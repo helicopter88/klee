@@ -44,7 +44,7 @@ const std::string RedisInstance::get(const std::string &key) {
 
 void RedisInstance::set(const std::string &key, const std::string &value) {
     client.set(key, value, [](const cpp_redis::reply &r) {});
-    client.sync_commit();
+    client.commit();
 }
 
 void RedisInstance::store() {
