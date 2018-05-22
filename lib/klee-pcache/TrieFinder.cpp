@@ -41,7 +41,7 @@ namespace klee {
             return emptyAssignment;
         };
         std::vector<Assignment**> assigments = trie.getSubsets(exprs);
-        NullAssignment p;
+        NullOrSatisfyingAssignment p(exprs);
         for(Assignment** pAssignment : assigments) {
             if(p(*pAssignment)) {
                 return pAssignment;
