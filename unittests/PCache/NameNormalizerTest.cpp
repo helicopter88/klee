@@ -1,7 +1,7 @@
 #include <klee/Expr.h>
 #include <gtest/gtest.h>
 #include <klee/util/ArrayCache.h>
-#include "../../lib/klee-pcache/NameNormalizer.h"
+#include "../../lib/Solver/NameNormalizer.h"
 
 using namespace klee;
 namespace {

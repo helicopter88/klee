@@ -11,9 +11,9 @@ if((NOT CAPNP_FOUND) AND (NOT REDIS_FOUND))
 endif()
 
 if(ENABLE_REDIS)
-    klee_add_component(klee_pcache RedisInstance.cpp RedisFinder.cpp PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp NameNormalizerFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
+    klee_add_component(klee_pcache RedisInstance.cpp RedisFinder.cpp PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp ../Solver/NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
 else()
-    klee_add_component(klee_pcache PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp NameNormalizerFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
+    klee_add_component(klee_pcache PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp ../Solver/NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
 endif()
 set(LLVM_COMPONENTS
         support

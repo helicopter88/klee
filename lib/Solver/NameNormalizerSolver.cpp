@@ -6,11 +6,10 @@
 #include "klee/Solver.h"
 #include "klee/SolverImpl.h"
 #include "klee/SolverStats.h"
-#include "../klee-pcache/NameNormalizer.h"
+#include "NameNormalizer.h"
 
 using namespace llvm;
 namespace klee {
-
     class NameNormalizerSolver : public SolverImpl {
     private:
         Solver *solver;
