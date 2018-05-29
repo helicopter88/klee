@@ -27,6 +27,7 @@ namespace klee {
         extern Statistic queryConstructs;
         extern Statistic queryCounterexamples;
         extern Statistic queryTime;
+#ifdef ENABLE_PERSISTENT_CACHE
         // Persistent cache related statistics
         extern Statistic pcacheTime;
         extern Statistic pcacheHits;
@@ -36,9 +37,10 @@ namespace klee {
         extern Statistic pcacheRedisSize;
         extern Statistic pcachePMapSize;
         extern Statistic pcacheTrieSize;
+#endif
 
-#ifdef DEBUG
-        extern Statistic arrayHashTime;
+#ifdef KLEE_ARRAY_DEBUG
+  extern Statistic arrayHashTime;
 #endif
 
     }

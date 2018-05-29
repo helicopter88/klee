@@ -23,6 +23,7 @@ Statistic stats::queryConstructTime("QueryConstructTime", "QBtime") ;
 Statistic stats::queryConstructs("QueriesConstructs", "QB");
 Statistic stats::queryCounterexamples("QueriesCEX", "Qcex");
 Statistic stats::queryTime("QueryTime", "Qtime");
+#ifdef ENABLE_PERSISTENT_CACHE
 Statistic stats::pcacheTime("PreviousCacheTime", "PCacheTime");
 Statistic stats::pcacheHits("PreviousCacheHits", "PCacheHits");
 Statistic stats::pcacheMisses("PreviousCacheHits", "PCacheHits");
@@ -31,6 +32,7 @@ Statistic stats::pcacheInsertionTime("PreviousCacheDeserializationTime", "PCache
 Statistic stats::pcacheRedisSize("PreviousCacheRedisSize", "PCacheRSize");
 Statistic stats::pcachePMapSize("PreviousCachePersistentMapSize", "PCachePMSize");
 Statistic stats::pcacheTrieSize("PreviousCacheTrieSize", "PCacheTSize");
-#ifdef DEBUG
+#endif
+#ifdef KLEE_ARRAY_DEBUG
 Statistic stats::arrayHashTime("ArrayHashTime", "AHtime");
 #endif

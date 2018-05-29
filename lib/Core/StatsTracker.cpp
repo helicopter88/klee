@@ -418,6 +418,7 @@ void StatsTracker::writeStatsHeader() {
              << "'ResolveTime',"
              << "'QueryCexCacheMisses',"
              << "'QueryCexCacheHits',"
+#ifdef ENABLE_PERSISTENT_CACHE
              << "'PCacheTime',"
              << "'PCacheMiss',"
              << "'PCacheHits',"
@@ -425,7 +426,8 @@ void StatsTracker::writeStatsHeader() {
              << "'PCacheInsertionTime',"
              << "'PCacheRSize',"
              << "'PCachePMSize',"
-#ifdef DEBUG
+#endif
+#ifdef KLEE_ARRAY_DEBUG
 	     << "'ArrayHashTime',"
 #endif
              << ")\n";
@@ -458,6 +460,7 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::queryCexCacheMisses
              << "," << stats::queryCexCacheHits
              << "," << stats::pcacheTime / 1000000.
+#ifdef ENABLE_PERSISTENT_CACHE
              << "," << stats::pcacheHits
              << "," << stats::pcacheMisses
              << "," << stats::pcacheLookupTime / 1000000.
@@ -465,7 +468,8 @@ void StatsTracker::writeStatsLine() {
              << "," << stats::pcacheRedisSize
              << "," << stats::pcachePMapSize
              << "," << stats::pcacheTrieSize
-#ifdef DEBUG
+#endif
+#ifdef KLEE_ARRAY_DEBUG
              << "," << stats::arrayHashTime / 1000000.
 #endif
              << ")\n";

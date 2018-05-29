@@ -487,8 +487,8 @@ void Executor::initializeGlobalObject(ExecutionState &state, ObjectState *os,
 MemoryObject * Executor::addExternalObject(ExecutionState &state, 
                                            void *addr, unsigned size, 
                                            bool isReadOnly) {
-  MemoryObject *mo = memory->allocateFixed((uint64_t) (unsigned long) addr, 
-                                           size, 0);
+  auto mo = memory->allocateFixed(reinterpret_cast<std::uint64_t>(addr),
+                                  size, nullptr);
   ObjectState *os = bindObjectInState(state, mo, false);
   for(unsigned i = 0; i < size; i++)
     os->write8(i, ((uint8_t*)addr)[i]);
@@ -520,8 +520,8 @@ void Executor::initializeGlobals(ExecutionState &state) {
         !externalDispatcher->resolveSymbol(f->getName())) {
       addr = Expr::createPointer(0);
     } else {
-      addr = Expr::createPointer((unsigned long) (void*) f);
-      legalFunctions.insert((uint64_t) (unsigned long) (void*) f);
+      addr = Expr::createPointer(reinterpret_cast<std::uint64_t>(f));
+      legalFunctions.insert(reinterpret_cast<std::uint64_t>(f));
     }
     
     globalAddresses.insert(std::make_pair(f, addr));
@@ -1153,9 +1153,7 @@ void Executor::printDebugInstructions(ExecutionState &state) {
 
   if (!DebugPrintInstructions.isSet(STDERR_COMPACT) &&
       !DebugPrintInstructions.isSet(FILE_COMPACT)) {
-    (*stream) << "     ";
-    state.pc->printFileLine(*stream);
-    (*stream) << ":";
+    (*stream) << "     " << state.pc->getSourceLocation() << ":";
   }
 
   (*stream) << state.pc->info->assemblyLine;
@@ -1564,7 +1562,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       destinations.insert(d);
 
       // create address expression
-      const auto PE = Expr::createPointer((uint64_t) (unsigned long) (void *) d);
+      const auto PE = Expr::createPointer(reinterpret_cast<std::uint64_t>(d));
       ref<Expr> e = EqExpr::create(address, PE);
 
       // exclude address from errorCase
@@ -1814,7 +1812,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
 
             // Don't give warning on unique resolution
             if (res.second || !first)
-              klee_warning_once((void*) (unsigned long) addr, 
+              klee_warning_once(reinterpret_cast<void*>(addr),
                                 "resolved symbolic function pointer to: %s",
                                 f->getName().data());
 
@@ -2335,69 +2333,60 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
     switch( fi->getPredicate() ) {
       // Predicates which only care about whether or not the operands are NaNs.
     case FCmpInst::FCMP_ORD:
-      Result = CmpRes != APFloat::cmpUnordered;
+      Result = (CmpRes != APFloat::cmpUnordered);
       break;
 
     case FCmpInst::FCMP_UNO:
-      Result = CmpRes == APFloat::cmpUnordered;
+      Result = (CmpRes == APFloat::cmpUnordered);
       break;
 
       // Ordered comparisons return false if either operand is NaN.  Unordered
       // comparisons return true if either operand is NaN.
     case FCmpInst::FCMP_UEQ:
-      if (CmpRes == APFloat::cmpUnordered) {
-        Result = true;
-        break;
-      }
+      Result = (CmpRes == APFloat::cmpUnordered || CmpRes == APFloat::cmpEqual);
+      break;
     case FCmpInst::FCMP_OEQ:
-      Result = CmpRes == APFloat::cmpEqual;
+      Result = (CmpRes != APFloat::cmpUnordered && CmpRes == APFloat::cmpEqual);
       break;
 
     case FCmpInst::FCMP_UGT:
-      if (CmpRes == APFloat::cmpUnordered) {
-        Result = true;
-        break;
-      }
+      Result = (CmpRes == APFloat::cmpUnordered || CmpRes == APFloat::cmpGreaterThan);
+      break;
     case FCmpInst::FCMP_OGT:
-      Result = CmpRes == APFloat::cmpGreaterThan;
+      Result = (CmpRes != APFloat::cmpUnordered && CmpRes == APFloat::cmpGreaterThan);
       break;
 
     case FCmpInst::FCMP_UGE:
-      if (CmpRes == APFloat::cmpUnordered) {
-        Result = true;
-        break;
-      }
+      Result = (CmpRes == APFloat::cmpUnordered || (CmpRes == APFloat::cmpGreaterThan || CmpRes == APFloat::cmpEqual));
+      break;
     case FCmpInst::FCMP_OGE:
-      Result = CmpRes == APFloat::cmpGreaterThan || CmpRes == APFloat::cmpEqual;
+      Result = (CmpRes != APFloat::cmpUnordered && (CmpRes == APFloat::cmpGreaterThan || CmpRes == APFloat::cmpEqual));
       break;
 
     case FCmpInst::FCMP_ULT:
-      if (CmpRes == APFloat::cmpUnordered) {
-        Result = true;
-        break;
-      }
+      Result = (CmpRes == APFloat::cmpUnordered || CmpRes == APFloat::cmpLessThan);
+      break;
     case FCmpInst::FCMP_OLT:
-      Result = CmpRes == APFloat::cmpLessThan;
+      Result = (CmpRes != APFloat::cmpUnordered && CmpRes == APFloat::cmpLessThan);
       break;
 
     case FCmpInst::FCMP_ULE:
-      if (CmpRes == APFloat::cmpUnordered) {
-        Result = true;
-        break;
-      }
+      Result = (CmpRes == APFloat::cmpUnordered || (CmpRes == APFloat::cmpLessThan || CmpRes == APFloat::cmpEqual));
+      break;
     case FCmpInst::FCMP_OLE:
-      Result = CmpRes == APFloat::cmpLessThan || CmpRes == APFloat::cmpEqual;
+      Result = (CmpRes != APFloat::cmpUnordered && (CmpRes == APFloat::cmpLessThan || CmpRes == APFloat::cmpEqual));
       break;
 
     case FCmpInst::FCMP_UNE:
-      Result = CmpRes == APFloat::cmpUnordered || CmpRes != APFloat::cmpEqual;
+      Result = (CmpRes == APFloat::cmpUnordered || CmpRes != APFloat::cmpEqual);
       break;
     case FCmpInst::FCMP_ONE:
-      Result = CmpRes != APFloat::cmpUnordered && CmpRes != APFloat::cmpEqual;
+      Result = (CmpRes != APFloat::cmpUnordered && CmpRes != APFloat::cmpEqual);
       break;
 
     default:
       assert(0 && "Invalid FCMP predicate!");
+      break;
     case FCmpInst::FCMP_FALSE:
       Result = false;
       break;
@@ -3080,10 +3069,9 @@ void Executor::callExternalFunction(ExecutionState &state,
     for (unsigned i=0; i<arguments.size(); i++) {
       os << arguments[i];
       if (i != arguments.size()-1)
-	os << ", ";
+        os << ", ";
     }
-    os << ") at ";
-    state.pc->printFileLine(os);
+    os << ") at " << state.pc->getSourceLocation();
     
     if (AllExternalWarnings)
       klee_warning("%s", os.str().c_str());
