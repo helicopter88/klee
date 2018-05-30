@@ -7,6 +7,7 @@
 
 #include <klee/Expr.h>
 #include <klee/util/Assignment.h>
+#include <functional>
 #include "Storage.h"
 
 namespace klee {
@@ -14,6 +15,8 @@ namespace klee {
 
     typedef const std::set<ref<Expr>> Key;
 
+
+    typedef const std::function<bool(Assignment *)>& Predicate;
 
     class Trie : public Storage<Key, Assignment **> {
 
@@ -73,11 +76,16 @@ namespace klee {
         bool getSubsetsInternal(const tnodePtr &pNode, const Key &exprs, constIterator expr,
                                 std::vector<Assignment **> &assignments) const;
 
+        Assignment **getSubsetsInternalPredicate(const tnodePtr &pNode, const Key &exprs, constIterator expr,
+                                          Predicate predicate) const;
+
         bool getSupersetsInternal(const tnodePtr &pNode, const Key &exprs,
                                   constIterator expr, std::vector<Assignment **> &assignments) const;
 
         void findAssignments(const tnodePtr &shared_ptr, std::vector<Assignment **> &set) const;
 
+        Assignment** getSupersetsInternalPredicate(const tnodePtr &pNode, const Key &exprs,
+                                                         constIterator expr, Predicate predicate) const;
     public:
         explicit Trie() : root(createTrieNode()) {
         }
@@ -109,6 +117,11 @@ namespace klee {
 
         std::vector<Assignment **> getSupersets(const Key &exprs) const;
 
+        Assignment **findFirstSubsetMatching(const Key &exprs, Predicate predicate) const;
+
+        Assignment **findFirstSupersetMatching(const Key &exprs, Predicate predicate) const;
+
+        Assignment **findAssignment(const tnodePtr &shared_ptr, Predicate function) const;
     };
 }
 

@@ -90,15 +90,15 @@ namespace klee {
     }
 
     void Trie::findAssignments(const tnodePtr &node, std::vector<Assignment **> &set) const {
-        if(node->last)
+        if (node->last)
             set.emplace_back(node->value);
-        for(const auto& child : node->children) {
-           findAssignments(child.second, set);
+        for (const auto &child : node->children) {
+            findAssignments(child.second, set);
         }
     }
 
     bool Trie::getSupersetsInternal(const tnodePtr &pNode, const Key &exprs,
-                                              constIterator expr, std::vector<Assignment**>& assignments) const {
+                                    constIterator expr, std::vector<Assignment **> &assignments) const {
 
         if (expr == exprs.cend()) {
             findAssignments(pNode, assignments);
@@ -116,6 +116,48 @@ namespace klee {
             }
         }
         return false;
+    }
+
+    Assignment **Trie::getSupersetsInternalPredicate(const tnodePtr &pNode, const Key &exprs,
+                                                     constIterator expr, Predicate predicate) const {
+
+        if (expr == exprs.cend()) {
+            return findAssignment(pNode, predicate);
+        }
+
+        Assignment **found = nullptr;
+        for (const auto &child : pNode->children) {
+            if (expr == exprs.end()) {
+                return nullptr;
+            }
+            if (child.first == expr->get()->hash()) {
+                found = getSupersetsInternalPredicate(child.second, exprs, ++expr, predicate);
+            } else {
+                found = getSupersetsInternalPredicate(child.second, exprs, expr, predicate);
+            }
+            if (found) {
+                return found;
+            }
+        }
+        return nullptr;
+    }
+
+    Assignment **Trie::getSubsetsInternalPredicate(const tnodePtr &pNode, const Key &exprs, constIterator expr,
+                                                   Predicate predicate) const {
+
+        if (pNode->last) {
+            if (predicate(*(pNode->value))) {
+                return pNode->value;
+            }
+        }
+        if (expr == exprs.cend()) {
+            return nullptr;
+        }
+        auto iter = pNode->children.find((*expr)->hash());
+        if (iter != pNode->children.cend()) {
+            return getSubsetsInternalPredicate(iter->second, exprs, ++expr, predicate);
+        }
+        return getSubsetsInternalPredicate(pNode, exprs, ++expr, predicate);
     }
 
     bool Trie::getSubsetsInternal(const tnodePtr &pNode, const Key &exprs, constIterator expr,
@@ -155,6 +197,10 @@ namespace klee {
         return assignments;
     }
 
+    Assignment **Trie::findFirstSubsetMatching(const Key &exprs, Predicate predicate) const {
+        return getSubsetsInternalPredicate(root, exprs, exprs.cbegin(), predicate);
+    }
+
     void Trie::store(CacheTrie::Builder &&builder) const {
         root->storeNode(std::forward<CacheTrieNode::Builder>(builder.initRoot()));
     }
@@ -190,6 +236,19 @@ namespace klee {
         Assignment **pAssignment = new Assignment *;
         *pAssignment = *value;
         insertInternal(root, key, key.cbegin(), pAssignment);
+    }
+
+    Assignment **Trie::findFirstSupersetMatching(const Key &key, Predicate predicate) const {
+        return getSupersetsInternalPredicate(root, key, key.cbegin(), predicate);
+    }
+
+    Assignment **
+    Trie::findAssignment(const tnodePtr &node, Predicate predicate) const {
+        if (node->last && node->value && predicate(*(node->value))) return node->value;
+        for (const auto &child : node->children) {
+            return findAssignment(child.second, predicate);
+        }
+        return nullptr;
     }
 
 

@@ -28,7 +28,7 @@ namespace klee {
 
         ret = trie.existsSubset(exprs);
         if (ret) {
-            NullAssignment s;
+            NullOrSatisfyingAssignment s(exprs);
             if (s(*ret)) {
                 return ret;
             }
@@ -40,19 +40,16 @@ namespace klee {
         if (exprs.empty()) {
             return emptyAssignment;
         };
-        std::vector<Assignment**> assigments = trie.getSubsets(exprs);
+
         NullOrSatisfyingAssignment p(exprs);
-        for(Assignment** pAssignment : assigments) {
-            if(p(*pAssignment)) {
-                return pAssignment;
-            }
+        Assignment** ret = trie.findFirstSubsetMatching(exprs, p);
+        if(ret) {
+            return ret;
         }
         SatisfyingAssignment s(exprs);
-        assigments = trie.getSupersets(exprs);
-        for(Assignment** pAssignment : assigments) {
-            if(s(*pAssignment)) {
-                return pAssignment;
-            }
+        ret = trie.findFirstSupersetMatching(exprs, s);
+        if(ret) {
+            return ret;
         }
         return nullptr;
     }
