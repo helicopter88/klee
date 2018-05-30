@@ -50,7 +50,7 @@ UseNameNormalizer("use-name-normalizer",
 
 cl::opt<bool>
 UseAlgebraNormalizer("use-algebra-normalizer",
-                     cl::init(false),
+                     cl::init(true),
                      cl::desc("Normalize algebraic comparisons before solving (default=off)"));
 
 cl::opt<bool>
