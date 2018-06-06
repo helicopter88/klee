@@ -11,41 +11,9 @@
 #include <klee/util/cache_cap.capnp.h>
 
 namespace klee {
-    ProtoAssignment *Assignment::serialize() const {
-        auto *protoAssignment = new ProtoAssignment();
-        protoAssignment->set_allowfreevalues(this->allowFreeValues);
-        if(bindings.empty()) {
-            return protoAssignment;
-        }
-        for (auto b : bindings) {
-            if(!b.first) continue;
-            auto *pbv = new ProtoBitVector();
-            for (unsigned char v : b.second) {
-                pbv->mutable_values()->Add(v);
-            }
-            protoAssignment->mutable_bvs()->AddAllocated(pbv);
-            protoAssignment->mutable_objects()->AddAllocated(b.first->serialize());
-        }
-        return protoAssignment;
-    }
+    
 
-    void Assignment::serialize(CacheAssignment::Builder &&builder) const {
-        builder.setAllowFreeValues(this->allowFreeValues);
-        if(bindings.empty()) {
-            builder.setNoBinding(true);
-            return;
-        }
-        unsigned i = 0;
-        auto bins = builder.initBindings(bindings.size());
-        for(auto b : bindings) {
-            b.first->serialize(bins[i].getObjects());
-            auto bvs = bins[i].initBvs(b.second.size());
-            for(unsigned j = 0; j < b.second.size(); j++) {
-                bvs.set(j, b.second[j]);
-            }
-            i++;
-        }
-    }
+    
     void Assignment::dump() const {
         if (bindings.empty()) {
             llvm::errs() << "No bindings\n";
@@ -75,6 +43,24 @@ namespace klee {
         }
     }
 
+#ifdef PCACHE_ENABLE_REDIS
+    ProtoAssignment *Assignment::serialize() const {
+        auto *protoAssignment = new ProtoAssignment();
+        protoAssignment->set_allowfreevalues(this->allowFreeValues);
+        if(bindings.empty()) {
+            return protoAssignment;
+        }
+        for (auto b : bindings) {
+            if(!b.first) continue;
+            auto *pbv = new ProtoBitVector();
+            for (unsigned char v : b.second) {
+                pbv->mutable_values()->Add(v);
+            }
+            protoAssignment->mutable_bvs()->AddAllocated(pbv);
+            protoAssignment->mutable_objects()->AddAllocated(b.first->serialize());
+        }
+        return protoAssignment;
+    }
     Assignment *Assignment::deserialize(const ProtoAssignment &pa) {
         if(pa.nobinding()) {
             return nullptr;
@@ -93,6 +79,25 @@ namespace klee {
         }
         return new Assignment(objects, values, pa.allowfreevalues());
     }
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+    void Assignment::serialize(CacheAssignment::Builder &&builder) const {
+        builder.setAllowFreeValues(this->allowFreeValues);
+        if(bindings.empty()) {
+            builder.setNoBinding(true);
+            return;
+        }
+        unsigned i = 0;
+        auto bins = builder.initBindings(bindings.size());
+        for(auto b : bindings) {
+            b.first->serialize(bins[i].getObjects());
+            auto bvs = bins[i].initBvs(b.second.size());
+            for(unsigned j = 0; j < b.second.size(); j++) {
+                bvs.set(j, b.second[j]);
+            }
+            i++;
+        }
+    }
     Assignment* Assignment::deserialize(const CacheAssignment::Reader &&reader) {
         if(reader.getNoBinding())
             return nullptr;
@@ -109,4 +114,5 @@ namespace klee {
         }
         return new Assignment(objects, values, reader.getAllowFreeValues());
     }
+#endif
 }

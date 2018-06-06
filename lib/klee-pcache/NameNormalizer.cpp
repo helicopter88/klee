@@ -29,8 +29,6 @@ namespace klee {
     class RenamerVisitor : public ExprVisitor {
     private:
         const NameMapping &namesMapping;
-        const NameMapping &reverseMapping;
-        bool reverse;
 
         UpdateNode *newNode(const UpdateNode *old) {
             UpdateNode *next = nullptr;
@@ -41,30 +39,17 @@ namespace klee {
         }
 
     public:
-        explicit RenamerVisitor(const NameMapping &_namesMapping,
-                                const NameMapping &_reverseMapping,
-                                bool _reverse = false) :
-                                namesMapping(_namesMapping),
-                                reverseMapping(_reverseMapping),
-                                reverse(_reverse) {};
-
+        explicit RenamerVisitor(const NameMapping &_namesMapping) :
+                namesMapping(_namesMapping) {}
 
         ExprVisitor::Action visitRead(const ReadExpr &rExpr) override {
             std::string newName;
             const Array *orig = rExpr.updates.root;
-            if (reverse) {
-                const auto &iterator = reverseMapping.find(orig->getName());
-                if (iterator == reverseMapping.cend()) {
-                    assert("Name was not in the mapping" && false);
-                }
-                newName = iterator->second;
-            } else {
-                const auto &iterator = namesMapping.find(orig->getName());
-                if (iterator == namesMapping.cend()) {
-                    assert("Name was not in the mapping" && false);
-                }
-                newName = iterator->second;
+            const auto &iterator = namesMapping.find(orig->getName());
+            if (iterator == namesMapping.cend()) {
+                assert("Name was not in the mapping" && false);
             }
+            newName = iterator->second;
             const Array *newArr;
             newArr = newArray(orig, newName);
             UpdateNode *un = nullptr;
@@ -82,11 +67,11 @@ namespace klee {
         std::vector<ref<ReadExpr>> readExprs;
         std::set<std::string> names;
 
-        findReads(expr, false, readExprs);
+        findReads(expr, true, readExprs);
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
         }
-        unsigned i = namesMappings.size();
+        size_t i = namesMappings.size();
         for (const std::string &name : names) {
             if (namesMappings.find(name) == namesMappings.cend()) {
                 const auto number = i++;
@@ -96,7 +81,7 @@ namespace klee {
             }
 
         }
-        RenamerVisitor rv(namesMappings, reverseMappings);
+        RenamerVisitor rv(namesMappings);
         return rv.visit(expr);
     }
 
@@ -105,7 +90,7 @@ namespace klee {
         std::vector<ref<ReadExpr>> readExprs;
         std::set<ref<Expr>> result;
         for (const ref<Expr> &expr : exprs) {
-            findReads(expr, false, readExprs);
+            findReads(expr, true, readExprs);
         }
         for (const ref<ReadExpr> &rExpr: readExprs) {
             names.insert(rExpr->updates.root->getName());
@@ -117,7 +102,7 @@ namespace klee {
             namesMappings.insert(std::make_pair(name, normalized));
             reverseMappings.insert(std::make_pair(normalized, name));
         }
-        RenamerVisitor rv(namesMappings, reverseMappings);
+        RenamerVisitor rv(namesMappings);
         for (const ref<Expr> &expr : exprs) {
             result.insert(rv.visit(expr));
         }
@@ -197,7 +182,7 @@ namespace klee {
     }
 
     ref<Expr> NameNormalizer::denormalizeExpression(const ref<Expr> &expr) const {
-        RenamerVisitor rv(namesMappings, reverseMappings, true);
+        RenamerVisitor rv(reverseMappings);
         return rv.visit(expr);
     }
 }

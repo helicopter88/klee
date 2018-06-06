@@ -1,19 +1,17 @@
 project(klee_pcache)
-find_package(protobuf)
-find_package(capnp)
 find_package(cpp_redis)
 if(REDIS_FOUND)
     set(ENABLE_REDIS 1)
-    message(STATUS "-- Redis support enabled")
+    message(STATUS "Redis support enabled")
 endif()
 if((NOT CAPNP_FOUND) AND (NOT REDIS_FOUND))
     message(FATAL_ERROR "Either protobuf and redis or capnp is required to build persistent cache support")
 endif()
 
 if(ENABLE_REDIS)
-    klee_add_component(klee_pcache RedisInstance.cpp RedisFinder.cpp PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp ../Solver/NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
+    klee_add_component(klee_pcache RedisInstance.cpp RedisFinder.cpp PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
 else()
-    klee_add_component(klee_pcache PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp ../Solver/NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
+    klee_add_component(klee_pcache PersistentMapOfSets.cpp PersistentMapOfSetsFinder.cpp NameNormalizer.cpp Trie.cpp TrieFinder.h TrieFinder.cpp AlgebraComparisonNormalizer.cpp Predicates.h)
 endif()
 set(LLVM_COMPONENTS
         support

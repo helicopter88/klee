@@ -243,8 +243,6 @@ public:
   // Given an array of new kids return a copy of the expression
   // but using those children.
   virtual ref<Expr> rebuild(ref<Expr> kids[/* getNumKids() */]) const = 0;
-  virtual ProtoExpr* serialize() const;
-    virtual void serialize(CacheExpr::Builder&& builder) const;
   /// isZero - Is this a constant zero.
   bool isZero() const;
 
@@ -258,8 +256,15 @@ public:
 
   static void printKind(llvm::raw_ostream &os, Kind k);
   static void printWidth(llvm::raw_ostream &os, Expr::Width w);
-    static ref<Expr> deserialize(const ProtoExpr& pe);
-    static ref<Expr> deserialize(const CacheExpr::Reader&& reader);
+
+#ifdef PCACHE_ENABLE_REDIS
+  virtual ProtoExpr* serialize() const;
+  static ref<Expr> deserialize(const ProtoExpr& pe);
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+  virtual void serialize(CacheExpr::Builder&& builder) const;
+  static ref<Expr> deserialize(const CacheExpr::Reader&& reader);
+#endif
   /// returns the smallest number of bytes in which the given width fits
   static inline unsigned getMinBytesForWidth(Width w) {
       return (w + 7) / 8;
@@ -295,8 +300,8 @@ private:
 struct Expr::CreateArg {
   ref<Expr> expr;
   Width width;
-    CreateArg(ref<Expr> e) : expr(e), width(Expr::InvalidWidth) {}
-    CreateArg(Width w = Bool) : expr(0), width(w) {}
+  CreateArg(ref<Expr> e) : expr(e), width(Expr::InvalidWidth) {}
+  CreateArg(Width w = Bool) : expr(0), width(w) {}
 
   bool isExpr() { return !isWidth(); }
   bool isWidth() { return width != Expr::InvalidWidth; }
@@ -430,8 +435,13 @@ public:
   ref<Expr> getKid(unsigned i) const { return src; }
 
   virtual ref<Expr> rebuild(ref<Expr> kids[]) const { return create(kids[0]); }
+
+#ifdef PCACHE_ENABLE_REDIS
   virtual ProtoExpr* serialize() const;
-    virtual void serialize(CacheExpr::Builder&& builder) const;
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+  virtual void serialize(CacheExpr::Builder&& builder) const;
+#endif
 private:
   NotOptimizedExpr(const ref<Expr> &_src) : src(_src) {}
 
@@ -498,10 +508,14 @@ public:
   /// a symbolic array. If non-empty, this size of this array is equivalent to
   /// the array size.
   const std::vector<ref<ConstantExpr> > constantValues;
-    ProtoArray* serialize() const;
-    void serialize(CacheArray::Builder&& builder) const;
-    static const Array* deserialize(const ProtoArray& protoArray);
-    static const Array* deserialize(const CacheArray::Reader&& reader);
+#ifdef PCACHE_ENABLE_REDIS
+  ProtoArray* serialize() const;
+  static const Array* deserialize(const ProtoArray& protoArray);
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+  void serialize(CacheArray::Builder&& builder) const;
+  static const Array* deserialize(const CacheArray::Reader&& reader);
+#endif
 private:
   unsigned hashValue;
 
@@ -524,7 +538,8 @@ private:
         const ref<ConstantExpr> *constantValuesEnd = 0,
         Expr::Width _domain = Expr::Int32, Expr::Width _range = Expr::Int8);
 
-    ~Array();
+  ~Array();
+
 public:
   bool isSymbolicArray() const { return constantValues.empty(); }
   bool isConstantArray() const { return !isSymbolicArray(); }
@@ -537,9 +552,9 @@ public:
   /// ComputeHash must take into account the name, the size, the domain, and the range
   unsigned computeHash();
   unsigned hash() const { return hashValue; }
-    bool operator==(const Array& rhs) const;
-    bool operator!=(const Array& rhs) const;
-    friend class ArrayCache;
+  bool operator==(const Array& rhs) const;
+  bool operator!=(const Array& rhs) const;
+  friend class ArrayCache;
 };
 
 /// Class representing a complete list of updates into an array.
@@ -601,7 +616,13 @@ public:
   }
 
   virtual unsigned computeHash();
-    virtual void serialize(CacheExpr::Builder&& builder) const;
+
+#ifdef ENABLE_PERSISTENT_CACHE
+  virtual void serialize(CacheExpr::Builder&& builder) const;
+#endif
+#ifdef PCACHE_ENABLE_REDIS
+  virtual ProtoExpr* serialize() const;
+#endif
 private:
   ReadExpr(const UpdateList &_updates, const ref<Expr> &_index) :
     updates(_updates), index(_index) { assert(updates.root); }
@@ -611,7 +632,6 @@ public:
     return E->getKind() == Expr::Read;
   }
   static bool classof(const ReadExpr *) { return true; }
-    virtual ProtoExpr* serialize() const;
 };
 
 
@@ -783,8 +803,13 @@ public:
   }
 
   virtual unsigned computeHash();
+
+#ifdef PCACHE_ENABLE_REDIS
   virtual ProtoExpr * serialize() const;
-    virtual void serialize(CacheExpr::Builder&& builder) const;
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+  virtual void serialize(CacheExpr::Builder&& builder) const;
+#endif
 private:
   ExtractExpr(const ref<Expr> &e, unsigned b, Width w)
     : expr(e),offset(b),width(w) {}
@@ -1153,9 +1178,12 @@ public:
 
   ref<ConstantExpr> Neg();
   ref<ConstantExpr> Not();
-
-    virtual ProtoExpr * serialize() const;
-    virtual void serialize(CacheExpr::Builder&& builder) const;
+#ifdef PCACHE_ENABLE_REDIS
+  virtual ProtoExpr * serialize() const;
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+  virtual void serialize(CacheExpr::Builder&& builder) const;
+#endif
 };
 
 // Implementations

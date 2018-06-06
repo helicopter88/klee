@@ -32,10 +32,7 @@ namespace klee {
 
         bool allowFreeValues;
         bindings_ty bindings;
-
     public:
-        static Assignment *deserialize(const ProtoAssignment &pa);
-        static Assignment *deserialize(const CacheAssignment::Reader&& reader);
         Assignment(bool _allowFreeValues = false)
                 : allowFreeValues(_allowFreeValues) {}
 
@@ -65,8 +62,14 @@ namespace klee {
 
         void dump() const;
 
+#ifdef PCACHE_ENABLE_REDIS
+        static Assignment *deserialize(const ProtoAssignment &pa);
         ProtoAssignment *serialize() const;
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+        static Assignment *deserialize(const CacheAssignment::Reader&& reader);
         void serialize(CacheAssignment::Builder&& builder) const;
+#endif
     };
 
     class AssignmentEvaluator : public ExprEvaluator {

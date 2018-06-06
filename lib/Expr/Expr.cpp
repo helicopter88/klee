@@ -314,10 +314,8 @@ ref<Expr> Expr::createFromKind(Kind k, std::vector<CreateArg> args) {
   }
 }
 
-UpdateNode* recDeserializeUpdateNode(const ProtoUpdateNode& node) {
-    UpdateNode* next = node.has_next() ? recDeserializeUpdateNode(node.next()) : nullptr;
-    return new UpdateNode(next, Expr::deserialize(node.updateindex()), Expr::deserialize(node.updatevalue()));
-}
+
+#ifdef ENABLE_PERSISTENT_CACHE
 
 UpdateNode* deserializeUpdateNode(CacheUpdateNode::Reader&& reader) {
     UpdateNode* next = reader.hasNext() ? deserializeUpdateNode(reader.getNext()) : nullptr;
@@ -426,13 +424,18 @@ ref<Expr> Expr::deserialize(const CacheExpr::Reader &&re) {
         CAP_BINARY_EXPR_CASE(Sgt);
         CAP_BINARY_EXPR_CASE(Sge);
         default:
-            std::cout << "Kind: " << (Kind) re.getKind() << std::endl;
+            llvm::errs() << "Kind: " << (Kind) re.getKind() << "\n";
 
             return ref<Expr>();
 
     }
 }
-
+#endif
+#ifdef PCACHE_ENABLE_REDIS
+UpdateNode* recDeserializeUpdateNode(const ProtoUpdateNode& node) {
+    UpdateNode* next = node.has_next() ? recDeserializeUpdateNode(node.next()) : nullptr;
+    return new UpdateNode(next, Expr::deserialize(node.updateindex()), Expr::deserialize(node.updatevalue()));
+}
 ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
     switch (pe.kind()) {
         case Constant: {
@@ -523,13 +526,14 @@ ref<Expr> Expr::deserialize(const ProtoExpr &pe) {
         PROTO_BINARY_EXPR_CASE(Sgt);
         PROTO_BINARY_EXPR_CASE(Sge);
         default:
-            std::cout << "Kind: " << (Kind) pe.kind() << std::endl;
+            llvm::errs() << "Kind: " << (Kind) pe.kind() << "\n";
 
             return ref<Expr>();
     }
 
     return ref<Expr>();
 }
+#endif
 
 void Expr::printWidth(llvm::raw_ostream &os, Width width) {
   switch(width) {
@@ -592,6 +596,7 @@ void ConstantExpr::toMemory(void *address) {
   }
 }
 
+#ifdef PCACHE_ENABLE_REDIS
 ProtoExpr* ConstantExpr::serialize() const {
     ProtoExpr* pe = Expr::serialize();
     auto * pc = new ProtoConstExpr();
@@ -601,7 +606,8 @@ ProtoExpr* ConstantExpr::serialize() const {
     pe->set_allocated_constdata(pc);
     return pe;
 }
-
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
 void ConstantExpr::serialize(CacheExpr::Builder&& builder) const {
     Expr::serialize(std::forward<CacheExpr::Builder>(builder));
     CacheConstExpr::Builder constB = builder.initSpecialData().initConstData();
@@ -612,6 +618,8 @@ void ConstantExpr::serialize(CacheExpr::Builder&& builder) const {
         constB.setConstExprVal(this->value.getZExtValue());
     }
 }
+#endif
+
 void ConstantExpr::toString(std::string &Res, unsigned radix) const {
   Res = value.toString(radix, false);
 }
@@ -744,6 +752,7 @@ ref<Expr>  NotOptimizedExpr::create(ref<Expr> src) {
   return NotOptimizedExpr::alloc(src);
 }
 
+#ifdef PCACHE_ENABLE_REDIS
 ProtoExpr* NotOptimizedExpr::serialize() const {
     ProtoExpr* base = Expr::serialize();
     ProtoNotOptimizedExpr* pne = new ProtoNotOptimizedExpr;
@@ -751,12 +760,15 @@ ProtoExpr* NotOptimizedExpr::serialize() const {
     base->set_allocated_nodata(pne);
     return base;
 }
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
 void NotOptimizedExpr::serialize(CacheExpr::Builder &&builder) const {
     Expr::serialize(std::forward<CacheExpr::Builder>(builder));
     src->serialize(builder.initSpecialData().initNOData().initSrc());
 }
+#endif
 /***/
-
+#ifdef ENABLE_PERSISTENT_CACHE
 void Array::serialize(CacheArray::Builder&& builder) const {
     builder.setDomain(this->domain);
     builder.setRange(this->range);
@@ -784,6 +796,7 @@ const Array* Array::deserialize(const CacheArray::Reader&& reader) {
     return ac.CreateArray(reader.getName(), reader.getSize(), &cVals[0], &cVals[0] + reader.getSize(), reader.getDomain(), reader.getRange());
 
 }
+#endif
 Array::Array(const std::string &_name, uint64_t _size,
              const ref<ConstantExpr> *constantValuesBegin,
              const ref<ConstantExpr> *constantValuesEnd, Expr::Width _domain,
@@ -801,7 +814,7 @@ Array::Array(const std::string &_name, uint64_t _size,
            "Invalid initial constant value!");
 #endif // NDEBUG
 }
-
+#ifdef PCACHE_ENABLE_REDIS
 const Array* Array::deserialize(const ProtoArray& protoArray) {
     if(protoArray.constantvalues().empty()) {
         return ac.CreateArray(protoArray.name(), protoArray.size(), nullptr, nullptr, protoArray.domain(), protoArray.range());
@@ -813,6 +826,18 @@ const Array* Array::deserialize(const ProtoArray& protoArray) {
     }
     return ac.CreateArray(protoArray.name(), protoArray.size(), &cVals[0], &cVals[0] + protoArray.size(), protoArray.domain(), protoArray.range());
 }
+ProtoArray *Array::serialize() const {
+    auto *protoArray = new ProtoArray();
+    protoArray->set_name(getName());
+    protoArray->set_size(getSize());
+    protoArray->set_range(getRange());
+    protoArray->set_domain(getDomain());
+    for (const auto &constExpr : this->constantValues) {
+        protoArray->mutable_constantvalues()->AddAllocated(constExpr->serialize());
+    }
+    return protoArray;
+}
+#endif
 
 bool Array::operator==(const Array& rhs) const {
     if(rhs.size != this->size) {
@@ -841,23 +866,6 @@ bool Array::operator!=(const Array &rhs) const {
 }
 
 Array::~Array() = default;
-
-ProtoArray *Array::serialize() const {
-    auto *protoArray = new ProtoArray();
-    protoArray->set_name(getName());
-    protoArray->set_size(getSize());
-    protoArray->set_range(getRange());
-    protoArray->set_domain(getDomain());
-    for (const auto &constExpr : this->constantValues) {
-        protoArray->mutable_constantvalues()->AddAllocated(constExpr->serialize());
-    }
-    //const Array *pArray = Array::deserialize(*protoArray);
-    /*assert(pArray->hash() == this->hash());
-    for(unsigned i = 0; i < this->constantValues.size(); i++) {
-        assert(pArray->constantValues[i].compare(this->constantValues[i]) == 0);
-    }*/
-    return protoArray;
-}
 
 unsigned Array::computeHash() {
   unsigned res = 0;
@@ -910,6 +918,10 @@ int ReadExpr::compareContents(const Expr &b) const {
   return updates.compare(static_cast<const ReadExpr&>(b).updates);
 }
 
+
+
+
+#ifdef PCACHE_ENABLE_REDIS
 ProtoUpdateNode* serializeList(const UpdateNode* iter) {
     auto* pn = new ProtoUpdateNode;
     pn->set_allocated_updateindex(iter->index->serialize());
@@ -918,14 +930,6 @@ ProtoUpdateNode* serializeList(const UpdateNode* iter) {
         pn->set_allocated_next(serializeList(iter->next));
     return pn;
 }
-
-void serializeList(CacheUpdateNode::Builder&& builder, const UpdateNode* iter) {
-    iter->value->serialize(builder.initUpdateValue());
-    iter->index->serialize(builder.initUpdateIndex());
-    if(iter->next)
-        serializeList(builder.initNext(), iter->next);
-}
-
 ProtoExpr* ReadExpr::serialize() const {
     ProtoExpr* base = Expr::serialize();
     auto* readExpr = new ProtoReadExpr();
@@ -937,7 +941,14 @@ ProtoExpr* ReadExpr::serialize() const {
     base->set_allocated_readdata(readExpr);
     return base;
 }
-
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
+void serializeList(CacheUpdateNode::Builder&& builder, const UpdateNode* iter) {
+    iter->value->serialize(builder.initUpdateValue());
+    iter->index->serialize(builder.initUpdateIndex());
+    if(iter->next)
+        serializeList(builder.initNext(), iter->next);
+}
 void ReadExpr::serialize(CacheExpr::Builder &&builder) const {
     Expr::serialize(std::forward<CacheExpr::Builder>(builder));
     auto readData = builder.initSpecialData().initReadData();
@@ -947,6 +958,7 @@ void ReadExpr::serialize(CacheExpr::Builder &&builder) const {
     if(iter)
         serializeList(readData.initHead(), iter);//->set_allocated_head(serializeList(iter));
 }
+#endif
 /***/
 ref<Expr> SelectExpr::create(ref<Expr> c, ref<Expr> t, ref<Expr> f) {
   Expr::Width kt = t->getWidth();
@@ -1058,7 +1070,7 @@ ref<Expr> ExtractExpr::create(ref<Expr> expr, unsigned off, Width w) {
 
   return ExtractExpr::alloc(expr, off, w);
 }
-
+#ifdef PCACHE_ENABLE_REDIS
 ProtoExpr * ExtractExpr::serialize() const {
     ProtoExpr* base = Expr::serialize();
     auto* extractExpr = new ProtoExtractExpr();
@@ -1068,7 +1080,8 @@ ProtoExpr * ExtractExpr::serialize() const {
     base->set_allocated_extractdata(extractExpr);
     return base;
 }
-
+#endif
+#ifdef ENABLE_PERSISTENT_CACHE
 void ExtractExpr::serialize(CacheExpr::Builder &&builder) const {
     Expr::serialize(std::forward<CacheExpr::Builder>(builder));
     auto exprData = builder.initSpecialData().initExtractData();
@@ -1076,7 +1089,7 @@ void ExtractExpr::serialize(CacheExpr::Builder &&builder) const {
     exprData.setExtractWidth(this->width);
     this->expr->serialize(exprData.initExpr());
 }
-
+#endif
 /***/
 
 ref<Expr> NotExpr::create(const ref<Expr> &e) {

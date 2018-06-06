@@ -3,7 +3,7 @@
 //
 
 #include "NameNormalizerFinder.h"
-#include "../Solver/NameNormalizer.h"
+#include "NameNormalizer.h"
 #include "Predicates.h"
 
 namespace klee {

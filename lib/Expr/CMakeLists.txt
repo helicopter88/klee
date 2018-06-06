@@ -6,8 +6,9 @@
 # License. See LICENSE.TXT for details.
 #
 #===------------------------------------------------------------------------===#
+find_package(protobuf)
+find_package(capnp)
 klee_add_component(kleaverExpr
-        Cache.pb.cc
   ArrayCache.cpp
   Assigment.cpp
   Constraints.cpp
@@ -21,13 +22,19 @@ klee_add_component(kleaverExpr
   Lexer.cpp
   Parser.cpp
   Updates.cpp
-        cache_cap.capnp.cpp
 )
 
 set(LLVM_COMPONENTS
   support
 )
+
 klee_get_llvm_libs(LLVM_LIBS ${LLVM_COMPONENTS})
+if(PROTOBUF_FOUND)
+    klee_add_component(protoExpr Cache.pb.cc)
+    target_link_libraries(kleaverExpr PUBLIC protoExpr protobuf)
+endif()
+if(CAPNP_FOUND)
+    klee_add_component(capExpr cache_cap.capnp.cpp)
+    target_link_libraries(kleaverExpr PUBLIC capnp kj capExpr)
+endif()
 target_link_libraries(kleaverExpr PUBLIC ${LLVM_LIBS})
-target_link_libraries(kleaverExpr PUBLIC protobuf)
-target_link_libraries(kleaverExpr PUBLIC capnp kj)
