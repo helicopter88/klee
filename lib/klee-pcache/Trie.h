@@ -86,6 +86,8 @@ namespace klee {
 
         Assignment** getSupersetsInternalPredicate(const tnodePtr &pNode, const Key &exprs,
                                                          constIterator expr, Predicate predicate) const;
+
+        Assignment **findAssignment(const tnodePtr &shared_ptr, Predicate function, size_t counter, size_t limit) const;
     public:
         explicit Trie() : root(createTrieNode()) {
         }
@@ -113,15 +115,24 @@ namespace klee {
             assert(false && "Do not use this method, use store(CacheTrie::Builder) instead");
         };
 
+        /**
+         * Finds all subsets of a constraint set
+         * @param exprs The constraint set to be used for lookup
+         * @return A vector (possibly empty) containing all the stored subsets inside the trie
+         */
         std::vector<Assignment **> getSubsets(const Key &exprs) const;
 
+        /**
+         * Finds all supersets of a constraint set
+         * @param exprs The constraint set to be used for lookup
+         * @return A vector (possibly empty) containing all the stored supersets inside the trie
+         */
         std::vector<Assignment **> getSupersets(const Key &exprs) const;
 
         Assignment **findFirstSubsetMatching(const Key &exprs, Predicate predicate) const;
 
         Assignment **findFirstSupersetMatching(const Key &exprs, Predicate predicate) const;
 
-        Assignment **findAssignment(const tnodePtr &shared_ptr, Predicate function) const;
     };
 }
 

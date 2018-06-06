@@ -122,7 +122,7 @@ namespace klee {
                                                      constIterator expr, Predicate predicate) const {
 
         if (expr == exprs.cend()) {
-            return findAssignment(pNode, predicate);
+            return findAssignment(pNode, predicate, 0, (int)exprs.size()/2);
         }
 
         Assignment **found = nullptr;
@@ -242,11 +242,11 @@ namespace klee {
         return getSupersetsInternalPredicate(root, key, key.cbegin(), predicate);
     }
 
-    Assignment **
-    Trie::findAssignment(const tnodePtr &node, Predicate predicate) const {
+    Assignment **Trie::findAssignment(const tnodePtr &node, Predicate predicate, size_t counter, size_t limit) const {
         if (node->last && node->value && predicate(*(node->value))) return node->value;
+        if(counter == limit) return nullptr;
         for (const auto &child : node->children) {
-            return findAssignment(child.second, predicate);
+            return findAssignment(child.second, predicate, ++counter, limit);
         }
         return nullptr;
     }
