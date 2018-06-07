@@ -122,7 +122,7 @@ namespace klee {
                                                      constIterator expr, Predicate predicate) const {
 
         if (expr == exprs.cend()) {
-            return findAssignment(pNode, predicate, 0, (int)exprs.size()/2);
+            return findAssignment(pNode, predicate, 0, exprs.size()/2);
         }
 
         Assignment **found = nullptr;

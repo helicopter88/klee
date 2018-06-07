@@ -13,9 +13,6 @@ protected:
     // x = k -> x < k + 1 && k < x + 1
     // TODO: this should become a std::set<ref<Expr>> with the two expressions to improve reusability.
     Action visitEq(const EqExpr &expr) override {
-        if (expr.getWidth() == Expr::Bool) {
-            return Action::doChildren();
-        }
         ref<Expr> child1 = expr.getKid(0);
         ref<Expr> child2 = expr.getKid(1);
         const ref<ConstantExpr> &one = ConstantExpr::create(1, child1->getWidth());
