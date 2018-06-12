@@ -37,15 +37,19 @@ namespace {
                                         cl::init("none"),
                                         cl::desc("Url for the redis instances, use 'none' to disable redis"));
 
-    cl::opt<size_t> PCacheRedisPort("pcache-redis-port",
+    cl::opt<int> PCacheRedisPort("pcache-redis-port",
                                     cl::init(6379),
-                                    cl::desc("Port for the redis instances"));
+                                    cl::desc("Port for the redis instances (default=6379)"));
 
+    cl::opt<int> PCacheRedisDBNum("pcache-redis-dbnum",
+                                    cl::init(0),
+                                    cl::desc("Database number to use for Redis (default=0)"));
     cl::opt<bool> PCacheTryAll("pcache-try-all",
                                cl::init(false),
                                cl::desc("EXPERIMENTAL: try everything(trie sub/superset,"
                                         " persistent map sub/superset)"
                                         "when looking up in the caches"));
+
 
 }
 namespace klee {
@@ -134,6 +138,7 @@ namespace klee {
                 missedFs.emplace_back(_f);
                 _f->incrementSpecialMisses();
             }
+
             return nullptr;
         }
 
@@ -145,10 +150,9 @@ namespace klee {
         }
 
         void printStats() const final {
-            KLEE_DEBUG(
                     for (Finder *f : finders) {
                         f->printStats();
-                    });
+                    }
         }
 
         ~ChainingFinder() noexcept override {
@@ -210,7 +214,7 @@ namespace klee {
         }
 #ifdef PCACHE_ENABLE_REDIS
         if (PCacheRedisUrl != "none") {
-            finders.emplace_back(new RedisFinder(PCacheRedisUrl, PCacheRedisPort));
+            finders.emplace_back(new RedisFinder(PCacheRedisUrl, (size_t)PCacheRedisPort, PCacheRedisDBNum));
         }
 #endif
 

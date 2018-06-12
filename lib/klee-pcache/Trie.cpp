@@ -1,9 +1,15 @@
 #include <capnp/message.h>
 #include <klee/SolverStats.h>
+#include <llvm/Support/CommandLine.h>
 #include "Trie.h"
 
 using namespace llvm;
 namespace klee {
+    cl::opt<int> TrieMaxDepth("pcache-trie-superset-max",
+                                    cl::init(0),
+                                    cl::desc("Maximum depth to be used for superset matching (default=constraint set size), set to -1 for no limit."));
+
+
     void Trie::dumpNode(const tnodePtr &node) const {
         llvm::errs() << " Is last: " << node->last << "\n";
         for (const auto &m : node->children) {
@@ -122,7 +128,11 @@ namespace klee {
                                                      constIterator expr, Predicate predicate) const {
 
         if (expr == exprs.cend()) {
-            return findAssignment(pNode, predicate, 0, exprs.size()/2);
+            if(TrieMaxDepth.getValue() > 0)
+                return findAssignment(pNode, predicate, 0, (size_t)TrieMaxDepth);
+            if(TrieMaxDepth == -1)
+                return findAssignment(pNode, predicate, 0, SIZE_MAX);
+            return findAssignment(pNode, predicate, 0, exprs.size());
         }
 
         Assignment **found = nullptr;
