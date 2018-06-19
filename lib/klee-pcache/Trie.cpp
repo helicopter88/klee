@@ -7,7 +7,8 @@ using namespace llvm;
 namespace klee {
     cl::opt<int> TrieMaxDepth("pcache-trie-superset-max",
                                     cl::init(0),
-                                    cl::desc("Maximum depth to be used for superset matching (default=constraint set size), set to -1 for no limit."));
+                                    cl::desc("Maximum depth to be used for superset matching (default=constraint set size), set to -1 for no limit."
+                                             "Any negative value != -1 will disable superset matching."));
 
 
     void Trie::dumpNode(const tnodePtr &node) const {
@@ -254,9 +255,11 @@ namespace klee {
 
     Assignment **Trie::findAssignment(const tnodePtr &node, Predicate predicate, size_t counter, size_t limit) const {
         if (node->last && node->value && predicate(*(node->value))) return node->value;
-        if(counter == limit) return nullptr;
+        if(counter >= limit) return nullptr;
         for (const auto &child : node->children) {
-            return findAssignment(child.second, predicate, ++counter, limit);
+            Assignment** ret = findAssignment(child.second, predicate, ++counter, limit);
+            if(ret)
+                return ret;
         }
         return nullptr;
     }
